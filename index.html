@@ -66,7 +66,7 @@ input:focus,textarea:focus{border-color:var(--violet)}
 .who .av{width:38px;height:38px;font-size:16px}
 .who span{display:block;color:var(--muted);font-size:12px}
 .post p{margin:6px 0 8px;font-size:16px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere}
-.post img{width:100%;border-radius:14px;display:block;margin-bottom:8px;background:var(--line)}
+.post img,.post video{width:100%;border-radius:14px;display:block;margin-bottom:8px;background:var(--line);max-height:70vh;object-fit:contain}
 .like{background:none;border:0;color:var(--muted);font-size:16px;font-weight:700;padding:4px 2px}
 .like.on{color:#FF5C8A}
 .like.pp{animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
@@ -105,27 +105,34 @@ const shrink = f => new Promise(r => { const i = new Image(); i.onload = () => {
 async function feedView(){
   $('#main').innerHTML = `<div class="head"><h1>Bouncy</h1><a class="link" id="th">${isDark()?'☀️ Light':'🌙 Dark'}</a></div>
   <div class="rows"><div class="comp"><textarea id="pt" rows="2" placeholder="Share something funny…"></textarea>
-  <div class="crow"><label class="ph">📷<input type="file" id="pf" accept="image/*" hidden></label><span class="muted" id="pn"></span><button class="btn sm" id="pb">Post</button></div></div>
+  <div class="crow"><label class="ph">📷<input type="file" id="pf" accept="image/*,video/mp4,video/webm,video/quicktime" hidden></label><span class="muted" id="pn"></span><button class="btn sm" id="pb">Post</button></div></div>
   <div id="feed"></div></div>`;
   $('#th').onclick = () => { applyTheme(isDark() ? 'light' : 'dark'); $('#th').textContent = isDark() ? '☀️ Light' : '🌙 Dark'; };
   let file = null;
   $('#pf').onchange = e => { file = e.target.files[0]; $('#pn').textContent = file ? file.name : ''; };
   $('#pb').onclick = async () => { const body = $('#pt').value.trim(); if (!body && !file) return;
     const b = $('#pb'); b.disabled = true; let url = null;
-    if (file) { const path = `${me.id}/${Date.now()}.jpg`;
-      const {error} = await sb.storage.from('posts').upload(path, await shrink(file), {contentType:'image/jpeg'});
-      if (error) { b.disabled = false; $('#pn').textContent = 'Photo failed. Try again.'; return; }
-      url = sb.storage.from('posts').getPublicUrl(path).data.publicUrl; }
-    const {error} = await sb.from('posts').insert({author_id:me.id, body, image_url:url});
+    let mediaType = null;
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) { b.disabled = false; $('#pn').textContent = 'Media must be under 100 MB.'; return; }
+      mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+      const ext = (file.name.split('.').pop() || (mediaType === 'video' ? 'mp4' : 'jpg')).toLowerCase().replace(/[^a-z0-9]/g,'');
+      const path = `${me.id}/${Date.now()}.${ext}`;
+      const uploadBody = mediaType === 'image' ? await shrink(file) : file;
+      const {error: uploadError} = await sb.storage.from('posts').upload(path, uploadBody, {contentType:file.type || (mediaType === 'video' ? 'video/mp4' : 'image/jpeg'), upsert:false});
+      if (uploadError) { b.disabled = false; $('#pn').textContent = 'Media upload failed. Try again.'; return; }
+      url = sb.storage.from('posts').getPublicUrl(path).data.publicUrl;
+    }
+    const {error} = await sb.from('posts').insert({author_id:me.id, body, media_url:url, media_type:mediaType});
     if (error) { b.disabled = false; $('#pn').textContent = 'Could not post. Try again.'; return; }
     feedView(); };
   const [{data:ps},{data:my}] = await Promise.all([
-    sb.from('posts').select('id,body,image_url,created_at,profiles(display_name),likes(count),comments(count)').order('created_at',{ascending:false}).limit(50),
+    sb.from('posts').select('id,body,media_url,media_type,created_at,profiles(display_name),likes(count),comments(count)').order('created_at',{ascending:false}).limit(50),
     sb.from('likes').select('post_id').eq('user_id',me.id)]);
   const mine = new Set((my||[]).map(x=>x.post_id)), feed = $('#feed');
   feed.innerHTML = (ps||[]).length ? ps.map(p => { const n = p.profiles?.display_name || 'Someone', c = p.likes?.[0]?.count || 0;
     return `<div class="post"><div class="who"><div class="av">${esc(n[0].toUpperCase())}</div><div><b>${esc(n)}</b><span>${ago(p.created_at)}</span></div></div>
-    ${p.body?`<p>${esc(p.body)}</p>`:''}${p.image_url?`<img loading="lazy" src="${esc(p.image_url)}" alt="">`:''}
+    ${p.body?`<p>${esc(p.body)}</p>`:''}${p.media_url?(p.media_type==='video'?`<video controls playsinline preload="metadata" src="${esc(p.media_url)}"></video>`:`<img loading="lazy" src="${esc(p.media_url)}" alt="">`):''}
     <button class="like ${mine.has(p.id)?'on':''}" data-id="${p.id}" data-n="${c}">♥ <i>${c}</i></button><button class="cm" data-id="${p.id}">💬 <i>${p.comments?.[0]?.count || 0}</i></button><div class="cbox"></div></div>`; }).join('')
     : '<p class="empty">No posts yet. Be the first to make people laugh.</p>';
   feed.onclick = async e => {
