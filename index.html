@@ -84,7 +84,7 @@ input:focus,textarea:focus{border-color:var(--violet)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
 <script>
-const sb = supabase.createClient('https://nruksvjkytpxbiemtalj.supabase.co','sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-');
+const sb = supabase.createClient('https://nruksvjkytpxbiemtalj.supabase.co','sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-',{auth:{lock:(n,t,fn)=>fn(),persistSession:true,autoRefreshToken:true}});
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const applyTheme = t => { document.documentElement.dataset.theme = t; document.querySelector('meta[name=theme-color]').content = t === 'dark' ? '#150F2E' : '#FFFFFF'; try { localStorage.setItem('bt', t); } catch (e) {} };
@@ -246,7 +246,9 @@ async function chatView(chat){
 }
 
 window.addEventListener('popstate', () => { if (me) shell(); });
-sb.auth.onAuthStateChange((_e, s) => { me = s?.user || null; const id = me?.id || null;
+let started = false;
+setTimeout(() => { if (!started) { started = true; authView('Still connecting. Log in to continue.'); } }, 4000);
+sb.auth.onAuthStateChange((_e, s) => { started = true; me = s?.user || null; const id = me?.id || null;
   if (id !== uid) { uid = id; setTimeout(() => { me ? shell('feed') : authView(); }, 0); } });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
