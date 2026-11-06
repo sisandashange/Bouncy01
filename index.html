@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="theme-color" content="#150F2E">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.json">
@@ -10,7 +10,8 @@
 <title>Bouncy</title>
 <style>
 *{box-sizing:border-box}
-:root{--ink:#150F2E;--card:#231A45;--line:#33285C;--violet:#7B5CFF;--sun:#FFC83D;--text:#F4F1FF;--muted:#9C93C4;--danger:#FF6B7A}
+:root{--ink:#FFFFFF;--card:#F3F2F8;--line:#E2E0EC;--violet:#6C4DF0;--sun:#FFC83D;--text:#111111;--muted:#6B6880;--danger:#D6293E}
+:root[data-theme=dark]{--ink:#150F2E;--card:#231A45;--line:#33285C;--violet:#7B5CFF;--text:#F4F1FF;--muted:#9C93C4;--danger:#FF6B7A}
 html,body{margin:0;height:100%;background:var(--ink);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 #app{height:100dvh;max-width:640px;margin:0 auto;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 input,textarea,button{font:inherit;color:inherit}
@@ -18,9 +19,9 @@ input,textarea{background:var(--card);border:1px solid var(--line);border-radius
 input:focus,textarea:focus{border-color:var(--violet)}
 .auth{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:28px}
 .logo{font-size:56px;font-weight:900;letter-spacing:-2px;margin:0}
-.tag{color:var(--sun);font-size:18px;font-weight:600;margin:0 0 18px}
+.tag{color:var(--violet);font-size:18px;font-weight:600;margin:0 0 18px}
 .err{color:var(--danger);font-size:14px}
-.btn{background:var(--sun);color:var(--ink);border:0;border-radius:16px;padding:17px;font-size:17px;font-weight:800}
+.btn{background:var(--sun);color:#111;border:0;border-radius:16px;padding:17px;font-size:17px;font-weight:800}
 .link{color:var(--muted);text-align:center;cursor:pointer;font-size:15px}
 .head{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 0}
 .head h1{font-size:34px;font-weight:900;letter-spacing:-1.5px;margin:0}
@@ -28,16 +29,16 @@ input:focus,textarea:focus{border-color:var(--violet)}
 .rows{flex:1;overflow-y:auto}
 .row{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer}
 .row:active{background:var(--card)}
-.av{width:50px;height:50px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex:none}
+.av{color:#fff;width:50px;height:50px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex:none}
 .rt{min-width:0}.rt b{display:block;font-size:17px}
 .rt span{display:block;color:var(--muted);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty{color:var(--muted);text-align:center;margin:60px 40px;line-height:1.5}
 .chead{justify-content:flex-start;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line)}
-.back{color:var(--sun);font-size:38px;line-height:30px;cursor:pointer;padding:0 6px}
+.back{color:var(--violet);font-size:38px;line-height:30px;cursor:pointer;padding:0 6px}
 .chead h2{margin:0;font-size:20px;font-weight:800}
 .msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px}
 .bub{max-width:80%;padding:9px 14px;border-radius:20px;overflow-wrap:anywhere}
-.mine{align-self:flex-end;background:var(--violet);border-bottom-right-radius:6px}
+.mine{color:#fff;align-self:flex-end;background:var(--violet);border-bottom-right-radius:6px}
 .theirs{align-self:flex-start;background:var(--card);border-bottom-left-radius:6px}
 .bd{font-size:16px;line-height:1.3;white-space:pre-wrap}
 .tm{font-size:11px;color:var(--muted);text-align:right;margin-top:3px}
@@ -46,13 +47,13 @@ input:focus,textarea:focus{border-color:var(--violet)}
 @keyframes pop{from{transform:scale(.8);opacity:.4}to{transform:scale(1);opacity:1}}
 .bar{display:flex;gap:10px;align-items:flex-end;padding:12px}
 .bar textarea{flex:1;border-radius:22px;padding:11px 16px;resize:none;max-height:120px}
-.send{width:44px;height:44px;border-radius:50%;border:0;background:var(--sun);color:var(--ink);font-size:24px;font-weight:900;flex:none;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.send{width:44px;height:44px;border-radius:50%;border:0;background:var(--sun);color:#111;font-size:24px;font-weight:900;flex:none;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
 .send:active{transform:scale(.82)}
 #main{flex:1;min-height:0;display:flex;flex-direction:column}
 .tabs{display:flex;border-top:1px solid var(--line);background:var(--ink)}
 .tabs a{flex:1;text-align:center;padding:12px 0 10px;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer}
 .tabs a b{display:block;font-size:22px;line-height:24px}
-.tabs a.on{color:var(--sun)}
+.tabs a.on{color:var(--violet)}
 .comp{margin:12px 16px;background:var(--card);border-radius:18px;padding:10px}
 .comp textarea{border:0;background:transparent;padding:6px;resize:none}
 .crow{display:flex;align-items:center;gap:10px;padding:0 4px}
@@ -71,14 +72,24 @@ input:focus,textarea:focus{border-color:var(--violet)}
 .like.pp{animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
 .me{padding:20px;display:flex;flex-direction:column;gap:14px}
 .me small{color:var(--muted)}
+.cm{background:none;border:0;color:var(--muted);font-size:16px;font-weight:700;padding:4px 10px}
+.cmt{font-size:14px;margin:6px 0;overflow-wrap:anywhere}.cmt span{color:var(--muted);font-size:12px}
+.cin{display:flex;gap:8px;margin-top:8px}.cin input{padding:10px 14px;border-radius:14px;background:var(--ink)}
+.sw{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.sw input{width:24px;height:24px;padding:0;accent-color:var(--violet)}
 @media (prefers-reduced-motion:reduce){.pop{animation:none}.send{transition:none}}
 </style></head>
-<body><div id="app"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<body><div id="app"><p style="padding:40px;color:#9C93C4;font-family:sans-serif">Loading Bouncy…</p></div>
+<script>window.onerror=function(m){document.getElementById("app").innerHTML='<p style="padding:30px;color:#FF6B7A;font-family:sans-serif">Something broke: '+m+'</p>'};window.onunhandledrejection=function(e){window.onerror(String(e.reason&&e.reason.message||e.reason))};</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
 <script>
 const sb = supabase.createClient('https://nruksvjkytpxbiemtalj.supabase.co','sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-');
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const applyTheme = t => { document.documentElement.dataset.theme = t; document.querySelector('meta[name=theme-color]').content = t === 'dark' ? '#150F2E' : '#FFFFFF'; try { localStorage.setItem('bt', t); } catch (e) {} };
+const isDark = () => document.documentElement.dataset.theme === 'dark';
+applyTheme((() => { try { return localStorage.getItem('bt'); } catch (e) {} })() || 'light');
 let me = null, uid = null, items = [], listCh = null, chatCh = null;
 
 let tab = 'feed';
@@ -92,10 +103,11 @@ const shrink = f => new Promise(r => { const i = new Image(); i.onload = () => {
   c.width = i.width*k; c.height = i.height*k; c.getContext('2d').drawImage(i,0,0,c.width,c.height); c.toBlob(r,'image/jpeg',.8); }; i.src = URL.createObjectURL(f); });
 
 async function feedView(){
-  $('#main').innerHTML = `<div class="head"><h1>Bouncy</h1></div>
+  $('#main').innerHTML = `<div class="head"><h1>Bouncy</h1><a class="link" id="th">${isDark()?'☀️ Light':'🌙 Dark'}</a></div>
   <div class="rows"><div class="comp"><textarea id="pt" rows="2" placeholder="Share something funny…"></textarea>
   <div class="crow"><label class="ph">📷<input type="file" id="pf" accept="image/*" hidden></label><span class="muted" id="pn"></span><button class="btn sm" id="pb">Post</button></div></div>
   <div id="feed"></div></div>`;
+  $('#th').onclick = () => { applyTheme(isDark() ? 'light' : 'dark'); $('#th').textContent = isDark() ? '☀️ Light' : '🌙 Dark'; };
   let file = null;
   $('#pf').onchange = e => { file = e.target.files[0]; $('#pn').textContent = file ? file.name : ''; };
   $('#pb').onclick = async () => { const body = $('#pt').value.trim(); if (!body && !file) return;
@@ -108,15 +120,25 @@ async function feedView(){
     if (error) { b.disabled = false; $('#pn').textContent = 'Could not post. Try again.'; return; }
     feedView(); };
   const [{data:ps},{data:my}] = await Promise.all([
-    sb.from('posts').select('id,body,image_url,created_at,profiles(display_name),likes(count)').order('created_at',{ascending:false}).limit(50),
+    sb.from('posts').select('id,body,image_url,created_at,profiles(display_name),likes(count),comments(count)').order('created_at',{ascending:false}).limit(50),
     sb.from('likes').select('post_id').eq('user_id',me.id)]);
   const mine = new Set((my||[]).map(x=>x.post_id)), feed = $('#feed');
   feed.innerHTML = (ps||[]).length ? ps.map(p => { const n = p.profiles?.display_name || 'Someone', c = p.likes?.[0]?.count || 0;
     return `<div class="post"><div class="who"><div class="av">${esc(n[0].toUpperCase())}</div><div><b>${esc(n)}</b><span>${ago(p.created_at)}</span></div></div>
     ${p.body?`<p>${esc(p.body)}</p>`:''}${p.image_url?`<img loading="lazy" src="${esc(p.image_url)}" alt="">`:''}
-    <button class="like ${mine.has(p.id)?'on':''}" data-id="${p.id}" data-n="${c}">♥ <i>${c}</i></button></div>`; }).join('')
+    <button class="like ${mine.has(p.id)?'on':''}" data-id="${p.id}" data-n="${c}">♥ <i>${c}</i></button><button class="cm" data-id="${p.id}">💬 <i>${p.comments?.[0]?.count || 0}</i></button><div class="cbox"></div></div>`; }).join('')
     : '<p class="empty">No posts yet. Be the first to make people laugh.</p>';
-  feed.onclick = async e => { const b = e.target.closest('.like'); if (!b) return;
+  feed.onclick = async e => {
+    const cb = e.target.closest('.cm');
+    if (cb) { const box = cb.closest('.post').querySelector('.cbox'); if (box.innerHTML) { box.innerHTML = ''; return; }
+      const draw = async () => { const {data} = await sb.from('comments').select('body,created_at,profiles(display_name)').eq('post_id',cb.dataset.id).order('created_at');
+        box.innerHTML = (data||[]).map(c => `<div class="cmt"><b>${esc(c.profiles?.display_name||'Someone')}</b> ${esc(c.body)} <span>${ago(c.created_at)}</span></div>`).join('')
+          + `<div class="cin"><input placeholder="Add a comment" maxlength="500"><button class="btn sm">Send</button></div>`;
+        box.querySelector('.btn').onclick = async () => { const i = box.querySelector('input'), v = i.value.trim(); if (!v) return; i.value = '';
+          const {error} = await sb.from('comments').insert({post_id:cb.dataset.id, author_id:me.id, body:v});
+          if (!error) { const n = cb.querySelector('i'); n.textContent = +n.textContent + 1; draw(); } }; };
+      draw(); return; }
+    const b = e.target.closest('.like'); if (!b) return;
     const on = !b.classList.contains('on'), n = +b.dataset.n + (on?1:-1);
     b.classList.toggle('on', on); b.dataset.n = n; b.querySelector('i').textContent = n;
     b.classList.remove('pp'); void b.offsetWidth; b.classList.add('pp');
@@ -127,9 +149,11 @@ async function meView(){
   const {data:p} = await sb.from('profiles').select('display_name').eq('id',me.id).single();
   $('#main').innerHTML = `<div class="head"><h1>Me</h1></div><div class="me"><small>${esc(me.email)}</small>
   <input id="dn" value="${esc(p?.display_name||'')}" placeholder="Your name" maxlength="30"><div class="err" id="ms"></div>
-  <button class="btn" id="sv">Save name</button><a class="link" id="out">Log out</a></div>`;
+  <button class="btn" id="sv">Save name</button>
+  <label class="sw"><span>Dark mode</span><input type="checkbox" id="dm" ${isDark()?'checked':''}></label><a class="link" id="out">Log out</a></div>`;
   $('#sv').onclick = async () => { const v = $('#dn').value.trim(); if (v.length < 2) { $('#ms').textContent = 'Use at least 2 characters.'; return; }
-    const {error} = await sb.from('profiles').update({display_name:v}).eq('id',me.id); $('#ms').style.color = error ? '' : 'var(--sun)'; $('#ms').textContent = error ? 'Could not save.' : 'Saved.'; };
+    const {error} = await sb.from('profiles').update({display_name:v}).eq('id',me.id); $('#ms').style.color = error ? '' : 'var(--violet)'; $('#ms').textContent = error ? 'Could not save.' : 'Saved.'; };
+  $('#dm').onchange = e => applyTheme(e.target.checked ? 'dark' : 'light');
   $('#out').onclick = () => sb.auth.signOut();
 }
 
@@ -223,6 +247,6 @@ async function chatView(chat){
 
 window.addEventListener('popstate', () => { if (me) shell(); });
 sb.auth.onAuthStateChange((_e, s) => { me = s?.user || null; const id = me?.id || null;
-  if (id !== uid) { uid = id; me ? shell('feed') : authView(); } });
+  if (id !== uid) { uid = id; setTimeout(() => { me ? shell('feed') : authView(); }, 0); } });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></body></html>
