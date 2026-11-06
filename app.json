@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "BOUNCY",
+    "slug": "bouncy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.sisandashange.bouncy"
+    }
+  }
+}
