@@ -31,7 +31,7 @@ export default function App() {
   const me = session?.user;
   return (
     <SafeAreaProvider>
-      <StatusBar style="light" />
+      <StatusBar barStyle="light-content" backgroundColor="#10192D" />
       <SafeAreaView style={{ flex: 1, backgroundColor: c.ink }}>
         {session === undefined ? (
           <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator color={c.sun} /></View>
