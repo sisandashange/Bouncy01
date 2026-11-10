@@ -55,6 +55,13 @@ input[type=file]{display:none}
   <button class="tab active" data-tab="garment">Garment</button><button class="tab" data-tab="design">Design</button><button class="tab" data-tab="edit">Edit</button><button class="tab" data-tab="layers">Layers</button>
  </nav>
  <div class="panel-content" id="content-garment">
+  <div class="section-title">Garment view</div>
+  <div class="hscroll" id="viewChoices">
+   <button class="choice active" data-view="front"><span class="emoji">👕</span>Front</button>
+   <button class="choice" data-view="back"><span class="emoji">🔄</span>Back</button>
+   <button class="choice" data-view="leftSleeve"><span class="emoji">◧</span>Left sleeve</button>
+   <button class="choice" data-view="rightSleeve"><span class="emoji">◨</span>Right sleeve</button>
+  </div>
   <div class="section-title">Choose a garment</div>
   <div class="hscroll" id="garmentChoices">
    <button class="choice active" data-garment="hoodie"><span class="emoji">🧥</span>Oversized hoodie<small>Streetwear</small></button>
@@ -65,7 +72,8 @@ input[type=file]{display:none}
   </div>
   <div class="section-title">Garment image</div>
   <div class="btnrow"><button class="btn" id="uploadGarment">＋ Upload garment photo</button><button class="btn" id="resetGarment">Reset mockup</button></div>
-  <p class="note">Tip: Upload a clear front-facing clothing photo for a more realistic preview. The design layers can be moved over the garment.</p>
+  <div class="btnrow"><button class="btn" id="uploadViewPhoto">📷 Upload photo for this view</button></div>
+  <p class="note">Each view has its own artwork and optional garment photo. Upload front, back and sleeve photos for the most accurate mockup.</p>
  </div>
  <div class="panel-content" id="content-design" hidden>
   <div class="section-title">Add artwork</div>
@@ -80,7 +88,7 @@ input[type=file]{display:none}
    <button class="choice" data-placement="leftSleeve"><span class="emoji">◧</span>Left sleeve<small>Sleeve mark</small></button>
    <button class="choice" data-placement="rightSleeve"><span class="emoji">◨</span>Right sleeve<small>Sleeve mark</small></button>
   </div>
-  <p class="note">Select a design layer first, then tap a placement. For back and sleeve prints, upload a photo showing that side of the garment so the preview matches the real item.</p>
+  <p class="note">Switch between Front, Back and sleeve views in Garment. Each view keeps its own artwork. Select a layer before using placement shortcuts.</p>
   <p class="note">Add text or upload a transparent PNG logo. Select artwork on the preview to move it.</p>
  </div>
  <div class="panel-content" id="content-edit" hidden>
@@ -120,12 +128,24 @@ const garments={
  sweater:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=900&q=85'
 };
 let bg=new Image(),bgUrl=garments.hoodie,bgIsUser=false,layers=[],selected=-1,undoStack=[],redoStack=[],drag=null,toastTimer;
+let currentView='front';
+const viewData={front:{bgUrl:garments.hoodie,bgIsUser:false,layers:[]},back:{bgUrl:garments.hoodie,bgIsUser:false,layers:[]},leftSleeve:{bgUrl:garments.hoodie,bgIsUser:false,layers:[]},rightSleeve:{bgUrl:garments.hoodie,bgIsUser:false,layers:[]}};
+function storeCurrentView(){viewData[currentView]={bgUrl,bgIsUser,layers};}
+function switchView(next){
+ if(!viewData[next])return;
+ storeCurrentView();currentView=next;
+ const data=viewData[currentView];layers=data.layers||[];selected=-1;
+ document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));
+ bgUrl=data.bgUrl||garments.hoodie;bgIsUser=!!data.bgIsUser;
+ loadBackground(bgUrl,bgIsUser);renderLayers();syncEditor();draw();
+ setStatus(currentView==='front'?'Front view':currentView==='back'?'Back view':currentView==='leftSleeve'?'Left sleeve view':'Right sleeve view');
+}
 function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2100)}
 function setStatus(s){$('status').textContent=s}
 function imageFrom(src,cross=true){return new Promise((resolve,reject)=>{const im=new Image();if(cross)im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=reject;im.src=src})}
-function loadBackground(src,user=false){bgUrl=src;bgIsUser=user;setStatus('Loading garment…');const im=new Image();if(!user)im.crossOrigin='anonymous';im.onload=()=>{bg=im;setStatus(user?'Your garment photo':'Mockup ready');draw()};im.onerror=()=>{bg=null;setStatus('Photo unavailable · using canvas');draw();toast('Could not load that garment photo. Try uploading one.')};im.src=src}
-function snapshot(){return JSON.stringify({layers:layers.map(l=>({...l,img:undefined})),bgUrl,bgIsUser})}
-function restore(s){const data=JSON.parse(s);layers=data.layers;bgUrl=data.bgUrl;bgIsUser=data.bgIsUser;layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});selected=Math.min(selected,layers.length-1);if(bgUrl)loadBackground(bgUrl,bgIsUser);draw();renderLayers();syncEditor()}
+function loadBackground(src,user=false){bgUrl=src;bgIsUser=user;if(viewData&&viewData[currentView]){viewData[currentView].bgUrl=src;viewData[currentView].bgIsUser=user}setStatus('Loading garment…');const im=new Image();if(!user)im.crossOrigin='anonymous';im.onload=()=>{bg=im;setStatus(user?'Your garment photo':'Mockup ready');draw()};im.onerror=()=>{bg=null;setStatus('Photo unavailable · using canvas');draw();toast('Could not load that garment photo. Try uploading one.')};im.src=src}
+function snapshot(){return JSON.stringify({currentView,viewData:Object.fromEntries(Object.entries(viewData).map(([k,v])=>[k,{bgUrl:v.bgUrl,bgIsUser:v.bgIsUser,layers:v.layers.map(l=>({...l,img:undefined}))}]))})}
+function restore(s){const data=JSON.parse(s);if(data.viewData){Object.keys(viewData).forEach(k=>{const v=data.viewData[k];if(v)viewData[k]={...v,layers:v.layers||[]}});currentView=data.currentView||'front';const active=viewData[currentView];layers=active.layers;bgUrl=active.bgUrl;bgIsUser=active.bgIsUser}else{layers=data.layers||[];bgUrl=data.bgUrl;bgIsUser=data.bgIsUser;viewData.front={bgUrl,bgIsUser,layers}};layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});selected=Math.min(selected,layers.length-1);if(bgUrl)loadBackground(bgUrl,bgIsUser);draw();renderLayers();syncEditor()}
 function checkpoint(){undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[];updateHistoryButtons()}
 function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop());updateHistoryButtons()}
 function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop());updateHistoryButtons()}
@@ -153,6 +173,8 @@ function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 $('garmentChoices').addEventListener('click',e=>{const b=e.target.closest('[data-garment]');if(!b)return;document.querySelectorAll('[data-garment]').forEach(x=>x.classList.toggle('active',x===b));loadBackground(garments[b.dataset.garment])});
 $('photoChoice').onclick=()=>$('garmentFile').click();$('uploadGarment').onclick=()=>$('garmentFile').click();
+document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+$('uploadViewPhoto').onclick=()=>$('garmentFile').click();
 $('garmentFile').onchange=async e=>{const f=e.target.files[0];if(f){loadBackground(await fileToDataURL(f),true);document.querySelectorAll('[data-garment]').forEach(x=>x.classList.remove('active'));$('photoChoice').classList.add('active')}e.target.value=''};
 $('resetGarment').onclick=()=>{document.querySelectorAll('[data-garment]').forEach(x=>x.classList.toggle('active',x.dataset.garment==='hoodie'));$('photoChoice').classList.remove('active');loadBackground(garments.hoodie)};
 $('addText').onclick=()=>addText();$('uploadLogo').onclick=()=>$('logoFile').click();$('logoFile').onchange=e=>{addImageFile(e.target.files[0]).catch(()=>toast('Could not open that image'));e.target.value=''};
@@ -177,17 +199,20 @@ document.querySelectorAll('[data-placement]').forEach(b=>b.onclick=()=>{
   chest:{x:W*.40,y:H*.39,scale:.72},
   front:{x:W*.50,y:H*.52,scale:1},
   back:{x:W*.50,y:H*.46,scale:1.12},
-  leftSleeve:{x:W*.22,y:H*.40,scale:.58},
-  rightSleeve:{x:W*.78,y:H*.40,scale:.58}
+  leftSleeve:{x:W*.50,y:H*.50,scale:.58},
+  rightSleeve:{x:W*.50,y:H*.50,scale:.58}
  };
+ if(p==='back')switchView('back');
+ if(p==='leftSleeve')switchView('leftSleeve');
+ if(p==='rightSleeve')switchView('rightSleeve');
  const s=spots[p];l.x=s.x;l.y=s.y;
  if(l.type==='text')l.size=Math.max(12,Math.round((l.size||62)*s.scale));
  else{l.w=Math.max(30,l.w*s.scale);l.h=Math.max(30,l.h*s.scale)}
  draw();renderLayers();syncEditor();toast('Placed on '+b.textContent.trim().replace(/\\s+/g,' '));
 });
 $('saveBtn').onclick=saveDesign;
-function saveDesign(){try{const data={version:1,bgUrl,bgIsUser,layers:layers.map(l=>({...l,img:undefined}))};localStorage.setItem('myBrandStudioDesign',JSON.stringify(data));toast('Design saved on this device')}catch(e){toast('Could not save. Try using a smaller logo image.')}}
-function loadSaved(){try{const raw=localStorage.getItem('myBrandStudioDesign');if(!raw)return false;const data=JSON.parse(raw);if(data.version!==1)return false;layers=data.layers||[];selected=-1;if(data.bgUrl)loadBackground(data.bgUrl,data.bgIsUser);layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});renderLayers();return layers.length>0}catch(e){console.warn('Saved design could not be restored',e);return false}}
+function saveDesign(){try{storeCurrentView();const data={version:2,currentView,viewData:Object.fromEntries(Object.entries(viewData).map(([k,v])=>[k,{bgUrl:v.bgUrl,bgIsUser:v.bgIsUser,layers:v.layers.map(l=>({...l,img:undefined}))}]))};localStorage.setItem('myBrandStudioDesign',JSON.stringify(data));toast('All garment views saved on this device')}catch(e){toast('Could not save. Try using a smaller logo image.')}}
+function loadSaved(){try{const raw=localStorage.getItem('myBrandStudioDesign');if(!raw)return false;const data=JSON.parse(raw);if(data.version!==1&&data.version!==2)return false;if(data.version===2){currentView=data.currentView||'front';Object.keys(viewData).forEach(k=>{if(data.viewData&&data.viewData[k])viewData[k]={...data.viewData[k],layers:data.viewData[k].layers||[]}});const active=viewData[currentView];layers=active.layers;bgUrl=active.bgUrl;bgIsUser=active.bgIsUser}else{layers=data.layers||[];bgUrl=data.bgUrl;bgIsUser=data.bgIsUser;viewData.front={bgUrl,bgIsUser,layers}};selected=-1;if(bgUrl)loadBackground(bgUrl,bgIsUser);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});renderLayers();return layers.length>0}catch(e){console.warn('Saved design could not be restored',e);return false}}
 $('removeBgBtn').onclick=()=>{if(selected<0||layers[selected].type!=='image'){toast('Select an image layer first');return}const l=layers[selected];try{const im=l.img,c=document.createElement('canvas'),x=c.getContext('2d');c.width=im.naturalWidth;c.height=im.naturalHeight;x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){const r=d.data[i],g=d.data[i+1],b=d.data[i+2];if(r>218&&g>218&&b>218)d.data[i+3]=0}x.putImageData(d,0,0);const src=c.toDataURL('image/png');imageFrom(src,false).then(next=>{checkpoint();l.img=next;l.src=src;draw();toast('Light background removed')})}catch(e){toast('This image cannot be edited. Try uploading the logo again.')}};
 function exportPNG(){try{draw();const a=document.createElement('a');a.download='my-brand-studio-design.png';a.href=canvas.toDataURL('image/png');a.click();toast('PNG exported. Check your Downloads folder.')}catch(e){toast('Export blocked by the garment photo. Upload your own photo or use a clean mockup.')}}$('exportBtn').onclick=exportPNG;
 function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
