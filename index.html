@@ -1,152 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D FASHION STUDIO - FIXED</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>REAL BRAND DESIGNER - STRICT</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{overflow:hidden;background:#0d0d0d;color:#fff}
-canvas{display:block;width:100vw;height:100vh}
-#header{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(18,18,18,0.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:20;border-bottom:1px solid rgba(255,255,255,0.1)}
-#header h1{font-size:18px;font-weight:800;background:linear-gradient(45deg,#ff758c,#ff7eb3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.action-btn{background:#fff;color:#000;border:0;padding:8px 16px;border-radius:20px;font-weight:700;font-size:13px}
-#toolbar{position:fixed;bottom:0;left:0;right:0;height:170px;background:rgba(18,18,18,0.92);border-top:1px solid rgba(255,255,255,0.1);z-index:20;display:flex;flex-direction:column;padding:12px}
-.tool-tabs{display:flex;gap:10px;margin-bottom:10px;overflow-x:auto}
-.tab-btn{background:rgba(255,255,255,0.08);border:0;color:#aaa;padding:6px 14px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
-.tab-btn.active{background:#fff;color:#000}
-.tool-panel{display:none;gap:10px;align-items:center;overflow-x:auto}
-.tool-panel.active{display:flex}
-.color-swatch{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);flex-shrink:0}
-.color-swatch.selected{border-color:#fff;transform:scale(1.1)}
-.asset-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 14px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
-.asset-card.active{background:#ff758c;border-color:#ff758c}
-#modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:30;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-content{background:#18181b;width:100%;max-width:380px;border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:16px}
-.modal-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:12px;border-radius:12px;color:#fff;font-size:14px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif}
+body{background:#111;color:#fff;overflow:hidden}
+#header{height:55px;display:flex;justify-content:space-between;align-items:center;padding:0 14px;background:#000;border-bottom:1px solid #333}
+#header b{font-size:17px;letter-spacing:1px}
+#header button{background:#fff;color:#000;border:0;padding:8px 14px;border-radius:20px;font-weight:900}
+#stage{height:52vh;position:relative;background:#222;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#stage img{height:100%;width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}
+#designLayer{position:absolute;top:50%;left:50%;transform:translate(-50%,-38%);text-align:center;pointer-events:none;max-width:55%}
+#designLayer h2{font-size:34px;font-weight:900;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.4);line-height:1}
+#designLayer p{font-size:11px;letter-spacing:4px;margin-top:4px}
+#designLayer img{width:90px;height:auto;filter:none}
+#controls{height:calc(100vh - 55px - 52vh);overflow-y:auto;padding:12px;background:#111}
+.row{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px}
+.chip{background:#222;border:1px solid #333;padding:10px 14px;border-radius:14px;white-space:nowrap;font-weight:700;font-size:13px;color:#fff}
+.chip.on{background:#FE2C55;border-color:#FE2C55}
+.swatch{width:38px;height:38px;border-radius:50%;border:2px solid #fff;flex-shrink:0}
+label{font-size:12px;opacity:.7;display:block;margin:10px 0 6px}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;font-size:15px}
+#downloadBtn{width:100%;padding:15px;border:0;border-radius:14px;background:#FE2C55;color:#fff;font-size:16px;font-weight:900;margin-top:12px}
+#brandPreview{font-size:12px;opacity:.7;margin-top:8px;text-align:center}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="header"><h1>3D FASHION STUDIO</h1><button class="action-btn" onclick="openPublishModal()">Publish 🚀</button></div>
-<div id="toolbar">
-<div class="tool-tabs">
-<button class="tab-btn active" onclick="switchTab('garments',this)">Garments</button>
-<button class="tab-btn" onclick="switchTab('fabric',this)">Fabric & Color</button>
-<button class="tab-btn" onclick="switchTab('decals',this)">Logos & Decals</button>
-<button class="tab-btn" onclick="switchTab('model',this)">Model</button>
+<div id="header"><b>MY BRAND STUDIO 👕</b><button onclick="downloadDesign()">Download PNG ⬇️</button></div>
+
+<div id="stage">
+  <!-- REAL CLOTHES PHOTOS - not 3D boxes -->
+  <img id="garmentImg" src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80" crossorigin="anonymous">
+  <div id="designLayer"><h2 id="brandText">STRICT</h2><p id="subText">PIETERMARITZBURG • 2026</p><img id="logoImg" style="display:none"></div>
 </div>
-<div id="panel-garments" class="tool-panel active">
-<div class="asset-card active" onclick="setTop('hoodie',this)">Oversized Hoodie</div>
-<div class="asset-card" onclick="setTop('tee',this)">Graphic T-Shirt</div>
-<div class="asset-card" onclick="setTop('puffer',this)">Puffer Jacket</div>
-<div class="asset-card" onclick="setBottom('jeans',this)">+ Cargo Jeans</div>
-<div class="asset-card" onclick="setBottom('none',this)">No Pants</div>
+
+<div id="controls">
+<label>1. CHOOSE REAL GARMENT</label>
+<div class="row">
+<button class="chip on" onclick="setGarment('hoodie',this)">Oversized Hoodie</button>
+<button class="chip" onclick="setGarment('tee',this)">T-Shirt</button>
+<button class="chip" onclick="setGarment('cap',this)">Cap</button>
+<button class="chip" onclick="setGarment('crew',this)">Sweater</button>
 </div>
-<div id="panel-fabric" class="tool-panel">
-<div class="color-swatch selected" style="background:#1e1e24" onclick="setGarmentColor(0x1e1e24,this)"></div>
-<div class="color-swatch" style="background:#ff3366" onclick="setGarmentColor(0xff3366,this)"></div>
-<div class="color-swatch" style="background:#3366ff" onclick="setGarmentColor(0x3366ff,this)"></div>
-<div class="color-swatch" style="background:#2ecc71" onclick="setGarmentColor(0x2ecc71,this)"></div>
-<div class="color-swatch" style="background:#f1c40f" onclick="setGarmentColor(0xf1c40f,this)"></div>
-<div class="color-swatch" style="background:#f5f6fa" onclick="setGarmentColor(0xf5f6fa,this)"></div>
+
+<label>2. YOUR BRAND NAME</label>
+<input id="brandInput" value="STRICT" oninput="document.getElementById('brandText').textContent=this.value.toUpperCase()">
+<input id="subInput" value="PIETERMARITZBURG • 2026" style="margin-top:8px" oninput="document.getElementById('subText').textContent=this.value.toUpperCase()">
+
+<label>3. GARMENT COLOUR - real tint</label>
+<div class="row">
+<div class="swatch" style="background:#111" onclick="setColor('#111','#fff',this)"></div>
+<div class="swatch" style="background:#fff" onclick="setColor('#f5f5f5','#111',this)"></div>
+<div class="swatch" style="background:#c1121f" onclick="setColor('#c1121f','#fff',this)"></div>
+<div class="swatch" style="background:#2563eb" onclick="setColor('#2563eb','#fff',this)"></div>
+<div class="swatch" style="background:#2ecc71" onclick="setColor('#2ecc71','#fff',this)"></div>
+<div class="swatch" style="background:#f1c40f" onclick="setColor('#f1c40f','#111',this)"></div>
+<div class="swatch" style="background:#ff6b9d" onclick="setColor('#ff6b9d','#fff',this)"></div>
 </div>
-<div id="panel-decals" class="tool-panel">
-<div class="asset-card" onclick="setLogo('STRICT')">STRICT™</div>
-<div class="asset-card" onclick="setLogo('★')">★ Star</div>
-<div class="asset-card" onclick="setLogo('TOKYO 2026')">Tokyo 2026</div>
-<div class="asset-card" onclick="setLogo('')">No Logo</div>
+
+<label>4. TEXT STYLE</label>
+<div class="row">
+<button class="chip on" onclick="setFont('Arial Black',this)">BOLD</button>
+<button class="chip" onclick="setFont('Georgia',this)">CLASSIC</button>
+<button class="chip" onclick="setFont('Courier New',this)">STREET</button>
+<button class="chip" onclick="setFont('Impact',this)">IMPACT</button>
 </div>
-<div id="panel-model" class="tool-panel">
-<div class="asset-card active" onclick="setSkin(0xdcbadc,this)">Light Skin</div>
-<div class="asset-card" onclick="setSkin(0x8d5524,this)">Brown Skin</div>
-<div class="asset-card" onclick="setSkin(0x3b2219,this)">Dark Skin</div>
+
+<label>5. UPLOAD YOUR LOGO (your brand logo PNG)</label>
+<input type="file" accept="image/*" onchange="loadLogo(event)">
+<label>6. TEXT SIZE</label>
+<input type="range" min="18" max="60" value="34" oninput="document.getElementById('brandText').style.fontSize=this.value+'px'">
+
+<button id="downloadBtn" onclick="downloadDesign()">⬇️ DOWNLOAD DESIGN FOR FACTORY / PRINTFUL</button>
+<p id="brandPreview">This downloads a real PNG you can send to a printer in PMB or upload to Printful / Yoco store.</p>
 </div>
-</div>
-<div id="modal"><div class="modal-content"><h2>Publish to Community</h2><input id="designName" class="modal-input" placeholder="Design title..."><input id="designerName" class="modal-input" placeholder="Your handle..."><button class="action-btn" style="padding:12px;background:linear-gradient(45deg,#ff758c,#ff7eb3);color:#fff" onclick="publishDesign()">Submit to Feed</button><button class="tab-btn" style="text-align:center" onclick="closePublishModal()">Cancel</button></div></div>
+
 <script>
-const SUPABASE_URL='YOUR_SUPABASE_URL'; const SUPABASE_ANON_KEY='YOUR_SUPABASE_ANON_KEY';
-let supabaseClient=null; try{ if(SUPABASE_URL!=='YOUR_SUPABASE_URL') supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); }catch(e){}
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a1e);
-const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,1000); camera.position.set(0,1.5,4.8);
-const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffff,0.7));
-let dir=new THREE.DirectionalLight(0xffffff,1.2); dir.position.set(4,8,6); dir.castShadow=true; scene.add(dir);
-let rim=new THREE.DirectionalLight(0xff758c,0.9); rim.position.set(-5,4,-5); scene.add(rim);
-// Floor - FIXED: no more floating
-let floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,32), new THREE.MeshStandardMaterial({color:0x2a2a2e,roughness:0.9})); floor.rotation.x=-Math.PI/2; floor.position.y=-0.95; floor.receiveShadow=true; scene.add(floor);
-
-// === ONE AVATAR GROUP - FIXED ===
-let avatar=new THREE.Group(); scene.add(avatar);
-let skinMat=new THREE.MeshStandardMaterial({color:0xdcbadc,roughness:0.55});
-let topMat=new THREE.MeshStandardMaterial({color:0x1e1e24,roughness:0.85});
-let bottomMat=new THREE.MeshStandardMaterial({color:0x2b2b35,roughness:0.9});
-let head=new THREE.Mesh(new THREE.SphereGeometry(0.26,32,32), skinMat); head.position.y=2.25; head.scale.set(0.85,1.05,0.9); head.castShadow=true; avatar.add(head);
-let neck=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,0.22,16), skinMat); neck.position.y=1.95; avatar.add(neck);
-// Arms + legs are ALWAYS there, clothes go OVER them
-let arms=[], legs=[];
-[-1,1].forEach(s=>{
-  let arm=new THREE.Mesh(new THREE.CapsuleGeometry(0.08,0.6,6,12), skinMat); arm.position.set(s*0.48,1.3,0); arm.rotation.z=s*0.08; avatar.add(arm); arms.push(arm);
-  let leg=new THREE.Mesh(new THREE.CapsuleGeometry(0.11,0.65,6,12), skinMat); leg.position.set(s*0.16,0.35,0); avatar.add(leg); legs.push(leg);
-  let shoe=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.09,0.3), new THREE.MeshStandardMaterial({color:0xffffff})); shoe.position.set(s*0.16,-0.02,0.05); avatar.add(shoe);
-});
-// TOP + BOTTOM groups - separate so jeans doesn't delete hoodie
-let topGroup=new THREE.Group(), bottomGroup=new THREE.Group(), logoGroup=new THREE.Group();
-avatar.add(topGroup); avatar.add(bottomGroup); avatar.add(logoGroup);
-
-function clearGroup(g){ while(g.children.length) g.remove(g.children[0]); }
-function makeHoodie(){
-  let g=new THREE.Group();
-  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.46,0.40,0.95,32), topMat); body.position.y=1.35; body.castShadow=true; g.add(body);
-  let hood=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,16,0,Math.PI*2,0,Math.PI*0.6), topMat); hood.position.set(0,1.88,-0.02); hood.rotation.x=0.25; g.add(hood);
-  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.12,0.75,16), topMat); sl.position.set(s*0.52,1.35,0); sl.rotation.z=s*0.25; g.add(sl); });
-  let pocket=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.28,0.06), topMat); pocket.position.set(0,1.05,0.4); g.add(pocket);
-  return g;
+let garmentPhotos={
+  hoodie:'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
+  tee:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
+  cap:'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&q=80',
+  crew:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=800&q=80'
+};
+function setGarment(type,el){ document.querySelectorAll('.chip').forEach(c=>{ if(['Oversized','T-Shirt','Cap','Sweater'].some(t=>c.textContent.includes(t))) c.classList.remove('on') }); el.classList.add('on'); document.getElementById('garmentImg').src=garmentPhotos[type]; }
+function setColor(bg,textColor,el){ document.getElementById('stage').style.background=bg; document.getElementById('brandText').style.color=textColor; document.getElementById('subText').style.color=textColor; }
+function setFont(font,el){ document.querySelectorAll('.chip').forEach(c=>{ if(['BOLD','CLASSIC','STREET','IMPACT'].includes(c.textContent)) c.classList.remove('on') }); el.classList.add('on'); document.getElementById('brandText').style.fontFamily=font; }
+function loadLogo(e){ let f=e.target.files[0]; if(!f) return; let url=URL.createObjectURL(f); let img=document.getElementById('logoImg'); img.src=url; img.style.display='block'; document.getElementById('brandText').style.display='none'; }
+function downloadDesign(){
+  // Export: draw garment + text to canvas for factory
+  let garment=document.getElementById('garmentImg');
+  let c=document.createElement('canvas'); c.width=800; c.height=1000; let ctx=c.getContext('2d');
+  ctx.fillStyle='#222'; ctx.fillRect(0,0,800,1000);
+  // Draw garment image centered
+  try{ ctx.drawImage(garment,100,50,600,750); }catch(e){}
+  ctx.fillStyle='#fff'; ctx.font='900 70px Arial'; ctx.textAlign='center';
+  ctx.fillText(document.getElementById('brandText').textContent,400,550);
+  ctx.font='20px Arial'; ctx.fillText(document.getElementById('subText').textContent,400,585);
+  let a=document.createElement('a'); a.download=(document.getElementById('brandInput').value||'mybrand')+'-design.png'; a.href=c.toDataURL('image/png'); a.click();
+  alert('✅ Design downloaded! Send this PNG to your printer / Printful / Yoco store.');
 }
-function makeTee(){
-  let g=new THREE.Group();
-  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.42,0.75,32), topMat); body.position.y=1.4; body.castShadow=true; g.add(body);
-  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.3,16), topMat); sl.position.set(s*0.5,1.6,0); sl.rotation.z=s*0.3; g.add(sl); });
-  return g;
-}
-function makePuffer(){
-  let g=new THREE.Group();
-  // Puffy segments - looks like puffer, not flat cylinder
-  for(let i=0;i<4;i++){ let seg=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.11,12,32), topMat); seg.rotation.x=Math.PI/2; seg.position.y=1.05+i*0.22; seg.scale.set(1,1,1); g.add(seg); }
-  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.42,0.95,32), topMat); body.position.y=1.4; g.add(body);
-  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.14,0.7,16), topMat); sl.position.set(s*0.52,1.35,0); sl.rotation.z=s*0.2; g.add(sl); });
-  let collar=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.26,0.18,20), topMat); collar.position.y=1.88; g.add(collar);
-  return g;
-}
-function makeJeans(){
-  let g=new THREE.Group();
-  [-1,1].forEach(s=>{ let leg=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.13,0.75,16), bottomMat); leg.position.set(s*0.16,0.45,0); g.add(leg); let pocket=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.16,0.03), bottomMat); pocket.position.set(s*0.16,0.72,0.16); g.add(pocket); });
-  return g;
-}
-let activeTop='hoodie', activeBottom='none';
-function setTop(type,el){ document.querySelectorAll('#panel-garments .asset-card').forEach(c=>{ if(c.textContent.includes('Hoodie')||c.textContent.includes('T-Shirt')||c.textContent.includes('Puffer')) c.classList.remove('active'); }); if(el) el.classList.add('active'); clearGroup(topGroup); if(type==='hoodie') topGroup.add(makeHoodie()); if(type==='tee') topGroup.add(makeTee()); if(type==='puffer') topGroup.add(makePuffer()); activeTop=type; updateLogoPos(); }
-function setBottom(type,el){ clearGroup(bottomGroup); if(type==='jeans') bottomGroup.add(makeJeans()); activeBottom=type; }
-setTop('hoodie'); setBottom('jeans');
-function setGarmentColor(hex,el){ document.querySelectorAll('#panel-fabric .color-swatch').forEach(s=>s.classList.remove('selected')); if(el) el.classList.add('selected'); topMat.color.setHex(hex); }
-function setSkin(hex,el){ skinMat.color.setHex(hex); }
-// LOGO - FIXED: small plane on chest, not whole texture
-let logoMesh=null;
-function setLogo(text){ clearGroup(logoGroup); if(!text) return; let c=document.createElement('canvas'); c.width=512; c.height=256; let ctx=c.getContext('2d'); ctx.clearRect(0,0,512,256); ctx.fillStyle='#fff'; ctx.font='900 72px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,256,128); let tex=new THREE.CanvasTexture(c); let mat=new THREE.MeshBasicMaterial({map:tex,transparent:true}); logoMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.27), mat); logoMesh.position.set(0,1.55,0.46); logoGroup.add(logoMesh); }
-function updateLogoPos(){ if(logoMesh) logoMesh.position.z = activeTop==='puffer'?0.52:0.46; }
-function setSkinBtn(){}
-function setSkin(hex,el){ document.querySelectorAll('#panel-model .asset-card').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); skinMat.color.setHex(hex); }
-// Orbit - rotate whole avatar, not garment vs head separately
-let dragging=false, px=0, py=0;
-addEventListener('pointerdown',e=>{ if(e.clientY>innerHeight-180) return; dragging=true; px=e.clientX; py=e.clientY; });
-addEventListener('pointermove',e=>{ if(!dragging) return; avatar.rotation.y+=(e.clientX-px)*0.01; px=e.clientX; py=e.clientY; });
-addEventListener('pointerup',()=>dragging=false);
-function switchTab(id,btn){ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active')); document.getElementById('panel-'+id).classList.add('active'); }
-function openPublishModal(){ document.getElementById('modal').style.display='flex'; }
-function closePublishModal(){ document.getElementById('modal').style.display='none'; }
-async function publishDesign(){ let title=document.getElementById('designName').value||'Untitled'; let creator=document.getElementById('designerName').value||'Anonymous'; let payload={title,creator,garment:activeTop, bottom:activeBottom, color:topMat.color.getHexString(), created_at:new Date()}; if(supabaseClient){ let {error}=await supabaseClient.from('community_designs').insert([payload]); alert(error?'Error: '+error.message:'Published! 🚀'); } else alert('Saved locally! Connect Supabase keys to sync.'); closePublishModal(); }
-function animate(){ requestAnimationFrame(animate); avatar.rotation.y+=0.0015; renderer.render(scene,camera); } animate();
-addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 </script>
 </body>
 </html>
