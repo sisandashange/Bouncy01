@@ -4,7 +4,9 @@ import {
   TextInput, TouchableOpacity, View, ActivityIndicator
 } from 'react-native';
 import { GLView } from 'expo-gl';
-import * as THREE from 'three';
+import { Renderer, THREE } from 'expo-three';
+
+global.THREE = global.THREE || THREE;
 import { supabase } from './src/lib/supabase';
 
 const PALETTE = [
@@ -92,7 +94,7 @@ function Garment3D({ category, color }) {
     const camera = new THREE.PerspectiveCamera(38, gl.drawingBufferWidth / gl.drawingBufferHeight, 0.1, 100);
     camera.position.set(0, 0.12, 3.7);
     camera.lookAt(0, 0, 0);
-    const renderer = new THREE.WebGLRenderer({ context: gl, antialias: true, alpha: false });
+    const renderer = new Renderer({ gl });
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight);
     renderer.setPixelRatio(1);
     scene.add(new THREE.HemisphereLight(0xffffff, 0x827b70, 1.55));
