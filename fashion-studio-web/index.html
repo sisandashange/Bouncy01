@@ -62,7 +62,7 @@ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawin
 scene.add(new THREE.HemisphereLight(0xffffff,0x45404b,2.1));const key=new THREE.DirectionalLight(0xffffff,3.2);key.position.set(-3,5,5);scene.add(key);const rim=new THREE.DirectionalLight(0x9ebcff,2.4);rim.position.set(3,2,-4);scene.add(rim);
 const garmentGroup=new THREE.Group();scene.add(garmentGroup);const designGroup=new THREE.Group();garmentGroup.add(designGroup);
 const ground=new THREE.Mesh(new THREE.CircleGeometry(1.65,64),new THREE.MeshBasicMaterial({color:0x363a44,transparent:true,opacity:.48}));ground.rotation.x=-Math.PI/2;ground.position.y=-1.45;ground.scale.set(1.3,1,1);scene.add(ground);
-let type='tee',fabric='cotton',garmentColor='#eeeeeb',layers=[],selected=-1,auto=true,dragging=false,lastX=0,lastY=0,history=[];
+let type='tee',fabric='cotton',garmentColor='#eeeeeb',layers=[],selected=-1,auto=true,dragging=false,dragLayer=false,lastX=0,lastY=0,history=[],artMesh=null;
 const designCanvas=document.createElement('canvas');designCanvas.width=1024;designCanvas.height=1024;const dctx=designCanvas.getContext('2d');const designTexture=new THREE.CanvasTexture(designCanvas);designTexture.colorSpace=THREE.SRGBColorSpace;designTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
 function material(){return new THREE.MeshStandardMaterial({color:garmentColor,roughness:fabric==='satin'?.25:fabric==='leather'?.32:fabric==='denim'?.86:.92,metalness:fabric==='satin'?.12:0,side:THREE.DoubleSide})}
 function addShape(points,mat,z=.0){const s=new THREE.Shape();s.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)s.lineTo(points[i][0],points[i][1]);s.closePath();const geo=new THREE.ShapeGeometry(s,32);const m=new THREE.Mesh(geo,mat);m.position.z=z;garmentGroup.add(m);return m}
@@ -91,7 +91,7 @@ function rebuild(){
  // Artwork is a transparent canvas mapped to the front of the garment.
  const designMat=new THREE.MeshBasicMaterial({map:designTexture,transparent:true,depthWrite:false,side:THREE.DoubleSide});
  const art=new THREE.Mesh(new THREE.PlaneGeometry(type==='pants'?1.02:type==='cap'?.8:.88,type==='pants'?1.75:type==='cap'?.42:1.55),designMat);
- art.position.set(0,type==='pants'?-.02:type==='cap'?.12:.05,.09);designGroup.add(art);
+ art.position.set(0,type==='pants'?-.02:type==='cap'?.12:.05,.09);designGroup.add(art);artMesh=art;
  drawDesign();garmentGroup.rotation.set(0,0,0);
 }
 function drawDesign(){dctx.clearRect(0,0,1024,1024);layers.forEach((l,i)=>{dctx.save();dctx.globalAlpha=l.opacity??1;dctx.translate(l.x*1024,l.y*1024);dctx.rotate((l.rot||0)*Math.PI/180);if(l.type==='text'){dctx.textAlign='center';dctx.textBaseline='middle';dctx.font='900 '+(l.size*1.5)+'px '+l.font;dctx.fillStyle=l.color;dctx.shadowColor=l.shadow?'#000':'transparent';dctx.shadowBlur=l.shadow?8:0;dctx.fillText(l.text,0,0,900)}else if(l.image){dctx.drawImage(l.image,-l.w*5,-l.h*5,l.w*10,l.h*10)}dctx.restore()});designTexture.needsUpdate=true;renderLayers()}
@@ -112,15 +112,16 @@ $('#undo').onclick=()=>{if(!history.length)return;layers=JSON.parse(history.pop(
 $('#spin').onclick=()=>{auto=!auto;$('#spin').textContent='Auto rotate '+(auto?'ON':'OFF');$('#spin').classList.toggle('active',auto)};
 $('#reset').onclick=()=>{garmentGroup.rotation.set(0,0,0);camera.position.set(0,.1,6.6)};$('#front').onclick=()=>{garmentGroup.rotation.set(0,0,0)};
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let artMesh=null;function setPointer(e){const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1}
-renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
-renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;garmentGroup.rotation.y+=dx*.009;garmentGroup.rotation.x=Math.max(-.65,Math.min(.65,garmentGroup.rotation.x+dy*.006));lastX=e.clientX;lastY=e.clientY});
-renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+function hitArtwork(e){const r=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-r.left)/r.width)*2-1;pointer.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObject(artMesh,false);return hits.length?hits[0].uv:null}
+renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;dragLayer=false;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId);const uv=hitArtwork(e);if(uv&&layers.length){const px=uv.x,py=1-uv.y;let best=-1,dist=.13;layers.forEach((l,i)=>{const d=Math.hypot((l.x-px)*1.3,(l.y-py));if(d<dist){dist=d;best=i}});if(best>=0){selected=best;dragLayer=true;syncControls()}}});
+renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;if(dragLayer&&selected>=0){const uv=hitArtwork(e);if(uv){layers[selected].x=Math.max(.04,Math.min(.96,uv.x));layers[selected].y=Math.max(.04,Math.min(.96,1-uv.y));drawDesign()}return}const dx=e.clientX-lastX,dy=e.clientY-lastY;garmentGroup.rotation.y+=dx*.009;garmentGroup.rotation.x=Math.max(-.65,Math.min(.65,garmentGroup.rotation.x+dy*.006));lastX=e.clientX;lastY=e.clientY});
+renderer.domElement.addEventListener('pointerup',()=>{dragging=false;dragLayer=false});renderer.domElement.addEventListener('pointercancel',()=>{dragging=false;dragLayer=false});
 renderer.domElement.addEventListener('wheel',e=>{camera.position.z=Math.max(4,Math.min(9,camera.position.z+e.deltaY*.004))},{passive:true});
 function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(stage);resize();
 function animate(){requestAnimationFrame(animate);if(auto&&!dragging)garmentGroup.rotation.y+=.003;renderer.render(scene,camera)}animate();
 $('#export').onclick=()=>{try{renderer.render(scene,camera);const a=document.createElement('a');a.download='bouncy-fashion-design.png';a.href=renderer.domElement.toDataURL('image/png');a.click()}catch(e){alert('Export failed. Please try again in Chrome.')}};
 $('#save').onclick=()=>{const arr=JSON.parse(localStorage.getItem('bouncyFashionDesigns')||'[]');arr.push({name:$('#designName').value||'Untitled',type,fabric,garmentColor,layers:layers.filter(l=>l.type==='text').map(({type,text,x,y,size,font,color,rot,opacity})=>({type,text,x,y,size,font,color,rot,opacity})),date:new Date().toISOString()});localStorage.setItem('bouncyFashionDesigns',JSON.stringify(arr));renderSaved()};
 function renderSaved(){const arr=JSON.parse(localStorage.getItem('bouncyFashionDesigns')||'[]');$('#saved').textContent=arr.length?arr.length+' design(s) saved on this device.':'No saved designs yet.'}renderSaved();
-rebuild();
+layers=[{type:'text',text:'STRICT',x:.5,y:.42,size:62,font:'Arial Black',color:'#171717',rot:0,opacity:1},{type:'text',text:'YOUR BRAND • 2026',x:.5,y:.53,size:20,font:'Arial Black',color:'#171717',rot:0,opacity:1}];selected=0;syncControls();rebuild();
 </script>
 </body></html>
