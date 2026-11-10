@@ -22,25 +22,17 @@ This app is stored in the \`fashion-studio/\` folder of the Bouncy01 repository.
 - View and reopen the designer's own saved designs
 - Public discovery feed
 
-## Run on Android
+## Build an Android APK using GitHub
 
-Install Node.js 22.13+ and Android Studio if building locally.
+You can start the Android test build from a phone; no local computer or Termux is required.
 
-\`\`\`bash
-npm install
-npx expo install --fix
-npx expo start
-\`\`\`
+1. Open the repository on GitHub and select **Actions**.
+2. Select **Fashion Studio Android APK**.
+3. Open the latest run. The workflow also runs automatically when files in fashion-studio/ change.
+4. When the run succeeds, download the fashion-studio-android-debug artifact.
+5. Extract the ZIP and install app-debug.apk on your Android phone. Android may ask you to allow installation from your browser or file manager.
 
-Scan the QR code with a compatible Expo Go app, or use an Android emulator. For a standalone APK:
-
-\`\`\`bash
-npm install -g eas-cli
-eas login
-eas build --platform android --profile preview
-\`\`\`
-
-SDK 58 Expo Go support may depend on the current Play Store rollout. If Expo Go is not yet available on your device, use an EAS development build instead.
+This is a debug/test APK for installing and checking the app. It is not a signed Play Store release. If the build fails, open the failed run and use its logs to identify the issue before trying another build.
 
 ## Current 3D limitation
 
