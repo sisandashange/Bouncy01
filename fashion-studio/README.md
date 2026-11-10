@@ -15,6 +15,7 @@ This app is stored in the \`fashion-studio/\` folder of the Bouncy01 repository.
 - Three.js garment preview rendered through Expo GL
 - Rotating 3D garment blockouts for T-shirt, hoodie, jacket, dress and pants
 - Colour and material selection (material choices adjust the 3D surface roughness)
+- Swipe the preview to rotate the garment manually; automatic rotation pauses while dragging and resumes after release
 - Designer email/password sign-up and sign-in
 - Save private drafts to Supabase
 - Publish designs to the community feed
