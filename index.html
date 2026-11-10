@@ -1,156 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101014">
+<meta name="description" content="Design your own clothing, add logos and artwork, and export print-ready previews with My Brand Studio.">
 <title>MY BRAND STUDIO PRO</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;-webkit-tap-highlight-color:transparent}
-body{background:#0f0f0f;color:#fff;overflow:hidden}
-#top{height:52px;display:flex;justify-content:space-between;align-items:center;padding:0 12px;background:#000;border-bottom:1px solid #333}
-#top b{letter-spacing:1px}
-#top button{background:#fff;color:#000;border:0;padding:8px 13px;border-radius:20px;font-weight:900}
-#stageWrap{height:48vh;background:#1c1c1c;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-#canvas{max-width:100%;max-height:100%;touch-action:none;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-#tools{height:calc(100vh - 52px - 48vh);overflow-y:auto;padding:10px;background:#111}
-.row{display:flex;gap:8px;overflow-x:auto;padding:6px 0}
-.chip{background:#222;border:1px solid #333;color:#fff;padding:9px 13px;border-radius:14px;white-space:nowrap;font-weight:700;font-size:13px}
-.chip.on{background:#FE2C55;border-color:#FE2C55}
-.swatch{width:36px;height:36px;border-radius:50%;border:2px solid #fff;flex-shrink:0}
-label{font-size:11px;opacity:.6;letter-spacing:1px;margin:10px 0 4px;display:block}
-input[type=text],select{width:100%;padding:11px;border-radius:11px;border:1px solid #333;background:#222;color:#fff}
-input[type=range]{width:100%}
-.btnRow{display:flex;gap:8px}
-.btnRow button{flex:1;padding:12px;border:0;border-radius:12px;font-weight:900;background:#222;color:#fff}
-.btnRow button.primary{background:#FE2C55;color:#fff}
-.layerItem{display:flex;justify-content:space-between;align-items:center;background:#1e1e1e;padding:9px 10px;border-radius:10px;margin-bottom:6px;font-size:13px}
-.layerItem.active{border:1px solid #FE2C55}
+:root{--bg:#0d0d11;--panel:#17171d;--panel2:#22222b;--line:#30303a;--muted:#9999a6;--accent:#fe2c55;--white:#fff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--white);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}body{overflow:hidden;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit}
+.app{height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:auto;background:var(--bg)}
+header{height:58px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--line);background:#111116;gap:10px}
+.brand{min-width:0}.brand strong{font-size:14px;letter-spacing:1.1px;display:block}.brand small{color:var(--muted);font-size:10px;letter-spacing:.7px}
+.header-actions{display:flex;gap:7px}.iconbtn,.exportbtn{border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:9px 11px;font-size:12px;font-weight:800}.exportbtn{background:var(--accent);border-color:var(--accent)}
+.workspace{position:relative;flex:1;min-height:210px;display:flex;align-items:center;justify-content:center;padding:12px;background:radial-gradient(ellipse at center,#292932 0%,#17171d 62%,#101014 100%);overflow:hidden}
+.canvas-shell{height:100%;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;aspect-ratio:700/900;background:#282830;box-shadow:0 14px 42px #0009;border-radius:4px;touch-action:none}
+.canvas-hint{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#c6c6ce;background:#101014c9;border:1px solid #ffffff20;border-radius:30px;padding:6px 11px;font-size:10px;pointer-events:none}
+.status{position:absolute;top:9px;left:10px;background:#101014c9;border:1px solid #ffffff20;border-radius:9px;padding:6px 9px;color:#ddd;font-size:10px}
+.panel{height:44%;min-height:270px;max-height:430px;flex:none;background:#111116;border-top:1px solid var(--line);display:flex;flex-direction:column}
+.tabs{display:flex;gap:6px;padding:9px 10px 7px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none}.tabs::-webkit-scrollbar,.hscroll::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;border:1px solid var(--line);background:var(--panel);padding:8px 12px;border-radius:10px;font-size:11px;font-weight:800;color:#c7c7d0}.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel-content{overflow:auto;padding:10px 12px 18px;flex:1;overscroll-behavior:contain}
+.section-title{font-size:10px;font-weight:900;color:var(--muted);letter-spacing:1.1px;margin:2px 0 8px;text-transform:uppercase}
+.hscroll{display:flex;gap:8px;overflow-x:auto;padding:1px 1px 8px}
+.choice{min-width:94px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:7px 9px;text-align:left;font-size:11px;font-weight:800}
+.choice.active{border:1px solid var(--accent);background:#fe2c551c}.choice .emoji{display:block;font-size:22px;margin-bottom:5px}.choice small{display:block;color:var(--muted);font-size:9px;font-weight:500;margin-top:3px}
+.btnrow{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}.btn{border:1px solid var(--line);background:var(--panel2);padding:10px 12px;border-radius:10px;font-size:11px;font-weight:800;flex:1;min-width:75px}.btn.primary{background:var(--accent);border-color:var(--accent)}.btn:disabled{opacity:.35;cursor:not-allowed}
+.field{margin:10px 0}.field label{display:flex;justify-content:space-between;gap:10px;color:#c8c8d1;font-size:10px;font-weight:800;margin-bottom:6px}.field input[type=text],.field select{width:100%;border:1px solid var(--line);background:var(--panel2);color:#fff;border-radius:10px;padding:11px;outline:none}.field input[type=range]{width:100%;accent-color:var(--accent)}.field input[type=color]{width:42px;height:35px;padding:2px;background:var(--panel2);border:1px solid var(--line);border-radius:8px}
+.field-inline{display:flex;align-items:center;gap:9px}.field-inline select{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.layer{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--panel);border:1px solid var(--line);padding:10px;border-radius:10px;margin:6px 0;font-size:11px}.layer.selected{border-color:var(--accent);background:#fe2c5515}.layer-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.layer button{border:0;background:transparent;color:#bbb;padding:3px 5px}
+.empty{padding:18px;text-align:center;color:var(--muted);font-size:11px;border:1px dashed var(--line);border-radius:10px}
+.note{font-size:10px;color:var(--muted);line-height:1.5;margin:9px 0}
+.toast{position:fixed;left:50%;bottom:calc(46% + 14px);transform:translate(-50%,12px);opacity:0;pointer-events:none;background:#f5f5f5;color:#111;padding:10px 14px;border-radius:12px;font-size:11px;font-weight:800;transition:.2s;z-index:10;max-width:90%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+input[type=file]{display:none}
+@media(min-width:700px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}.panel{height:38%;max-height:390px}.workspace{min-height:300px}}
+@media(max-height:650px){header{height:50px}.panel{height:42%;min-height:220px}.workspace{padding:7px}.canvas-hint{bottom:4px}}
 </style>
 </head>
 <body>
-<div id="top"><b>MY BRAND STUDIO PRO 👕</b><button onclick="exportPNG()">Download PNG ⬇️</button></div>
-<div id="stageWrap"><canvas id="canvas" width="700" height="900"></canvas></div>
-<div id="tools">
-<label>1. GARMENT - REAL PHOTO</label>
-<div class="row">
-<button class="chip on" onclick="setGarment('hoodie',this)">Oversized Hoodie</button>
-<button class="chip" onclick="setGarment('tee',this)">T-Shirt</button>
-<button class="chip" onclick="setGarment('cap',this)">Cap</button>
-<button class="chip" onclick="setGarment('sweater',this)">Sweater</button>
-<button class="chip" onclick="document.getElementById('bgUpload').click()">📸 My Photo</button>
-<input type="file" id="bgUpload" accept="image/*" hidden onchange="loadBG(event)">
+<div class="app">
+<header>
+ <div class="brand"><strong>MY BRAND STUDIO <span style="color:var(--accent)">PRO</span></strong><small>DESIGN YOUR OWN CLOTHING</small></div>
+ <div class="header-actions"><button class="iconbtn" id="undoBtn" title="Undo">↶</button><button class="iconbtn" id="redoBtn" title="Redo">↷</button><button class="exportbtn" id="exportBtn">EXPORT ↓</button></div>
+</header>
+<main class="workspace">
+ <div class="status" id="status">Loading garment…</div>
+ <div class="canvas-shell"><canvas id="canvas" width="700" height="900"></canvas></div>
+ <div class="canvas-hint">TAP ARTWORK TO SELECT • DRAG TO MOVE</div>
+</main>
+<section class="panel">
+ <nav class="tabs" aria-label="Studio tools">
+  <button class="tab active" data-tab="garment">Garment</button><button class="tab" data-tab="design">Design</button><button class="tab" data-tab="edit">Edit</button><button class="tab" data-tab="layers">Layers</button>
+ </nav>
+ <div class="panel-content" id="content-garment">
+  <div class="section-title">Choose a garment</div>
+  <div class="hscroll" id="garmentChoices">
+   <button class="choice active" data-garment="hoodie"><span class="emoji">🧥</span>Oversized hoodie<small>Streetwear</small></button>
+   <button class="choice" data-garment="tee"><span class="emoji">👕</span>T-shirt<small>Everyday</small></button>
+   <button class="choice" data-garment="cap"><span class="emoji">🧢</span>Cap<small>Headwear</small></button>
+   <button class="choice" data-garment="sweater"><span class="emoji">🧶</span>Sweater<small>Classic</small></button>
+   <button class="choice" id="photoChoice"><span class="emoji">📷</span>Your photo<small>Use mockup</small></button>
+  </div>
+  <div class="section-title">Garment image</div>
+  <div class="btnrow"><button class="btn" id="uploadGarment">＋ Upload garment photo</button><button class="btn" id="resetGarment">Reset mockup</button></div>
+  <p class="note">Tip: Upload a clear front-facing clothing photo for a more realistic preview. The design layers can be moved over the garment.</p>
+ </div>
+ <div class="panel-content" id="content-design" hidden>
+  <div class="section-title">Add artwork</div>
+  <div class="btnrow"><button class="btn primary" id="addText">＋ Add text</button><button class="btn" id="uploadLogo">＋ Add logo / picture</button></div>
+  <div class="section-title">Quick text styles</div>
+  <div class="hscroll"><button class="choice" data-preset="brand"><span class="emoji">🔥</span>Streetwear<small>Bold statement</small></button><button class="choice" data-preset="minimal"><span class="emoji">✦</span>Minimal<small>Clean type</small></button><button class="choice" data-preset="back"><span class="emoji">⚡</span>Back print<small>Large graphic</small></button></div>
+  <p class="note">Add text or upload a transparent PNG logo. Select artwork on the preview to move it.</p>
+ </div>
+ <div class="panel-content" id="content-edit" hidden>
+  <div id="noSelection" class="empty">Select a text or logo layer on the preview, or from Layers, to edit it.</div>
+  <div id="editControls" hidden>
+   <div class="field"><label for="textEdit">Text</label><input id="textEdit" type="text" placeholder="Enter your brand name"></div>
+   <div class="grid2">
+    <div class="field"><label for="fontSel">Font style</label><select id="fontSel"><option value="Arial Black">Bold / Street</option><option value="Impact">Impact</option><option value="Georgia">Classic serif</option><option value="Courier New">Typewriter</option><option value="Verdana">Modern</option><option value="Trebuchet MS">Rounded</option></select></div>
+    <div class="field"><label for="colorPick">Text colour</label><input type="color" id="colorPick" value="#ffffff"></div>
+   </div>
+   <div class="field"><label for="sizeRange">Size <span id="sizeValue">62</span></label><input type="range" id="sizeRange" min="12" max="220" value="62"></div>
+   <div class="field"><label for="rotRange">Rotation <span id="rotValue">0°</span></label><input type="range" id="rotRange" min="-180" max="180" value="0"></div>
+   <div class="field"><label for="opacityRange">Opacity <span id="opacityValue">100%</span></label><input type="range" id="opacityRange" min="5" max="100" value="100"></div>
+   <div class="btnrow"><button class="btn" id="strokeBtn">Outline</button><button class="btn" id="shadowBtn">Shadow</button><button class="btn" id="removeBgBtn">Remove white BG</button></div>
+   <div class="btnrow"><button class="btn" id="duplicateBtn">Duplicate</button><button class="btn" id="deleteBtn">Delete layer</button></div>
+  </div>
+ </div>
+ <div class="panel-content" id="content-layers" hidden>
+  <div class="section-title">Your design layers</div><div id="layersList"></div>
+  <div class="btnrow"><button class="btn" id="bringBtn">Bring forward</button><button class="btn" id="sendBtn">Send backward</button></div>
+  <div class="btnrow"><button class="btn" id="clearBtn">Clear artwork</button><button class="btn" id="saveBtn">Save design</button></div>
+  <p class="note">Your work is saved on this device when you tap Save design. Export creates a PNG image of the current canvas.</p>
+ </div>
+</section>
 </div>
-
-<label>2. ADD LAYER</label>
-<div class="btnRow">
-<button onclick="addText()">+ TEXT</button>
-<button onclick="document.getElementById('imgUpload').click()">+ PICTURE / LOGO</button>
-<input type="file" id="imgUpload" accept="image/*" hidden onchange="addImage(event)">
-<button onclick="duplicateLayer()">Duplicate</button>
-<button onclick="deleteLayer()">🗑 Delete</button>
-</div>
-
-<label>3. EDIT SELECTED LAYER - Tap any design to select it</label>
-<input type="text" id="textEdit" placeholder="Edit text..." oninput="updateText(this.value)">
-<div class="row">
-<select id="fontSel" onchange="setFont(this.value)" style="flex:1;padding:10px;border-radius:10px;background:#222;color:#fff;border:1px solid #333">
-<option value="Arial Black">BOLD - Arial Black</option>
-<option value="Impact">IMPACT Street</option>
-<option value="Georgia">Classic Serif</option>
-<option value="Courier New">Typewriter</option>
-<option value="Verdana">Clean Modern</option>
-<option value="Comic Sans MS">Playful</option>
-</select>
-<input type="color" id="colorPick" value="#ffffff" onchange="setColor(this.value)" style="width:50px;height:40px;border:0;background:none">
-</div>
-<label>SIZE • ROTATE • OPACITY</label>
-<input type="range" min="20" max="180" value="60" oninput="setSize(this.value)">
-<input type="range" min="-180" max="180" value="0" id="rotRange" oninput="setRot(this.value)">
-<input type="range" min="20" max="100" value="100" oninput="setOpacity(this.value)">
-
-<label>4. EFFECTS</label>
-<div class="row">
-<button class="chip" onclick="toggleStroke()">Outline ON/OFF</button>
-<button class="chip" onclick="toggleShadow()">Shadow ON/OFF</button>
-<button class="chip" onclick="bringForward()">Bring Forward</button>
-<button class="chip" onclick="sendBack()">Send Back</button>
-<button class="chip" onclick="removeBG()">✨ Remove BG (logo)</button>
-</div>
-
-<label>5. LAYERS - Tap to select</label>
-<div id="layersList"></div>
-
-<div class="btnRow" style="margin-top:10px">
-<button onclick="undo()">↩ Undo</button>
-<button onclick="clearAll()">Clear All</button>
-<button class="primary" onclick="exportPNG()">⬇️ DOWNLOAD FOR FACTORY</button>
-</div>
-<p style="font-size:11px;opacity:.5;text-align:center;margin:10px 0">Drag to MOVE • Pinch / Slider to RESIZE • Slider to ROTATE<br>Tip: Tap STRICT to move it off-center, like real brands do.</p>
-</div>
-
+<div class="toast" id="toast"></div>
+<input type="file" id="garmentFile" accept="image/*"><input type="file" id="logoFile" accept="image/*">
 <script>
-const cv=document.getElementById('canvas'), ctx=cv.getContext('2d');
-let bgImg=new Image(); bgImg.crossOrigin='anonymous';
-let garments={
- hoodie:'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&q=80',
- tee:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800&q=80',
- cap:'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&q=80',
- sweater:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=800&q=80'
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id), canvas=$('canvas'),ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height;
+const garments={
+ hoodie:'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=900&q=85',
+ tee:'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=85',
+ cap:'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=900&q=85',
+ sweater:'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=900&q=85'
 };
-let layers=[], selected=-1, history=[];
-function setGarment(t,el){ document.querySelectorAll('.chip').forEach(c=>{if(['Oversized','T-Shirt','Cap','Sweater'].some(x=>c.textContent.includes(x)))c.classList.remove('on')}); if(el)el.classList.add('on'); loadBGImg(garments[t]); }
-function loadBGImg(src){ bgImg=new Image(); bgImg.crossOrigin='anonymous'; bgImg.onload=draw; bgImg.src=src; }
-function loadBG(e){ let f=e.target.files[0]; if(!f)return; let u=URL.createObjectURL(f); loadBGImg(u); }
-function saveHist(){ history.push(JSON.stringify(layers)); if(history.length>20)history.shift(); }
-function undo(){ if(!history.length)return; layers=JSON.parse(history.pop()); draw(); renderLayers(); }
-function addText(){ saveHist(); layers.push({type:'text',text:'STRICT',x:350,y:450,size:60,font:'Arial Black',color:'#ffffff',rot:0,opacity:1,stroke:false,shadow:false}); selected=layers.length-1; draw(); renderLayers(); }
-function addImage(e){ let f=e.target.files[0]; if(!f)return; let u=URL.createObjectURL(f); let im=new Image(); im.onload=()=>{ saveHist(); layers.push({type:'image',img:im,url:u,x:350,y:400,w:220,h:220,rot:0,opacity:1}); selected=layers.length-1; draw(); renderLayers(); }; im.src=u; }
-function updateText(v){ if(selected<0)return; layers[selected].text=v; draw(); }
-function setFont(f){ if(selected<0)return; layers[selected].font=f; draw(); }
-function setColor(c){ if(selected<0)return; layers[selected].color=c; draw(); }
-function setSize(v){ if(selected<0)return; if(layers[selected].type==='text') layers[selected].size=+v; else { layers[selected].w=+v*3; layers[selected].h=+v*3; } draw(); }
-function setRot(v){ if(selected<0)return; layers[selected].rot=+v; draw(); }
-function setOpacity(v){ if(selected<0)return; layers[selected].opacity=v/100; draw(); }
-function toggleStroke(){ if(selected<0)return; layers[selected].stroke=!layers[selected].stroke; draw(); }
-function toggleShadow(){ if(selected<0)return; layers[selected].shadow=!layers[selected].shadow; draw(); }
-function bringForward(){ if(selected<0||selected===layers.length-1)return; let t=layers.splice(selected,1)[0]; layers.splice(selected+1,0,t); selected++; draw(); renderLayers(); }
-function sendBack(){ if(selected<=0)return; let t=layers.splice(selected,1)[0]; layers.splice(selected-1,0,t); selected--; draw(); renderLayers(); }
-function duplicateLayer(){ if(selected<0)return; saveHist(); let c=JSON.parse(JSON.stringify(layers[selected])); if(c.type==='image') c.img=layers[selected].img; c.x+=30; c.y+=30; layers.push(c); selected=layers.length-1; draw(); renderLayers(); }
-function deleteLayer(){ if(selected<0)return; saveHist(); layers.splice(selected,1); selected=-1; draw(); renderLayers(); }
-function clearAll(){ saveHist(); layers=[]; selected=-1; draw(); renderLayers(); }
-// REMOVE BACKGROUND - removes white / light background from logo
-function removeBG(){
- if(selected<0||layers[selected].type!=='image') return alert('Select a PICTURE layer first, then tap Remove BG');
- let L=layers[selected]; let c=document.createElement('canvas'); c.width=L.img.naturalWidth; c.height=L.img.naturalHeight; let x=c.getContext('2d'); x.drawImage(L.img,0,0);
- let d=x.getImageData(0,0,c.width,c.height); let data=d.data;
- for(let i=0;i<data.length;i+=4){ if(data[i]>200&&data[i+1]>200&&data[i+2]>200) data[i+3]=0; }
- x.putImageData(d,0,0); let ni=new Image(); ni.onload=()=>{ L.img=ni; draw(); }; ni.src=c.toDataURL(); alert('✨ Background removed! White background is now transparent.');
-}
-function renderLayers(){ let el=document.getElementById('layersList'); el.innerHTML=''; layers.forEach((l,i)=>{ let div=document.createElement('div'); div.className='layerItem'+(i===selected?' active':''); div.innerHTML=`<span>${l.type==='text'?'🔤 ':'🖼 '} ${l.type==='text'?l.text:'Picture'}</span><span>↕ ${i}</span>`; div.onclick=()=>{selected=i; draw(); renderLayers();}; el.appendChild(div); }); }
-// DRAG + PINCH - MOVEABLE DESIGN
-let dragging=false, lastX=0, lastY=0, lastDist=0;
-function getPos(e){ let r=cv.getBoundingClientRect(); let t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left)*(cv.width/r.width), y:(t.clientY-r.top)*(cv.height/r.height)}; }
-cv.addEventListener('touchstart',e=>{ if(e.touches.length===2){ lastDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); return; } let p=getPos(e); for(let i=layers.length-1;i>=0;i--){ let l=layers[i]; let dx=p.x-l.x, dy=p.y-l.y; if(Math.abs(dx)<120&&Math.abs(dy)<90){ selected=i; dragging=true; lastX=p.x; lastY=p.y; document.getElementById('textEdit').value=l.type==='text'?l.text:''; document.getElementById('rotRange').value=l.rot||0; renderLayers(); draw(); break; } } });
-cv.addEventListener('touchmove',e=>{ e.preventDefault(); if(e.touches.length===2&&selected>=0){ let d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); let diff=d-lastDist; lastDist=d; let l=layers[selected]; if(l.type==='text') l.size=Math.max(20,Math.min(180,l.size+diff*0.2)); else { l.w=Math.max(40,l.w+diff); l.h=Math.max(40,l.h+diff); } draw(); return; } if(!dragging||selected<0)return; let p=getPos(e); layers[selected].x+=p.x-lastX; layers[selected].y+=p.y-lastY; lastX=p.x; lastY=p.y; draw(); },{passive:false});
-cv.addEventListener('touchend',()=>dragging=false);
-cv.addEventListener('mousedown',e=>{ let p=getPos(e); for(let i=layers.length-1;i>=0;i--){ let l=layers[i]; if(Math.abs(p.x-l.x)<120&&Math.abs(p.y-l.y)<90){ selected=i; dragging=true; lastX=p.x; lastY=p.y; renderLayers(); draw(); break; } } });
-cv.addEventListener('mousemove',e=>{ if(!dragging||selected<0)return; let p=getPos(e); layers[selected].x+=p.x-lastX; layers[selected].y+=p.y-lastY; lastX=p.x; lastY=p.y; draw(); });
-addEventListener('mouseup',()=>dragging=false);
+let bg=new Image(),bgUrl=garments.hoodie,bgIsUser=false,layers=[],selected=-1,undoStack=[],redoStack=[],drag=null,toastTimer;
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2100)}
+function setStatus(s){$('status').textContent=s}
+function imageFrom(src,cross=true){return new Promise((resolve,reject)=>{const im=new Image();if(cross)im.crossOrigin='anonymous';im.onload=()=>resolve(im);im.onerror=reject;im.src=src})}
+function loadBackground(src,user=false){bgUrl=src;bgIsUser=user;setStatus('Loading garment…');const im=new Image();if(!user)im.crossOrigin='anonymous';im.onload=()=>{bg=im;setStatus(user?'Your garment photo':'Mockup ready');draw()};im.onerror=()=>{bg=null;setStatus('Photo unavailable · using canvas');draw();toast('Could not load that garment photo. Try uploading one.')};im.src=src}
+function snapshot(){return JSON.stringify({layers:layers.map(l=>({...l,img:undefined})),bgUrl,bgIsUser})}
+function restore(s){const data=JSON.parse(s);layers=data.layers;bgUrl=data.bgUrl;bgIsUser=data.bgIsUser;layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});selected=Math.min(selected,layers.length-1);if(bgUrl)loadBackground(bgUrl,bgIsUser);draw();renderLayers();syncEditor()}
+function checkpoint(){undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[];updateHistoryButtons()}
+function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop());updateHistoryButtons()}
+function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop());updateHistoryButtons()}
+function updateHistoryButtons(){$('undoBtn').disabled=!undoStack.length;$('redoBtn').disabled=!redoStack.length}
 function draw(){
- ctx.clearRect(0,0,cv.width,cv.height);
- if(bgImg.complete&&bgImg.naturalWidth){ ctx.drawImage(bgImg,0,0,cv.width,cv.height); } else { ctx.fillStyle='#222'; ctx.fillRect(0,0,cv.width,cv.height); }
- layers.forEach((l,i)=>{
-  ctx.save(); ctx.globalAlpha=l.opacity||1; ctx.translate(l.x,l.y); ctx.rotate((l.rot||0)*Math.PI/180);
-  if(l.shadow){ ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=12; ctx.shadowOffsetY=6; }
-  if(l.type==='text'){ ctx.font=`900 ${l.size}px ${l.font}`; ctx.textAlign='center'; ctx.textBaseline='middle'; if(l.stroke){ ctx.lineWidth=5; ctx.strokeStyle='#000'; ctx.strokeText(l.text,0,0); } ctx.fillStyle=l.color; ctx.fillText(l.text,0,0); }
-  else { ctx.drawImage(l.img,-l.w/2,-l.h/2,l.w,l.h); }
-  ctx.restore();
-  if(i===selected){ ctx.save(); ctx.strokeStyle='#FE2C55'; ctx.lineWidth=3; ctx.setLineDash([10,8]); ctx.strokeRect(l.x-130,l.y-90,260,180); ctx.restore(); }
+ ctx.clearRect(0,0,W,H);ctx.fillStyle='#33333b';ctx.fillRect(0,0,W,H);
+ if(bg&&bg.complete&&bg.naturalWidth){const scale=Math.max(W/bg.width,H/bg.height);const dw=bg.width*scale,dh=bg.height*scale;ctx.drawImage(bg,(W-dw)/2,(H-dh)/2,dw,dh)}
+ else{ctx.fillStyle='#e8e8e8';ctx.fillRect(0,0,W,H);ctx.fillStyle='#d2d2d2';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText('UPLOAD A GARMENT PHOTO',W/2,H/2)}
+ layers.forEach((l,i)=>{ctx.save();ctx.globalAlpha=l.opacity??1;ctx.translate(l.x,l.y);ctx.rotate((l.rot||0)*Math.PI/180);if(l.shadow){ctx.shadowColor='#0009';ctx.shadowBlur=12;ctx.shadowOffsetY=5}
+ if(l.type==='text'){ctx.font='900 '+l.size+'px "'+String(l.font).replace(/["\\]/g,'')+'"';ctx.textAlign='center';ctx.textBaseline='middle';if(l.stroke){ctx.lineWidth=Math.max(2,l.size*.07);ctx.strokeStyle=l.strokeColor||'#111';ctx.strokeText(l.text,0,0)}ctx.fillStyle=l.color||'#fff';ctx.fillText(l.text,0,0)}
+ else if(l.img&&l.img.complete){ctx.drawImage(l.img,-l.w/2,-l.h/2,l.w,l.h)}
+ ctx.restore();
+ if(i===selected){const b=getBounds(l);ctx.save();ctx.strokeStyle='#fe2c55';ctx.lineWidth=3;ctx.setLineDash([9,7]);ctx.strokeRect(b.x,b.y,b.w,b.h);ctx.fillStyle='#fe2c55';ctx.beginPath();ctx.arc(l.x,l.y,5,0,Math.PI*2);ctx.fill();ctx.restore()}
  });
 }
-function exportPNG(){ let a=document.createElement('a'); a.download='my-brand-design.png'; a.href=cv.toDataURL('image/png'); a.click(); alert('✅ Downloaded! Send this PNG to your printer / Printful.'); }
-// Start with STRICT like your screenshot, but now MOVEABLE
-loadBGImg(garments.hoodie);
-setTimeout(()=>{ layers.push({type:'text',text:'STRICT',x:350,y:450,size:62,font:'Arial Black',color:'#ffffff',rot:0,opacity:1,stroke:false,shadow:false}); layers.push({type:'text',text:'PIETERMARITZBURG • 2026',x:350,y:500,size:22,font:'Arial Black',color:'#ffffff',rot:0,opacity:1}); selected=0; draw(); renderLayers(); },500);
+function getBounds(l){let w,h;if(l.type==='text'){ctx.save();ctx.font='900 '+l.size+'px "'+l.font+'"';w=Math.max(70,ctx.measureText(l.text||' ').width+22);h=l.size*1.35;ctx.restore()}else{w=l.w;h=l.h}return{x:l.x-w/2-8,y:l.y-h/2-8,w:w+16,h:h+16}}
+function addText(text='YOUR BRAND'){checkpoint();layers.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),type:'text',text,x:W/2,y:H/2,size:62,font:'Arial Black',color:'#ffffff',rot:0,opacity:1,stroke:false,shadow:false});selected=layers.length-1;draw();renderLayers();syncEditor();showTab('edit')}
+async function addImageFile(file){if(!file)return;if(!file.type.startsWith('image/')){toast('Please choose an image file');return}const src=await fileToDataURL(file);const im=await imageFrom(src,false);checkpoint();const ratio=im.width/im.height;const w=230,h=w/ratio;layers.push({id:String(Date.now()),type:'image',src,img:im,x:W/2,y:H/2,w,h,rot:0,opacity:1,shadow:false});selected=layers.length-1;draw();renderLayers();syncEditor();showTab('edit')}
+function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
+function selectLayer(i){selected=i;draw();renderLayers();syncEditor()}
+function syncEditor(){const has=selected>=0&&layers[selected];$('noSelection').hidden=!!has;$('editControls').hidden=!has;if(!has)return;const l=layers[selected];$('textEdit').value=l.type==='text'?l.text:'';$('textEdit').disabled=l.type!=='text';$('fontSel').disabled=l.type!=='text';$('colorPick').disabled=l.type!=='text';$('sizeRange').value=l.type==='text'?l.size:Math.round(l.w/3);$('sizeValue').textContent=$('sizeRange').value;$('rotRange').value=l.rot||0;$('rotValue').textContent=(l.rot||0)+'°';$('opacityRange').value=Math.round((l.opacity??1)*100);$('opacityValue').textContent=$('opacityRange').value+'%';if(l.type==='text'){$('fontSel').value=l.font;$('colorPick').value=l.color}}
+function updateSelected(patch,save=false){if(selected<0)return;if(save)checkpoint();Object.assign(layers[selected],patch);draw();renderLayers()}
+function renderLayers(){const root=$('layersList');root.innerHTML='';if(!layers.length){root.innerHTML='<div class="empty">No artwork yet. Go to Design to add text or a logo.</div>';return}layers.forEach((l,i)=>{const row=document.createElement('div');row.className='layer'+(i===selected?' selected':'');const name=document.createElement('span');name.className='layer-name';name.textContent=(l.type==='text'?'🔤 ':'🖼 ')+(l.type==='text'?l.text:'Image / logo');const select=document.createElement('button');select.textContent='SELECT';select.onclick=()=>selectLayer(i);const del=document.createElement('button');del.textContent='✕';del.setAttribute('aria-label','Delete layer');del.onclick=()=>{checkpoint();layers.splice(i,1);if(selected===i)selected=-1;else if(selected>i)selected--;draw();renderLayers();syncEditor()};row.append(name,select,del);root.append(row)})}
+function showTab(name){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));['garment','design','edit','layers'].forEach(n=>$('content-'+n).hidden=n!==name)}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+$('garmentChoices').addEventListener('click',e=>{const b=e.target.closest('[data-garment]');if(!b)return;document.querySelectorAll('[data-garment]').forEach(x=>x.classList.toggle('active',x===b));loadBackground(garments[b.dataset.garment])});
+$('photoChoice').onclick=()=>$('garmentFile').click();$('uploadGarment').onclick=()=>$('garmentFile').click();
+$('garmentFile').onchange=async e=>{const f=e.target.files[0];if(f){loadBackground(await fileToDataURL(f),true);document.querySelectorAll('[data-garment]').forEach(x=>x.classList.remove('active'));$('photoChoice').classList.add('active')}e.target.value=''};
+$('resetGarment').onclick=()=>{document.querySelectorAll('[data-garment]').forEach(x=>x.classList.toggle('active',x.dataset.garment==='hoodie'));$('photoChoice').classList.remove('active');loadBackground(garments.hoodie)};
+$('addText').onclick=()=>addText();$('uploadLogo').onclick=()=>$('logoFile').click();$('logoFile').onchange=e=>{addImageFile(e.target.files[0]).catch(()=>toast('Could not open that image'));e.target.value=''};
+$('textEdit').oninput=e=>{if(selected>=0&&layers[selected].type==='text'){layers[selected].text=e.target.value;draw();renderLayers()}};
+$('fontSel').onchange=e=>updateSelected({font:e.target.value});$('colorPick').oninput=e=>updateSelected({color:e.target.value});
+$('sizeRange').oninput=e=>{if(selected<0)return;const l=layers[selected];if(l.type==='text')l.size=+e.target.value;else{const ratio=l.img.width/l.img.height;l.w=+e.target.value*3;l.h=l.w/ratio}$('sizeValue').textContent=e.target.value;draw()};
+$('rotRange').oninput=e=>{if(selected<0)return;layers[selected].rot=+e.target.value;$('rotValue').textContent=e.target.value+'°';draw()};
+$('opacityRange').oninput=e=>{if(selected<0)return;layers[selected].opacity=+e.target.value/100;$('opacityValue').textContent=e.target.value+'%';draw()};
+$('strokeBtn').onclick=()=>{if(selected<0)return;checkpoint();layers[selected].stroke=!layers[selected].stroke;draw();toast(layers[selected].stroke?'Outline enabled':'Outline disabled')};
+$('shadowBtn').onclick=()=>{if(selected<0)return;checkpoint();layers[selected].shadow=!layers[selected].shadow;draw();toast(layers[selected].shadow?'Shadow enabled':'Shadow disabled')};
+$('duplicateBtn').onclick=()=>{if(selected<0)return;checkpoint();const l=layers[selected],copy={...l,id:String(Date.now()),x:l.x+28,y:l.y+28};if(l.type==='image')copy.img=l.img;layers.push(copy);selected=layers.length-1;draw();renderLayers();syncEditor()};
+$('deleteBtn').onclick=()=>{if(selected<0)return;checkpoint();layers.splice(selected,1);selected=-1;draw();renderLayers();syncEditor()};
+$('bringBtn').onclick=()=>moveLayer(1);$('sendBtn').onclick=()=>moveLayer(-1);
+function moveLayer(dir){if(selected<0)return;const next=selected+dir;if(next<0||next>=layers.length)return;checkpoint();const item=layers.splice(selected,1)[0];layers.splice(next,0,item);selected=next;draw();renderLayers()}
+$('clearBtn').onclick=()=>{if(!layers.length)return;if(!confirm('Remove all artwork layers?'))return;checkpoint();layers=[];selected=-1;draw();renderLayers();syncEditor()};
+$('undoBtn').onclick=undo;$('redoBtn').onclick=redo;
+document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=b.dataset.preset;if(p==='brand')addText('NO LIMITS');if(p==='minimal')addText('STUDIO');if(p==='back'){addText('BUILT DIFFERENT');if(selected>=0){layers[selected].size=90;layers[selected].y=H*.65;draw();syncEditor()}}});
+$('saveBtn').onclick=saveDesign;
+function saveDesign(){try{const data={version:1,bgUrl,bgIsUser,layers:layers.map(l=>({...l,img:undefined}))};localStorage.setItem('myBrandStudioDesign',JSON.stringify(data));toast('Design saved on this device')}catch(e){toast('Could not save. Try using a smaller logo image.')}}
+function loadSaved(){try{const raw=localStorage.getItem('myBrandStudioDesign');if(!raw)return;const data=JSON.parse(raw);if(data.version!==1)return;layers=data.layers||[];selected=-1;if(data.bgUrl)loadBackground(data.bgUrl,data.bgIsUser);layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});renderLayers()}catch(e){console.warn('Saved design could not be restored',e)}}
+$('removeBgBtn').onclick=()=>{if(selected<0||layers[selected].type!=='image'){toast('Select an image layer first');return}const l=layers[selected];try{const im=l.img,c=document.createElement('canvas'),x=c.getContext('2d');c.width=im.naturalWidth;c.height=im.naturalHeight;x.drawImage(im,0,0);const d=x.getImageData(0,0,c.width,c.height);for(let i=0;i<d.data.length;i+=4){const r=d.data[i],g=d.data[i+1],b=d.data[i+2];if(r>218&&g>218&&b>218)d.data[i+3]=0}x.putImageData(d,0,0);const src=c.toDataURL('image/png');imageFrom(src,false).then(next=>{checkpoint();l.img=next;l.src=src;draw();toast('Light background removed')})}catch(e){toast('This image cannot be edited. Try uploading the logo again.')}};
+function exportPNG(){try{draw();const a=document.createElement('a');a.download='my-brand-studio-design.png';a.href=canvas.toDataURL('image/png');a.click();toast('PNG exported. Check your Downloads folder.')}catch(e){toast('Export blocked by the garment photo. Upload your own photo or use a clean mockup.')}}$('exportBtn').onclick=exportPNG;
+function point(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
+function hit(p,l){const b=getBounds(l);return p.x>=b.x&&p.x<=b.x+b.w&&p.y>=b.y&&p.y<=b.y+b.h}
+canvas.addEventListener('pointerdown',e=>{const p=point(e);let found=-1;for(let i=layers.length-1;i>=0;i--)if(hit(p,layers[i])){found=i;break}if(found>=0){selectLayer(found);drag={id:e.pointerId,x:p.x,y:p.y};canvas.setPointerCapture(e.pointerId);showTab('edit')}else{selected=-1;draw();renderLayers();syncEditor()}});
+canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId||selected<0)return;const p=point(e);layers[selected].x+=p.x-drag.x;layers[selected].y+=p.y-drag.y;drag.x=p.x;drag.y=p.y;draw()});
+canvas.addEventListener('pointerup',()=>{drag=null});canvas.addEventListener('pointercancel',()=>{drag=null});
+loadBackground(garments.hoodie);loadSaved();addText('STRICT');layers[0].x=W/2;layers[0].y=H*.49;layers[0].size=66;selected=0;draw();renderLayers();syncEditor();updateHistoryButtons();
+})();
 </script>
 </body>
 </html>
