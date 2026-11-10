@@ -3,317 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D FASHION STUDIO & CREATOR</title>
+<title>3D FASHION STUDIO - FIXED</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 body{overflow:hidden;background:#0d0d0d;color:#fff}
 canvas{display:block;width:100vw;height:100vh}
-
-/* UI Layout */
 #header{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(18,18,18,0.85);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:20;border-bottom:1px solid rgba(255,255,255,0.1)}
-#header h1{font-size:18px;font-weight:800;letter-spacing:1px;background:linear-gradient(45deg,#ff758c,#ff7eb3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.action-btn{background:#fff;color:#000;border:0;padding:8px 16px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer}
-
-/* Studio Toolbar */
-#toolbar{position:fixed;bottom:0;left:0;right:0;height:160px;background:rgba(18,18,18,0.9);backdrop-filter:blur(12px);border-top:1px solid rgba(255,255,255,0.1);z-index:20;display:flex;flex-direction:column;padding:12px}
-.tool-tabs{display:flex;gap:12px;margin-bottom:10px;overflow-x:auto;padding-bottom:4px}
-.tab-btn{background:rgba(255,255,255,0.08);border:0;color:#aaa;padding:6px 14px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+#header h1{font-size:18px;font-weight:800;background:linear-gradient(45deg,#ff758c,#ff7eb3);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.action-btn{background:#fff;color:#000;border:0;padding:8px 16px;border-radius:20px;font-weight:700;font-size:13px}
+#toolbar{position:fixed;bottom:0;left:0;right:0;height:170px;background:rgba(18,18,18,0.92);border-top:1px solid rgba(255,255,255,0.1);z-index:20;display:flex;flex-direction:column;padding:12px}
+.tool-tabs{display:flex;gap:10px;margin-bottom:10px;overflow-x:auto}
+.tab-btn{background:rgba(255,255,255,0.08);border:0;color:#aaa;padding:6px 14px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
 .tab-btn.active{background:#fff;color:#000}
-
 .tool-panel{display:none;gap:10px;align-items:center;overflow-x:auto}
 .tool-panel.active{display:flex}
-
-/* Swatches & Controls */
-.color-swatch{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);cursor:pointer;flex-shrink:0}
+.color-swatch{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);flex-shrink:0}
 .color-swatch.selected{border-color:#fff;transform:scale(1.1)}
-.asset-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 14px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap;cursor:pointer}
+.asset-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px 14px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
 .asset-card.active{background:#ff758c;border-color:#ff758c}
-
-/* Modal Overlay */
 #modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:30;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-content{background:#18181b;width:100%;max-width:380px;border-radius:24px;padding:24px;border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column;gap:16px}
-.modal-content h2{font-size:20px;font-weight:700}
+.modal-content{background:#18181b;width:100%;max-width:380px;border-radius:24px;padding:24px;display:flex;flex-direction:column;gap:16px}
 .modal-input{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);padding:12px;border-radius:12px;color:#fff;font-size:14px}
 </style>
-<!-- Three.js Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- Supabase Client -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<div id="header">
-  <h1>3D FASHION STUDIO</h1>
-  <button class="action-btn" onclick="openPublishModal()">Publish 🚀</button>
-</div>
-
+<div id="header"><h1>3D FASHION STUDIO</h1><button class="action-btn" onclick="openPublishModal()">Publish 🚀</button></div>
 <div id="toolbar">
-  <div class="tool-tabs">
-    <button class="tab-btn active" onclick="switchTab('garments', this)">Garments</button>
-    <button class="tab-btn" onclick="switchTab('fabric', this)">Fabric & Color</button>
-    <button class="tab-btn" onclick="switchTab('decals', this)">Logos & Decals</button>
-  </div>
-
-  <!-- Garments Panel -->
-  <div id="panel-garments" class="tool-panel active">
-    <div class="asset-card active" onclick="switchGarment('hoodie', this)">Oversized Hoodie</div>
-    <div class="asset-card" onclick="switchGarment('tee', this)">Graphic T-Shirt</div>
-    <div class="asset-card" onclick="switchGarment('puffer', this)">Puffer Jacket</div>
-    <div class="asset-card" onclick="switchGarment('jeans', this)">Cargo Jeans</div>
-  </div>
-
-  <!-- Fabric & Color Panel -->
-  <div id="panel-fabric" class="tool-panel">
-    <div class="color-swatch selected" style="background:#1e1e24" onclick="setGarmentColor(0x1e1e24, this)"></div>
-    <div class="color-swatch" style="background:#ff3366" onclick="setGarmentColor(0xff3366, this)"></div>
-    <div class="color-swatch" style="background:#3366ff" onclick="setGarmentColor(0x3366ff, this)"></div>
-    <div class="color-swatch" style="background:#2ecc71" onclick="setGarmentColor(0x2ecc71, this)"></div>
-    <div class="color-swatch" style="background:#f1c40f" onclick="setGarmentColor(0xf1c40f, this)"></div>
-    <div class="color-swatch" style="background:#f5f6fa" onclick="setGarmentColor(0xf5f6fa, this)"></div>
-  </div>
-
-  <!-- Decals Panel -->
-  <div id="panel-decals" class="tool-panel">
-    <div class="asset-card active" onclick="setLogo('STRICT')">STRICT™ Logo</div>
-    <div class="asset-card" onclick="setLogo('STAR')">★ Star Emblem</div>
-    <div class="asset-card" onclick="setLogo('TOKYO')">Tokyo 2026</div>
-  </div>
+<div class="tool-tabs">
+<button class="tab-btn active" onclick="switchTab('garments',this)">Garments</button>
+<button class="tab-btn" onclick="switchTab('fabric',this)">Fabric & Color</button>
+<button class="tab-btn" onclick="switchTab('decals',this)">Logos & Decals</button>
+<button class="tab-btn" onclick="switchTab('model',this)">Model</button>
 </div>
-
-<!-- Publish Modal -->
-<div id="modal">
-  <div class="modal-content">
-    <h2>Publish to Community</h2>
-    <input type="text" id="designName" class="modal-input" placeholder="Give your design a title...">
-    <input type="text" id="designerName" class="modal-input" placeholder="Your Creator Handle...">
-    <button class="action-btn" style="width:100%;padding:12px;background:linear-gradient(45deg,#ff758c,#ff7eb3);color:#fff" onclick="publishDesign()">Submit to Feed</button>
-    <button class="tab-btn" style="width:100%;text-align:center" onclick="closePublishModal()">Cancel</button>
-  </div>
+<div id="panel-garments" class="tool-panel active">
+<div class="asset-card active" onclick="setTop('hoodie',this)">Oversized Hoodie</div>
+<div class="asset-card" onclick="setTop('tee',this)">Graphic T-Shirt</div>
+<div class="asset-card" onclick="setTop('puffer',this)">Puffer Jacket</div>
+<div class="asset-card" onclick="setBottom('jeans',this)">+ Cargo Jeans</div>
+<div class="asset-card" onclick="setBottom('none',this)">No Pants</div>
 </div>
-
+<div id="panel-fabric" class="tool-panel">
+<div class="color-swatch selected" style="background:#1e1e24" onclick="setGarmentColor(0x1e1e24,this)"></div>
+<div class="color-swatch" style="background:#ff3366" onclick="setGarmentColor(0xff3366,this)"></div>
+<div class="color-swatch" style="background:#3366ff" onclick="setGarmentColor(0x3366ff,this)"></div>
+<div class="color-swatch" style="background:#2ecc71" onclick="setGarmentColor(0x2ecc71,this)"></div>
+<div class="color-swatch" style="background:#f1c40f" onclick="setGarmentColor(0xf1c40f,this)"></div>
+<div class="color-swatch" style="background:#f5f6fa" onclick="setGarmentColor(0xf5f6fa,this)"></div>
+</div>
+<div id="panel-decals" class="tool-panel">
+<div class="asset-card" onclick="setLogo('STRICT')">STRICT™</div>
+<div class="asset-card" onclick="setLogo('★')">★ Star</div>
+<div class="asset-card" onclick="setLogo('TOKYO 2026')">Tokyo 2026</div>
+<div class="asset-card" onclick="setLogo('')">No Logo</div>
+</div>
+<div id="panel-model" class="tool-panel">
+<div class="asset-card active" onclick="setSkin(0xdcbadc,this)">Light Skin</div>
+<div class="asset-card" onclick="setSkin(0x8d5524,this)">Brown Skin</div>
+<div class="asset-card" onclick="setSkin(0x3b2219,this)">Dark Skin</div>
+</div>
+</div>
+<div id="modal"><div class="modal-content"><h2>Publish to Community</h2><input id="designName" class="modal-input" placeholder="Design title..."><input id="designerName" class="modal-input" placeholder="Your handle..."><button class="action-btn" style="padding:12px;background:linear-gradient(45deg,#ff758c,#ff7eb3);color:#fff" onclick="publishDesign()">Submit to Feed</button><button class="tab-btn" style="text-align:center" onclick="closePublishModal()">Cancel</button></div></div>
 <script>
-// --- SUPABASE CONFIGURATION ---
-// Replace with your Supabase free tier project URL and anon key
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
-let supabaseClient = null;
-try {
-  if(SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-} catch(e) { console.log('Supabase offline mode'); }
+const SUPABASE_URL='YOUR_SUPABASE_URL'; const SUPABASE_ANON_KEY='YOUR_SUPABASE_ANON_KEY';
+let supabaseClient=null; try{ if(SUPABASE_URL!=='YOUR_SUPABASE_URL') supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); }catch(e){}
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a1a1e);
+const camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,0.1,1000); camera.position.set(0,1.5,4.8);
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.shadowMap.enabled=true; document.body.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0xffffff,0.7));
+let dir=new THREE.DirectionalLight(0xffffff,1.2); dir.position.set(4,8,6); dir.castShadow=true; scene.add(dir);
+let rim=new THREE.DirectionalLight(0xff758c,0.9); rim.position.set(-5,4,-5); scene.add(rim);
+// Floor - FIXED: no more floating
+let floor=new THREE.Mesh(new THREE.CircleGeometry(2.2,32), new THREE.MeshStandardMaterial({color:0x2a2a2e,roughness:0.9})); floor.rotation.x=-Math.PI/2; floor.position.y=-0.95; floor.receiveShadow=true; scene.add(floor);
 
-// --- 3D SCENE SETUP ---
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x121214);
-scene.fog = new THREE.FogExp2(0x121214, 0.03);
-
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1.5, 5);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
-
-// Lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambientLight);
-
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-dirLight.position.set(5, 10, 7);
-dirLight.castShadow = true;
-scene.add(dirLight);
-
-const rimLight = new THREE.DirectionalLight(0xff758c, 0.8);
-rimLight.position.set(-5, 5, -5);
-scene.add(rimLight);
-
-// --- PROCEDURAL GARMENT & MODEL BUILDER ---
-let currentGarmentGroup = new THREE.Group();
-scene.add(currentGarmentGroup);
-
-const fabricMaterial = new THREE.MeshStandardMaterial({ color: 0x1e1e24, roughness: 0.8, metalness: 0.1 });
-const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xdcbadc, roughness: 0.5 });
-
-function buildAvatarModel() {
-  const avatarGroup = new THREE.Group();
-  // Head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 32, 32), skinMaterial);
-  head.position.y = 1.7;
-  avatarGroup.add(head);
-  // Neck
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 16), skinMaterial);
-  neck.position.y = 1.45;
-  avatarGroup.add(neck);
-  return avatarGroup;
-}
-
-const baseAvatar = buildAvatarModel();
-scene.add(baseAvatar);
-
-function createHoodieMesh() {
-  const group = new THREE.Group();
-  // Torso / Body
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.45, 1.1, 32), fabricMaterial);
-  body.position.y = 0.85;
-  group.add(body);
-  // Hood
-  const hood = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.6), fabricMaterial);
-  hood.position.set(0, 1.4, -0.05);
-  hood.rotation.x = 0.2;
-  group.add(hood);
-  // Sleeves
-  const sleeveGeo = new THREE.CylinderGeometry(0.16, 0.13, 0.9, 16);
-  const leftSleeve = new THREE.Mesh(sleeveGeo, fabricMaterial);
-  leftSleeve.position.set(-0.55, 1.0, 0);
-  leftSleeve.rotation.z = 0.5;
-  group.add(leftSleeve);
-
-  const rightSleeve = new THREE.Mesh(sleeveGeo, fabricMaterial);
-  rightSleeve.position.set(0.55, 1.0, 0);
-  rightSleeve.rotation.z = -0.5;
-  group.add(rightSleeve);
-
-  return group;
-}
-
-function createTeeMesh() {
-  const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.46, 0.85, 32), fabricMaterial);
-  body.position.y = 0.95;
-  group.add(body);
-  return group;
-}
-
-function createPufferMesh() {
-  const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.52, 1.15, 32), fabricMaterial);
-  body.position.y = 0.85;
-  group.add(body);
-  return group;
-}
-
-function createJeansMesh() {
-  const group = new THREE.Group();
-  const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.38, 1.1, 32), fabricMaterial);
-  legs.position.y = 0.15;
-  group.add(legs);
-  return group;
-}
-
-// Initialize default garment
-let activeGarmentType = 'hoodie';
-function switchGarment(type, el) {
-  document.querySelectorAll('#panel-garments .asset-card').forEach(c => c.classList.remove('active'));
-  if(el) el.classList.add('active');
-  
-  scene.remove(currentGarmentGroup);
-  currentGarmentGroup = new THREE.Group();
-
-  if(type === 'hoodie') currentGarmentGroup.add(createHoodieMesh());
-  else if(type === 'tee') currentGarmentGroup.add(createTeeMesh());
-  else if(type === 'puffer') currentGarmentGroup.add(createPufferMesh());
-  else if(type === 'jeans') currentGarmentGroup.add(createJeansMesh());
-
-  scene.add(currentGarmentGroup);
-  activeGarmentType = type;
-}
-switchGarment('hoodie');
-
-// --- CUSTOMIZATION LOGIC ---
-function setGarmentColor(hex, el) {
-  document.querySelectorAll('#panel-fabric .color-swatch').forEach(s => s.classList.remove('selected'));
-  if(el) el.classList.add('selected');
-  fabricMaterial.color.setHex(hex);
-}
-
-function setLogo(text) {
-  // Dynamic Canvas Texture for Logos
-  const canvas = document.createElement('canvas');
-  canvas.width = 512; canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 54px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, 256, 128);
-
-  const texture = new THREE.CanvasTexture(canvas);
-  fabricMaterial.map = texture;
-  fabricMaterial.needsUpdate = true;
-}
-
-// --- TOUCH & ORBIT CONTROLS ---
-let isDragging = false;
-let previousTouchPosition = { x: 0, y: 0 };
-
-window.addEventListener('pointerdown', (e) => {
-  if(e.clientY > window.innerHeight - 170) return; // Ignore toolbar clicks
-  isDragging = true;
-  previousTouchPosition = { x: e.clientX, y: e.clientY };
+// === ONE AVATAR GROUP - FIXED ===
+let avatar=new THREE.Group(); scene.add(avatar);
+let skinMat=new THREE.MeshStandardMaterial({color:0xdcbadc,roughness:0.55});
+let topMat=new THREE.MeshStandardMaterial({color:0x1e1e24,roughness:0.85});
+let bottomMat=new THREE.MeshStandardMaterial({color:0x2b2b35,roughness:0.9});
+let head=new THREE.Mesh(new THREE.SphereGeometry(0.26,32,32), skinMat); head.position.y=2.25; head.scale.set(0.85,1.05,0.9); head.castShadow=true; avatar.add(head);
+let neck=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.11,0.22,16), skinMat); neck.position.y=1.95; avatar.add(neck);
+// Arms + legs are ALWAYS there, clothes go OVER them
+let arms=[], legs=[];
+[-1,1].forEach(s=>{
+  let arm=new THREE.Mesh(new THREE.CapsuleGeometry(0.08,0.6,6,12), skinMat); arm.position.set(s*0.48,1.3,0); arm.rotation.z=s*0.08; avatar.add(arm); arms.push(arm);
+  let leg=new THREE.Mesh(new THREE.CapsuleGeometry(0.11,0.65,6,12), skinMat); leg.position.set(s*0.16,0.35,0); avatar.add(leg); legs.push(leg);
+  let shoe=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.09,0.3), new THREE.MeshStandardMaterial({color:0xffffff})); shoe.position.set(s*0.16,-0.02,0.05); avatar.add(shoe);
 });
+// TOP + BOTTOM groups - separate so jeans doesn't delete hoodie
+let topGroup=new THREE.Group(), bottomGroup=new THREE.Group(), logoGroup=new THREE.Group();
+avatar.add(topGroup); avatar.add(bottomGroup); avatar.add(logoGroup);
 
-window.addEventListener('pointermove', (e) => {
-  if (!isDragging) return;
-  const deltaX = e.clientX - previousTouchPosition.x;
-  const deltaY = e.clientY - previousTouchPosition.y;
-
-  currentGarmentGroup.rotation.y += deltaX * 0.01;
-  baseAvatar.rotation.y += deltaX * 0.01;
-
-  previousTouchPosition = { x: e.clientX, y: e.clientY };
-});
-
-window.addEventListener('pointerup', () => { isDragging = false; });
-
-// UI Tabs switching
-function switchTab(tabId, btn) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`panel-${tabId}`).classList.add('active');
+function clearGroup(g){ while(g.children.length) g.remove(g.children[0]); }
+function makeHoodie(){
+  let g=new THREE.Group();
+  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.46,0.40,0.95,32), topMat); body.position.y=1.35; body.castShadow=true; g.add(body);
+  let hood=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,16,0,Math.PI*2,0,Math.PI*0.6), topMat); hood.position.set(0,1.88,-0.02); hood.rotation.x=0.25; g.add(hood);
+  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.12,0.75,16), topMat); sl.position.set(s*0.52,1.35,0); sl.rotation.z=s*0.25; g.add(sl); });
+  let pocket=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.28,0.06), topMat); pocket.position.set(0,1.05,0.4); g.add(pocket);
+  return g;
 }
-
-// Modal Handling
-function openPublishModal() { document.getElementById('modal').style.display = 'flex'; }
-function closePublishModal() { document.getElementById('modal').style.display = 'none'; }
-
-async function publishDesign() {
-  const title = document.getElementById('designName').value || 'Untitled Collection';
-  const creator = document.getElementById('designerName').value || 'Anonymous Creator';
-  
-  const designPayload = {
-    title: title,
-    creator: creator,
-    garment: activeGarmentType,
-    color: fabricMaterial.color.getHexString(),
-    created_at: new Date()
-  };
-
-  if(supabaseClient) {
-    const { error } = await supabaseClient.from('community_designs').insert([designPayload]);
-    if(error) alert('Error saving to Supabase: ' + error.message);
-    else alert('Design successfully published to Supabase community feed! 🚀');
-  } else {
-    alert('Design saved locally! (Connect Supabase keys to sync online).');
-  }
-  closePublishModal();
+function makeTee(){
+  let g=new THREE.Group();
+  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.42,0.75,32), topMat); body.position.y=1.4; body.castShadow=true; g.add(body);
+  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,0.3,16), topMat); sl.position.set(s*0.5,1.6,0); sl.rotation.z=s*0.3; g.add(sl); });
+  return g;
 }
-
-// Animation Loop
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
+function makePuffer(){
+  let g=new THREE.Group();
+  // Puffy segments - looks like puffer, not flat cylinder
+  for(let i=0;i<4;i++){ let seg=new THREE.Mesh(new THREE.TorusGeometry(0.42,0.11,12,32), topMat); seg.rotation.x=Math.PI/2; seg.position.y=1.05+i*0.22; seg.scale.set(1,1,1); g.add(seg); }
+  let body=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.42,0.95,32), topMat); body.position.y=1.4; g.add(body);
+  [-1,1].forEach(s=>{ let sl=new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.14,0.7,16), topMat); sl.position.set(s*0.52,1.35,0); sl.rotation.z=s*0.2; g.add(sl); });
+  let collar=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.26,0.18,20), topMat); collar.position.y=1.88; g.add(collar);
+  return g;
 }
-animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+function makeJeans(){
+  let g=new THREE.Group();
+  [-1,1].forEach(s=>{ let leg=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.13,0.75,16), bottomMat); leg.position.set(s*0.16,0.45,0); g.add(leg); let pocket=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.16,0.03), bottomMat); pocket.position.set(s*0.16,0.72,0.16); g.add(pocket); });
+  return g;
+}
+let activeTop='hoodie', activeBottom='none';
+function setTop(type,el){ document.querySelectorAll('#panel-garments .asset-card').forEach(c=>{ if(c.textContent.includes('Hoodie')||c.textContent.includes('T-Shirt')||c.textContent.includes('Puffer')) c.classList.remove('active'); }); if(el) el.classList.add('active'); clearGroup(topGroup); if(type==='hoodie') topGroup.add(makeHoodie()); if(type==='tee') topGroup.add(makeTee()); if(type==='puffer') topGroup.add(makePuffer()); activeTop=type; updateLogoPos(); }
+function setBottom(type,el){ clearGroup(bottomGroup); if(type==='jeans') bottomGroup.add(makeJeans()); activeBottom=type; }
+setTop('hoodie'); setBottom('jeans');
+function setGarmentColor(hex,el){ document.querySelectorAll('#panel-fabric .color-swatch').forEach(s=>s.classList.remove('selected')); if(el) el.classList.add('selected'); topMat.color.setHex(hex); }
+function setSkin(hex,el){ skinMat.color.setHex(hex); }
+// LOGO - FIXED: small plane on chest, not whole texture
+let logoMesh=null;
+function setLogo(text){ clearGroup(logoGroup); if(!text) return; let c=document.createElement('canvas'); c.width=512; c.height=256; let ctx=c.getContext('2d'); ctx.clearRect(0,0,512,256); ctx.fillStyle='#fff'; ctx.font='900 72px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,256,128); let tex=new THREE.CanvasTexture(c); let mat=new THREE.MeshBasicMaterial({map:tex,transparent:true}); logoMesh=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.27), mat); logoMesh.position.set(0,1.55,0.46); logoGroup.add(logoMesh); }
+function updateLogoPos(){ if(logoMesh) logoMesh.position.z = activeTop==='puffer'?0.52:0.46; }
+function setSkinBtn(){}
+function setSkin(hex,el){ document.querySelectorAll('#panel-model .asset-card').forEach(b=>b.classList.remove('active')); if(el) el.classList.add('active'); skinMat.color.setHex(hex); }
+// Orbit - rotate whole avatar, not garment vs head separately
+let dragging=false, px=0, py=0;
+addEventListener('pointerdown',e=>{ if(e.clientY>innerHeight-180) return; dragging=true; px=e.clientX; py=e.clientY; });
+addEventListener('pointermove',e=>{ if(!dragging) return; avatar.rotation.y+=(e.clientX-px)*0.01; px=e.clientX; py=e.clientY; });
+addEventListener('pointerup',()=>dragging=false);
+function switchTab(id,btn){ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.querySelectorAll('.tool-panel').forEach(p=>p.classList.remove('active')); document.getElementById('panel-'+id).classList.add('active'); }
+function openPublishModal(){ document.getElementById('modal').style.display='flex'; }
+function closePublishModal(){ document.getElementById('modal').style.display='none'; }
+async function publishDesign(){ let title=document.getElementById('designName').value||'Untitled'; let creator=document.getElementById('designerName').value||'Anonymous'; let payload={title,creator,garment:activeTop, bottom:activeBottom, color:topMat.color.getHexString(), created_at:new Date()}; if(supabaseClient){ let {error}=await supabaseClient.from('community_designs').insert([payload]); alert(error?'Error: '+error.message:'Published! 🚀'); } else alert('Saved locally! Connect Supabase keys to sync.'); closePublishModal(); }
+function animate(){ requestAnimationFrame(animate); avatar.rotation.y+=0.0015; renderer.render(scene,camera); } animate();
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 </script>
 </body>
 </html>
