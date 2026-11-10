@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#100d1c">
+<meta name="theme-color" content="#100d1c">\n<link rel="manifest" href="./manifest.json">\n<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>BOUNCY CHAT — Talk without limits</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -85,5 +85,5 @@ $('signOut').onclick=async()=>{if(messageChannel)sb.removeChannel(messageChannel
 sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.user&&!user)boot(session.user);if(event==='SIGNED_OUT'){user=null;showAuth()}});
 (async()=>{const {data}=await sb.auth.getSession();if(data.session)await boot(data.session.user);else showAuth()})();
 </script>
-</body>
+<script>if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>\n</body>
 </html>
