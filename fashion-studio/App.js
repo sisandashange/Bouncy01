@@ -324,7 +324,7 @@ export default function App() {
           <Text style={styles.eyebrow}>THE 3D DESIGN WORKSPACE</Text>
           <Text style={styles.heading}>Make your own{"\n"}fashion statement.</Text>
           <View style={styles.previewCard}>
-            <View style={styles.previewTop}><Text style={styles.previewLabel}>LIVE 3D GARMENT VIEW</Text><Text style={styles.previewHint}>360° ROTATION</Text></View>
+            <View style={styles.previewTop}><Text style={styles.previewLabel}>LIVE 3D GARMENT VIEW</Text><Text style={styles.previewHint}>DRAG TO ROTATE</Text></View>
             <Garment3D category={category} color={color} material={material} />
             <View style={styles.previewBottom}><Text style={styles.previewLabel}>{category.toUpperCase()} / DIGITAL BLOCKOUT</Text><Text style={styles.previewHint}>3D MODEL</Text></View>
           </View>
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   previewBottom: { paddingHorizontal: 14, paddingBottom: 13, flexDirection: 'row', justifyContent: 'space-between' },
   previewLabel: { color: '#625e57', fontSize: 8, fontWeight: '900', letterSpacing: 1.2 },
   previewHint: { color: '#89847a', fontSize: 8, fontWeight: '800', letterSpacing: 1 },
-  glTouchSurface: { height: 270, width: '100%', touchAction: 'none' },
+  glTouchSurface: { height: 270, width: '100%' },
   glView: { height: 270, width: '100%' },
   sectionTitle: { color: '#22211f', fontSize: 13, fontWeight: '900', marginBottom: 10, marginTop: 8 },
   textInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e8e4dc', borderRadius: 11, paddingHorizontal: 13, paddingVertical: 12, color: '#222', fontSize: 12, marginBottom: 16 },
