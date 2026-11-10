@@ -146,7 +146,7 @@ function imageFrom(src,cross=true){return new Promise((resolve,reject)=>{const i
 function loadBackground(src,user=false){bgUrl=src;bgIsUser=user;if(viewData&&viewData[currentView]){viewData[currentView].bgUrl=src;viewData[currentView].bgIsUser=user}setStatus('Loading garment…');const im=new Image();if(!user)im.crossOrigin='anonymous';im.onload=()=>{bg=im;setStatus(user?'Your garment photo':'Mockup ready');draw()};im.onerror=()=>{bg=null;setStatus('Photo unavailable · using canvas');draw();toast('Could not load that garment photo. Try uploading one.')};im.src=src}
 function snapshot(){return JSON.stringify({currentView,viewData:Object.fromEntries(Object.entries(viewData).map(([k,v])=>[k,{bgUrl:v.bgUrl,bgIsUser:v.bgIsUser,layers:v.layers.map(l=>({...l,img:undefined}))}]))})}
 function restore(s){const data=JSON.parse(s);if(data.viewData){Object.keys(viewData).forEach(k=>{const v=data.viewData[k];if(v)viewData[k]={...v,layers:v.layers||[]}});currentView=data.currentView||'front';const active=viewData[currentView];layers=active.layers;bgUrl=active.bgUrl;bgIsUser=active.bgIsUser}else{layers=data.layers||[];bgUrl=data.bgUrl;bgIsUser=data.bgIsUser;viewData.front={bgUrl,bgIsUser,layers}};layers.forEach(l=>{if(l.type==='image'&&l.src){const im=new Image();im.onload=draw;im.src=l.src;l.img=im}});selected=Math.min(selected,layers.length-1);if(bgUrl)loadBackground(bgUrl,bgIsUser);draw();renderLayers();syncEditor()}
-function checkpoint(){undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[];updateHistoryButtons()}
+function checkpoint(){storeCurrentView();undoStack.push(snapshot());if(undoStack.length>40)undoStack.shift();redoStack=[];updateHistoryButtons()}
 function undo(){if(!undoStack.length)return;redoStack.push(snapshot());restore(undoStack.pop());updateHistoryButtons()}
 function redo(){if(!redoStack.length)return;undoStack.push(snapshot());restore(redoStack.pop());updateHistoryButtons()}
 function updateHistoryButtons(){$('undoBtn').disabled=!undoStack.length;$('redoBtn').disabled=!redoStack.length}
@@ -194,7 +194,9 @@ $('undoBtn').onclick=undo;$('redoBtn').onclick=redo;
 document.querySelectorAll('[data-preset]').forEach(b=>b.onclick=()=>{const p=b.dataset.preset;if(p==='brand')addText('NO LIMITS');if(p==='minimal')addText('STUDIO');if(p==='back'){addText('BUILT DIFFERENT');if(selected>=0){layers[selected].size=90;layers[selected].y=H*.65;draw();syncEditor()}}});
 document.querySelectorAll('[data-placement]').forEach(b=>b.onclick=()=>{
  if(selected<0){toast('Select a text or logo layer first');return}
- const p=b.dataset.placement,l=layers[selected];checkpoint();
+ const p=b.dataset.placement,source=layers[selected];
+ const target=p==='back'?'back':p==='leftSleeve'?'leftSleeve':p==='rightSleeve'?'rightSleeve':currentView;
+ checkpoint();
  const spots={
   chest:{x:W*.40,y:H*.39,scale:.72},
   front:{x:W*.50,y:H*.52,scale:1},
@@ -202,13 +204,17 @@ document.querySelectorAll('[data-placement]').forEach(b=>b.onclick=()=>{
   leftSleeve:{x:W*.50,y:H*.50,scale:.58},
   rightSleeve:{x:W*.50,y:H*.50,scale:.58}
  };
- if(p==='back')switchView('back');
- if(p==='leftSleeve')switchView('leftSleeve');
- if(p==='rightSleeve')switchView('rightSleeve');
- const s=spots[p];l.x=s.x;l.y=s.y;
+ if(target!==currentView){
+  const copy={...source,id:String(Date.now()),x:W/2,y:H/2};
+  if(source.type==='image')copy.img=source.img;
+  viewData[target].layers.push(copy);
+  switchView(target);
+  selected=layers.length-1;
+ }else selected=selected;
+ const l=layers[selected],s=spots[p];l.x=s.x;l.y=s.y;
  if(l.type==='text')l.size=Math.max(12,Math.round((l.size||62)*s.scale));
  else{l.w=Math.max(30,l.w*s.scale);l.h=Math.max(30,l.h*s.scale)}
- draw();renderLayers();syncEditor();toast('Placed on '+b.textContent.trim().replace(/\\s+/g,' '));
+ draw();renderLayers();syncEditor();toast('Artwork placed in '+target+' view');
 });
 $('saveBtn').onclick=saveDesign;
 function saveDesign(){try{storeCurrentView();const data={version:2,currentView,viewData:Object.fromEntries(Object.entries(viewData).map(([k,v])=>[k,{bgUrl:v.bgUrl,bgIsUser:v.bgIsUser,layers:v.layers.map(l=>({...l,img:undefined}))}]))};localStorage.setItem('myBrandStudioDesign',JSON.stringify(data));toast('All garment views saved on this device')}catch(e){toast('Could not save. Try using a smaller logo image.')}}
