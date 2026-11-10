@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text,
-  TextInput, TouchableOpacity, View, ActivityIndicator
+  TextInput, TouchableOpacity, View, ActivityIndicator, PanResponder
 } from 'react-native';
 import { GLView } from 'expo-gl';
 import { Renderer, THREE } from 'expo-three';
@@ -82,8 +82,49 @@ function makeGarment(category, color, materialName = 'Cotton fleece') {
 function Garment3D({ category, color, material }) {
   const groupRef = useRef(null);
   const garmentRef = useRef(null);
+  const cleanupRef = useRef(null);
+  const gestureRef = useRef({ dx: 0, dy: 0, dragging: false });
   const latest = useRef({ category, color, material });
   latest.current = { category, color, material };
+
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onStartShouldSetPanResponderCapture: () => true,
+    onMoveShouldSetPanResponder: (_event, gesture) =>
+      Math.abs(gesture.dx) + Math.abs(gesture.dy) > 2,
+    onMoveShouldSetPanResponderCapture: (_event, gesture) =>
+      Math.abs(gesture.dx) + Math.abs(gesture.dy) > 2,
+    onPanResponderGrant: () => {
+      gestureRef.current = { dx: 0, dy: 0, dragging: true };
+    },
+    onPanResponderMove: (_event, gesture) => {
+      const deltaX = gesture.dx - gestureRef.current.dx;
+      const deltaY = gesture.dy - gestureRef.current.dy;
+      if (groupRef.current) {
+        groupRef.current.rotation.y += deltaX * 0.012;
+        groupRef.current.rotation.x = Math.max(
+          -0.62,
+          Math.min(0.62, groupRef.current.rotation.x + deltaY * 0.008)
+        );
+      }
+      gestureRef.current.dx = gesture.dx;
+      gestureRef.current.dy = gesture.dy;
+    },
+    onPanResponderRelease: () => {
+      gestureRef.current.dragging = false;
+      gestureRef.current.dx = 0;
+      gestureRef.current.dy = 0;
+    },
+    onPanResponderTerminate: () => {
+      gestureRef.current.dragging = false;
+      gestureRef.current.dx = 0;
+      gestureRef.current.dy = 0;
+    }
+  }), []);
+
+  useEffect(() => () => {
+    if (cleanupRef.current) cleanupRef.current();
+  }, []);
 
   useEffect(() => {
     if (!groupRef.current) return;
@@ -118,15 +159,19 @@ function Garment3D({ category, color, material }) {
     let frame;
     const animate = () => {
       frame = requestAnimationFrame(animate);
-      group.rotation.y += 0.006;
+      if (!gestureRef.current.dragging) group.rotation.y += 0.0025;
       renderer.render(scene, camera);
       gl.endFrameEXP();
     };
     animate();
-    gl.__fashionCleanup = () => { cancelAnimationFrame(frame); renderer.dispose(); };
+    cleanupRef.current = () => { cancelAnimationFrame(frame); renderer.dispose(); };
   };
 
-  return <GLView style={styles.glView} onContextCreate={onContextCreate} />;
+  return (
+    <View style={styles.glTouchSurface} {...panResponder.panHandlers}>
+      <GLView style={styles.glView} onContextCreate={onContextCreate} />
+    </View>
+  );
 }
 
 function Button({ title, onPress, light = false, disabled = false }) {
@@ -177,7 +222,7 @@ export default function App() {
 
   async function loadMyDesigns() {
     const { data, error } = await supabase.from('fashion_designs')
-      .select('id,title,description,category,color,material,status,updated_at')
+      .select('id,user_id,title,description,category,color,material,status,updated_at')
       .eq('user_id', user.id).order('updated_at', { ascending: false }).limit(50);
     if (error) Alert.alert('Could not load your designs', error.message);
     else setMyDesigns(data || []);
@@ -381,6 +426,7 @@ const styles = StyleSheet.create({
   previewBottom: { paddingHorizontal: 14, paddingBottom: 13, flexDirection: 'row', justifyContent: 'space-between' },
   previewLabel: { color: '#625e57', fontSize: 8, fontWeight: '900', letterSpacing: 1.2 },
   previewHint: { color: '#89847a', fontSize: 8, fontWeight: '800', letterSpacing: 1 },
+  glTouchSurface: { height: 270, width: '100%', touchAction: 'none' },
   glView: { height: 270, width: '100%' },
   sectionTitle: { color: '#22211f', fontSize: 13, fontWeight: '900', marginBottom: 10, marginTop: 8 },
   textInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#e8e4dc', borderRadius: 11, paddingHorizontal: 13, paddingVertical: 12, color: '#222', fontSize: 12, marginBottom: 16 },
