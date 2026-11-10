@@ -68,6 +68,9 @@ create index if not exists fashion_designs_feed_idx on public.fashion_designs (s
 create index if not exists fashion_designs_owner_idx on public.fashion_designs (user_id, updated_at desc);
 create index if not exists fashion_comments_design_idx on public.fashion_design_comments (design_id, created_at desc);
 create index if not exists fashion_follows_following_idx on public.fashion_designer_follows (following_id);
+create index if not exists fashion_designs_garment_idx on public.fashion_designs (garment_id);
+create index if not exists fashion_likes_design_idx on public.fashion_design_likes (design_id);
+create index if not exists fashion_comments_user_idx on public.fashion_design_comments (user_id);
 
 alter table public.fashion_profiles enable row level security;
 alter table public.fashion_garments enable row level security;
