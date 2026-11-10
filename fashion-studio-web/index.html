@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101114"><title>Fashion Studio — BOUNCY</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--line:#2a2d35;--muted:#a3a6b0;--white:#f7f7f8;--red:#ff4058}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--white);font:15px Inter,system-ui,Arial,sans-serif}
+header{height:64px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:#101114ed;z-index:5}
+.brand{font-weight:900;letter-spacing:.12em}.brand span{color:var(--red)}.tag{font-size:11px;color:var(--muted);letter-spacing:.12em}
+main{max-width:1180px;margin:auto;padding:20px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.8fr);gap:18px}
+.preview,.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.preview-top{padding:16px 18px;display:flex;align-items:center;justify-content:space-between}.eyebrow{font-size:11px;letter-spacing:.15em;color:var(--muted);font-weight:700}
+#stage{height:min(62vh,570px);min-height:350px;background:radial-gradient(ellipse at 50% 42%,#30333c 0,#1c1e25 48%,#14161a 100%);touch-action:none;position:relative}
+#stage canvas{display:block;width:100%;height:100%}.hint{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#aeb1bc;font-size:12px;pointer-events:none}
+.preview-foot{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.panel{padding:18px}.panel h2{font-size:20px;margin:0 0 5px}.sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+label{display:block;font-size:12px;color:#c5c7ce;font-weight:700;margin:17px 0 9px;letter-spacing:.04em}
+.choices{display:flex;gap:8px;flex-wrap:wrap}.choice,button{border:1px solid var(--line);background:#22252c;color:var(--white);padding:10px 12px;border-radius:11px;font-weight:650;cursor:pointer}
+.choice.active{border-color:var(--red);background:#42232b}.swatch{width:34px;height:34px;padding:0;border-radius:50%;border:2px solid #555}.swatch.active{outline:2px solid var(--red);outline-offset:3px}
+input[type=color]{width:42px;height:36px;border:0;background:transparent;padding:0}
+select{width:100%;background:#22252c;color:white;border:1px solid var(--line);padding:12px;border-radius:10px}
+.primary{background:var(--red);border-color:var(--red);color:white}.wide{width:100%;margin-top:18px;padding:14px}.muted{color:var(--muted)}.note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:12px}
+.saved{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}.saved-item{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+button:active{transform:scale(.98)}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:12px;gap:12px}#stage{height:48vh;min-height:300px}.panel{padding:16px}header{height:58px}}
+</style>
+</head>
+<body>
+<header><div><div class="brand">FASHION<span>.</span>STUDIO</div><div class="tag">DESIGN YOUR NEXT LOOK</div></div><div class="tag">3D PREVIEW</div></header>
+<main>
+<section class="preview">
+ <div class="preview-top"><div><div class="eyebrow">LIVE GARMENT PREVIEW</div><strong id="previewName">Classic T-shirt</strong></div><div class="eyebrow">360° VIEW</div></div>
+ <div id="stage"><div class="hint">Drag to rotate · Pinch or scroll to zoom</div></div>
+ <div class="preview-foot"><button id="reset">Reset view</button><button id="spin" class="choice active">Auto rotate: ON</button><span class="muted" style="align-self:center;font-size:12px">Prototype preview</span></div>
+</section>
+<aside class="panel">
+ <div class="eyebrow">YOUR WORKSPACE</div><h2>Design Studio</h2><p class="sub">Choose a garment, colour and finish. Your preview updates instantly.</p>
+ <label>GARMENT TYPE</label><div class="choices" id="types">
+  <button class="choice active" data-type="T-shirt">T-shirt</button><button class="choice" data-type="Hoodie">Hoodie</button><button class="choice" data-type="Jacket">Jacket</button><button class="choice" data-type="Dress">Dress</button><button class="choice" data-type="Pants">Pants</button>
+ </div>
+ <label>FABRIC COLOUR</label><div class="choices" id="colors">
+  <button class="swatch active" data-color="#e8e8e5" style="background:#e8e8e5" aria-label="Ivory"></button><button class="swatch" data-color="#17191e" style="background:#17191e" aria-label="Black"></button><button class="swatch" data-color="#b52f43" style="background:#b52f43" aria-label="Red"></button><button class="swatch" data-color="#315b9b" style="background:#315b9b" aria-label="Blue"></button><button class="swatch" data-color="#78856c" style="background:#78856c" aria-label="Olive"></button><button class="swatch" data-color="#d0a16f" style="background:#d0a16f" aria-label="Sand"></button><input id="customColor" type="color" value="#e8e8e5" aria-label="Custom colour">
+ </div>
+ <label>FABRIC FINISH</label><select id="finish"><option value="cotton">Cotton / matte</option><option value="satin">Satin / smooth</option><option value="denim">Denim</option><option value="leather">Leather</option></select>
+ <label>DESIGN NAME</label><input id="designName" value="My first design" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#22252c;color:white">
+ <button class="primary wide" id="save">Save design on this device</button>
+ <div class="note">This browser preview saves designs in this browser only. Online accounts, cloud publishing and the full mobile app are not connected to this preview yet.</div>
+ <div class="saved"><div class="eyebrow">SAVED DESIGNS</div><div id="savedList" class="muted" style="font-size:13px;margin-top:8px">No saved designs yet.</div></div>
+</aside>
+</main>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js';
+const stage=document.querySelector('#stage'),scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(35,1,.1,100);
+camera.position.set(0,1.25,6.2);
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;stage.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x45404b,2));
+const key=new THREE.DirectionalLight(0xffffff,3);key.position.set(-3,5,5);scene.add(key);
+const rim=new THREE.DirectionalLight(0x9cbcff,2);rim.position.set(3,2,-4);scene.add(rim);
+const group=new THREE.Group();scene.add(group);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(1.5,64),new THREE.MeshBasicMaterial({color:0x343741,transparent:true,opacity:.48}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.15;floor.scale.set(1.25,1,1);scene.add(floor);
+let garment='T-shirt',color='#e8e8e5',finish='cotton',auto=true,drag=false,lastX=0,lastY=0;
+const mats=()=>new THREE.MeshStandardMaterial({color,roughness:finish==='satin'?.22:finish==='leather'?.34:finish==='denim'?.82:.9,metalness:finish==='satin'?.12:finish==='leather'?.05:0});
+function mesh(geo,mat,x=0,y=0,z=0){const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);group.add(m);return m}
+function build(){
+ while(group.children.length){const o=group.children.pop();o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose()}
+ const m=mats(),seam=new THREE.MeshStandardMaterial({color:new THREE.Color(color).multiplyScalar(.72),roughness:.8});
+ if(garment==='Pants'){
+  for(const x of [-.34,.34]){mesh(new THREE.CylinderGeometry(.22,.17,1.65,24),m,x,-.12,0);mesh(new THREE.SphereGeometry(.22,24,12),m,x,-.91,0).scale.set(1,.6,1)}
+  mesh(new THREE.BoxGeometry(.82,.42,.35),m,0,.86,0);mesh(new THREE.BoxGeometry(.84,.08,.37),seam,0,.64,0);
+ }else if(garment==='Dress'){
+  mesh(new THREE.CylinderGeometry(.22,.7,1.55,40,1,false),m,0,-.18,0);
+  mesh(new THREE.CylinderGeometry(.22,.24,.42,32),m,0,.82,0);
+  mesh(new THREE.CylinderGeometry(.18,.18,.12,32),m,0,1.08,0);
+ }else{
+  const width=garment==='Hoodie'?.72:.66, height=garment==='Jacket'?1.18:1.25;
+  mesh(new THREE.BoxGeometry(width,height,.34),m,0,.18,0);
+  const sleeveGeo=new THREE.CylinderGeometry(.13,.17,.82,24);
+  for(const s of [-1,1]){const arm=mesh(sleeveGeo,m,s*.49,.25,0);arm.rotation.z=s*-.23}
+  mesh(new THREE.CylinderGeometry(.14,.14,.14,24),m,0,.86,0);
+  if(garment==='Hoodie'){const hood=mesh(new THREE.SphereGeometry(.27,28,18,0,Math.PI*2,0,Math.PI*.72),m,0,.88,-.12);hood.scale.set(1,1,.75)}
+  if(garment==='Jacket'){mesh(new THREE.BoxGeometry(.035,1.08,.02),seam,0,.18,.18);for(let y of [.55,.25,-.05,-.35])mesh(new THREE.SphereGeometry(.025,12,8),seam,.06,y,.205)}
+ }
+ group.rotation.set(0,0,0);
+}
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(stage);resize();build();
+function animate(){requestAnimationFrame(animate);if(auto&&!drag)group.rotation.y+=.003;renderer.render(scene,camera)}animate();
+stage.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;stage.setPointerCapture(e.pointerId)});
+stage.addEventListener('pointermove',e=>{if(!drag)return;group.rotation.y+=(e.clientX-lastX)*.012;group.rotation.x=Math.max(-.55,Math.min(.55,group.rotation.x+(e.clientY-lastY)*.008));lastX=e.clientX;lastY=e.clientY});
+stage.addEventListener('pointerup',()=>drag=false);stage.addEventListener('pointercancel',()=>drag=false);
+stage.addEventListener('wheel',e=>{camera.position.z=Math.max(4,Math.min(9,camera.position.z+e.deltaY*.004))},{passive:true});
+document.querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{garment=b.dataset.type;document.querySelectorAll('[data-type]').forEach(x=>x.classList.toggle('active',x===b));document.querySelector('#previewName').textContent=garment;build()});
+function setColor(c){color=c;document.querySelectorAll('[data-color]').forEach(b=>b.classList.toggle('active',b.dataset.color===c));document.querySelector('#customColor').value=c;build()}
+document.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>setColor(b.dataset.color));document.querySelector('#customColor').oninput=e=>setColor(e.target.value);
+document.querySelector('#finish').onchange=e=>{finish=e.target.value;build()};
+document.querySelector('#spin').onclick=e=>{auto=!auto;e.currentTarget.textContent='Auto rotate: '+(auto?'ON':'OFF');e.currentTarget.classList.toggle('active',auto)};
+document.querySelector('#reset').onclick=()=>{group.rotation.set(0,0,0);camera.position.set(0,1.25,6.2)};
+function renderSaved(){const arr=JSON.parse(localStorage.getItem('fashionStudioDrafts')||'[]'),box=document.querySelector('#savedList');box.innerHTML='';if(!arr.length){box.textContent='No saved designs yet.';return}arr.slice().reverse().forEach((d,i)=>{const row=document.createElement('div');row.className='saved-item';const name=document.createElement('span');name.textContent=d.name+' · '+d.garment;const load=document.createElement('button');load.textContent='Load';load.onclick=()=>{garment=d.garment;color=d.color;finish=d.finish;document.querySelector('#previewName').textContent=garment;document.querySelector('#designName').value=d.name;document.querySelector('#finish').value=finish;document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===garment));setColor(color)};row.append(name,load);box.append(row)})}
+document.querySelector('#save').onclick=()=>{const arr=JSON.parse(localStorage.getItem('fashionStudioDrafts')||'[]');arr.push({name:document.querySelector('#designName').value||'Untitled',garment,color,finish,createdAt:new Date().toISOString()});localStorage.setItem('fashionStudioDrafts',JSON.stringify(arr));renderSaved()};renderSaved();
+</script>
+</body></html>
