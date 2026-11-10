@@ -16,7 +16,7 @@ const PALETTE = [
 ];
 const GARMENTS = ['T-shirt', 'Hoodie', 'Jacket', 'Dress', 'Pants'];
 
-function makeGarment(category, color) {
+function makeGarment(category, color, materialName = 'Cotton fleece') {
   const shape = new THREE.Shape();
   if (category === 'Dress') {
     shape.moveTo(-0.25, 0.88); shape.lineTo(-0.68, 0.62);
@@ -46,9 +46,13 @@ function makeGarment(category, color) {
   });
   geometry.center();
   const group = new THREE.Group();
+  const roughness = {
+    'Cotton fleece': 0.94, Denim: 0.82, Leather: 0.48,
+    Silk: 0.24, Linen: 0.96, Jersey: 0.86
+  }[materialName] ?? 0.88;
   const cloth = new THREE.Mesh(
     geometry,
-    new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0.01 })
+    new THREE.MeshStandardMaterial({ color, roughness, metalness: materialName === 'Leather' ? 0.035 : 0.01 })
   );
   cloth.castShadow = true;
   group.add(cloth);
@@ -75,18 +79,18 @@ function makeGarment(category, color) {
   return group;
 }
 
-function Garment3D({ category, color }) {
+function Garment3D({ category, color, material }) {
   const groupRef = useRef(null);
   const garmentRef = useRef(null);
-  const latest = useRef({ category, color });
-  latest.current = { category, color };
+  const latest = useRef({ category, color, material });
+  latest.current = { category, color, material };
 
   useEffect(() => {
     if (!groupRef.current) return;
     groupRef.current.clear();
-    garmentRef.current = makeGarment(category, color);
+    garmentRef.current = makeGarment(category, color, material);
     groupRef.current.add(garmentRef.current);
-  }, [category, color]);
+  }, [category, color, material]);
 
   const onContextCreate = (gl) => {
     const scene = new THREE.Scene();
@@ -109,7 +113,7 @@ function Garment3D({ category, color }) {
     floor.rotation.x = -Math.PI / 2; floor.position.y = -1.04; scene.add(floor);
     const group = new THREE.Group();
     groupRef.current = group;
-    garmentRef.current = makeGarment(latest.current.category, latest.current.color);
+    garmentRef.current = makeGarment(latest.current.category, latest.current.color, latest.current.material);
     group.add(garmentRef.current); scene.add(group);
     let frame;
     const animate = () => {
@@ -237,7 +241,9 @@ export default function App() {
   }
 
   async function openDesign(item) {
-    setDesignId(item.id); setTitle(item.title); setDescription(item.description || '');
+    const isMine = !!user && user.id === item.user_id;
+    setDesignId(isMine ? item.id : null);
+    setTitle(isMine ? item.title : 'Inspired by ' + item.title); setDescription(item.description || '');
     setCategory(item.category); setColor(item.color || '#171717');
     setMaterial(item.material || 'Cotton fleece'); setTab('Studio');
   }
@@ -274,7 +280,7 @@ export default function App() {
           <Text style={styles.heading}>Make your own{"\n"}fashion statement.</Text>
           <View style={styles.previewCard}>
             <View style={styles.previewTop}><Text style={styles.previewLabel}>LIVE 3D GARMENT VIEW</Text><Text style={styles.previewHint}>360° ROTATION</Text></View>
-            <Garment3D category={category} color={color} />
+            <Garment3D category={category} color={color} material={material} />
             <View style={styles.previewBottom}><Text style={styles.previewLabel}>{category.toUpperCase()} / DIGITAL BLOCKOUT</Text><Text style={styles.previewHint}>3D MODEL</Text></View>
           </View>
           <Text style={styles.sectionTitle}>01 / Name your design</Text>
