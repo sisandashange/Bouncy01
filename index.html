@@ -186,7 +186,7 @@ const $=id=>document.getElementById(id);
 let user=null,profile=null,activeConversation=null,activePeer=null,conversations=[],messageChannel=null,mode='signin',searchTimer=null,typingTimer=null,peerTyping=false,peerOnline=false;
 let activeMessageRows=[],messageSearchMatches=[],messageSearchIndex=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(msg){window.toast=toast;const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}window.toast=toast;
 function initials(name){return (name||'B').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
 function timeLabel(date){return new Date(date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
 function showAuth(){ $('auth').classList.remove('hidden');$('app').classList.add('hidden');}
@@ -248,11 +248,11 @@ sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.use
 <script>
 (function(){
  const $=id=>document.getElementById(id);
- const open=()=>{if(!window.profile||!window.user)return;$('profileName').value=window.profile.display_name||'';$('profileDisplay').textContent=window.profile.display_name||window.profile.username;$('profileUsername').textContent='@'+window.profile.username;$('profileAvatar').textContent=(window.profile.display_name||window.profile.username||'B').split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileEmail').textContent=window.user.email||'Phone account';$('profileModal').classList.remove('hidden')};
+ const open=()=>{if(!window.profile||!window.user)return;$('profileName').value=window.profile.display_name||'';$('profileDisplay').textContent=window.profile.display_name||window.profile.username;$('profileUsername').textContent='@'+window.profile.username;$('profileAvatar').textContent=(window.profile.display_name||window.profile.username||'B').split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileEmail').textContent=window.user.email||'Phone account';$('profileModal').classList.remove('hidden')};
  const close=()=> $('profileModal').classList.add('hidden');
  $('openProfile').addEventListener('click',open);$('closeProfile').addEventListener('click',close);$('cancelProfile').addEventListener('click',close);
  $('profileModal').addEventListener('click',e=>{if(e.target===$('profileModal'))close()});
- $('saveProfile').addEventListener('click',async()=>{const name=$('profileName').value.trim();if(!name){$('profileName').focus();return}const btn=$('saveProfile');btn.disabled=true;try{const {error}=await window.sb.from('profiles').update({display_name:name}).eq('id',window.user.id);if(error)throw error;window.profile.display_name=name;$('myName').textContent=name;$('myAvatar').textContent=name.split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileDisplay').textContent=name;$('profileAvatar').textContent=$('myAvatar').textContent;close();window.toast('Profile updated')}catch(e){window.toast(e.message||'Could not update profile')}finally{btn.disabled=false}});
+ $('saveProfile').addEventListener('click',async()=>{const name=$('profileName').value.trim();if(!name){$('profileName').focus();return}const btn=$('saveProfile');btn.disabled=true;try{const {error}=await window.sb.from('profiles').update({display_name:name}).eq('id',window.user.id);if(error)throw error;window.profile.display_name=name;$('myName').textContent=name;$('myAvatar').textContent=name.split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileDisplay').textContent=name;$('profileAvatar').textContent=$('myAvatar').textContent;close();window.toast('Profile updated')}catch(e){window.toast(e.message||'Could not update profile')}finally{btn.disabled=false}});
 })();
 </script>
 
