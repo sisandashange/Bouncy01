@@ -32,6 +32,115 @@
 #peerStatus{transition:color .15s ease}
 .message-search{position:relative;z-index:2;display:flex;align-items:center;gap:5px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line)}.message-search.hidden{display:none!important}.message-search input{flex:1;min-width:0;padding:9px 12px}.message-search .icon-btn{width:30px;height:30px;font-size:16px}.bubble.search-hit{outline:1px solid color-mix(in srgb,var(--green2) 65%,transparent);outline-offset:2px}.bubble.search-current{outline:2px solid var(--green2);outline-offset:2px}#peerStatus:has(+ .typing-dot){color:var(--green2)}
 
+
+/* BOUNCY v2 — complete interface system */
+:root{--bg:#f5f6fa;--panel:#fff;--panel2:#f2f3f8;--line:#e8e9f0;--text:#171827;--muted:#85889a;--green:#6554d9;--green2:#705df0;--out:#eeeaff;--in:#fff;--field:#f4f4f8;--hover:#f4f2ff;--wall:#f7f7fb;--wall-dot:#e5e4ef;--shadow:0 8px 28px #2420440b;--radius:18px}
+:root[data-theme="dark"]{--bg:#101018;--panel:#191923;--panel2:#222231;--line:#303041;--text:#f5f4fc;--muted:#a2a0b5;--green:#a18cff;--green2:#8d77ff;--out:#352d57;--in:#242432;--field:#222231;--hover:#29263b;--wall:#14141e;--wall-dot:#252536;--shadow:0 8px 28px #0003}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;letter-spacing:-.1px}
+button,input{font-family:inherit}
+.brand{font:800 22px 'Space Grotesk',sans-serif;letter-spacing:-1.25px}
+.brand span{color:var(--green2)}
+.primary{background:linear-gradient(135deg,#6653df,#8b6cf6);border-radius:12px;padding:13px 18px;box-shadow:0 8px 18px #705df02b;transition:transform .18s,box-shadow .18s}
+.primary:active{transform:translateY(1px);box-shadow:0 3px 10px #705df022}
+.secondary{background:var(--panel2);border:1px solid var(--line);border-radius:11px}
+.field{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+.field:focus{border-color:var(--green2);box-shadow:0 0 0 3px color-mix(in srgb,var(--green2) 13%,transparent)}
+.auth-wrap{position:relative;overflow:hidden;min-height:100dvh;padding:28px;background:radial-gradient(ellipse at 12% 12%,#b8aaff38,transparent 34%),radial-gradient(ellipse at 90% 85%,#7bd9d033,transparent 30%),var(--bg)}
+.auth-wrap:before{content:'';position:absolute;width:360px;height:360px;border:1px solid #8b79ee20;border-radius:50%;right:-130px;top:-160px;box-shadow:0 0 0 35px #8b79ee09,0 0 0 75px #8b79ee06;pointer-events:none}
+.auth-card{position:relative;width:min(100%,460px);padding:clamp(25px,5vw,42px);border:1px solid var(--line);border-radius:25px;background:color-mix(in srgb,var(--panel) 94%,transparent);box-shadow:0 24px 80px #29204b12;backdrop-filter:blur(18px)}
+.auth-card .brand{font-size:26px}
+.auth-card h1{font:700 clamp(30px,7vw,38px)/1.08 'Space Grotesk';letter-spacing:-1.7px;margin:30px 0 10px}
+.auth-card p{font-size:14px;line-height:1.65}
+.auth-card label{margin:19px 0 8px;color:var(--muted);font-size:10px;letter-spacing:1px}
+.auth-card .primary{height:49px;margin-top:23px}
+.auth-switch{margin-top:22px}
+.auth-card>p:last-child{border-top:1px solid var(--line);padding-top:17px;font-size:11px!important}
+.app{max-width:1600px;height:100dvh;padding:16px;gap:14px;background:transparent;grid-template-columns:minmax(310px,370px) minmax(0,1fr);box-shadow:none}
+.sidebar,.chat{border:1px solid var(--line);border-radius:22px;background:var(--panel);box-shadow:var(--shadow)}
+.sidebar{overflow:hidden}
+.side-head{padding:21px 20px 12px}
+.side-top{min-height:42px}
+.icon-btn{width:40px;height:40px;border:1px solid transparent;background:transparent;border-radius:12px;color:var(--muted);font-size:21px;transition:.15s}
+.icon-btn:hover{background:var(--hover);color:var(--green2)}
+.theme-select{height:34px;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:0 8px;color:var(--muted)}
+.search{margin:13px 16px 12px}
+.search:before{content:'⌕';top:5px;font-size:23px}
+.search input{height:44px;padding-left:42px}
+.section-label{padding:12px 20px 9px;font-size:10px;letter-spacing:1.4px;color:var(--muted)}
+.chat-list{padding:0 9px 14px}
+.chat-row{padding:12px 11px;border-radius:14px;gap:12px;margin:2px 0}
+.chat-row:after{display:none}
+.chat-row:hover,.chat-row.active{background:var(--hover)}
+.chat-row.active{box-shadow:inset 3px 0 var(--green2)}
+.avatar{width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#ded8ff,#c8eae2);color:#51449f;font:700 16px 'Space Grotesk';}
+:root[data-theme="dark"] .avatar{background:linear-gradient(145deg,#514479,#28584f);color:#f4edff}
+.avatar.small{width:40px;height:40px;border-radius:14px}
+.chat-name{font-size:14px;font-weight:700}
+.chat-preview{font-size:12px;color:var(--muted)}
+.chat-time{font-size:10px;color:var(--muted)}
+.side-bottom{margin:8px 12px 12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel2)}
+.me-info b{font-size:13px}.me-info small{font-size:11px}
+.chat{overflow:hidden;position:relative}
+.chat:before{opacity:.22;background-image:radial-gradient(var(--wall-dot) .8px,transparent .8px);background-size:22px 22px}
+.chat-head{min-height:72px;padding:13px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+.chat-head b{font:700 15px 'DM Sans'}
+.chat-head .muted{font-size:11px!important;margin-top:3px}
+.chat-actions .secondary{width:38px;height:38px;padding:0;border-radius:12px;font-size:18px}
+.messages{padding:24px clamp(14px,4vw,58px);gap:7px}
+.day-label{margin:14px auto 18px;border:1px solid var(--line);border-radius:20px;padding:6px 12px;font-size:10px;color:var(--muted)}
+.bubble{max-width:min(72%,570px);padding:10px 13px 7px;border-radius:15px 15px 15px 5px;background:var(--in);border:1px solid var(--line);box-shadow:0 2px 6px #17182708;font-size:14px}
+.bubble.mine{border:1px solid color-mix(in srgb,var(--green2) 13%,transparent);background:var(--out);border-radius:15px 15px 5px 15px}
+.bubble time{font-size:10px;color:var(--muted);margin-top:5px}
+.composer{padding:13px 17px calc(13px + env(safe-area-inset-bottom));background:var(--panel);border-top:1px solid var(--line);gap:10px}
+.composer input{height:48px;border-radius:15px;padding:0 17px;background:var(--field);border:1px solid var(--line)}
+.voice-btn{width:44px;height:44px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
+.send{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#6653df,#8b6cf6);box-shadow:0 6px 16px #705df02b}
+.empty{background:var(--panel);z-index:1}
+.empty>div{max-width:380px}
+.empty-icon{width:76px;height:76px;margin:0 auto 23px;border-radius:25px;display:grid;place-items:center;background:linear-gradient(145deg,#eeeaff,#e0f4ed);color:#6653df;font-size:32px}
+:root[data-theme="dark"] .empty-icon{background:linear-gradient(145deg,#393052,#203a35);color:#b8aaff}
+.empty .brand{font:700 25px 'Space Grotesk'!important;letter-spacing:-1px}
+.empty p{font-size:13px;line-height:1.6;margin:12px 0 20px}
+.empty .primary{min-width:190px}
+.modal{border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 24px 90px #0003}
+.modal h2{font:700 22px 'Space Grotesk';letter-spacing:-.6px}
+.modal .field{margin-top:6px}
+.result{padding:10px;border-radius:13px}
+.result .avatar{width:42px;height:42px}
+.toast{bottom:calc(22px + env(safe-area-inset-bottom));border-radius:13px;box-shadow:var(--shadow)}
+.message-search{padding:9px 12px;background:var(--panel)}
+.message-search input{border-radius:11px}
+.reaction-chip,.reaction-add{border-radius:13px;padding:4px 8px}
+.reaction-picker{border-radius:14px}
+.msg-status.read{color:#6956e8}
+.profile-trigger{display:flex;align-items:center;gap:10px;flex:1;min-width:0;padding:0;background:none;text-align:left}
+.profile-trigger .me-info{flex:1;min-width:0}
+.profile-trigger:hover .me-info b{color:var(--green2)}
+.profile-modal-head{display:flex;align-items:center;gap:13px;margin:8px 0 20px}
+.profile-modal-head .avatar{width:58px;height:58px;border-radius:19px;font-size:19px}
+.profile-meta{min-width:0}.profile-meta b{display:block;font-size:15px}.profile-meta small{color:var(--muted)}
+.profile-note{padding:12px 13px;border-radius:12px;background:var(--panel2);color:var(--muted);font-size:12px;line-height:1.55;margin-top:14px}
+.modal-actions{display:flex;gap:9px;margin-top:18px}.modal-actions>*{flex:1}
+@media(max-width:760px){
+ .app{display:block;padding:0;height:100dvh;max-width:none;gap:0}
+ .sidebar,.chat{border:0;border-radius:0;height:100dvh;box-shadow:none}
+ .sidebar{border-right:0}
+ .side-head{padding:calc(13px + env(safe-area-inset-top)) 15px 8px}
+ .chat-head{padding:calc(10px + env(safe-area-inset-top)) 13px 10px;min-height:65px}
+ .chat-row{padding:12px 13px;border-radius:13px}
+ .messages{padding:16px 11px}
+ .bubble{max-width:87%;padding:9px 11px}
+ .composer{padding:10px 11px calc(10px + env(safe-area-inset-bottom));gap:8px}
+ .composer input{height:46px;min-width:0}
+ .send{width:43px;height:43px}
+ .auth-wrap{padding:18px;align-items:center}
+ .auth-card{border-radius:22px;padding:28px 23px}
+ .auth-card h1{margin-top:25px}
+ .side-bottom{margin:8px 12px calc(10px + env(safe-area-inset-bottom))}
+ .modal{border-radius:18px}
+}
+@media(min-width:761px){.app{min-height:620px;height:calc(100dvh - 32px)}}
+
 </style>
 </head>
 <body>
@@ -55,7 +164,7 @@
   <div class="search"><input id="filterChats" class="field" placeholder="Search conversations"></div>
   <div class="section-label">Your conversations</div>
   <div id="chatList" class="chat-list"></div>
-  <div class="side-bottom"><div id="myAvatar" class="avatar small">B</div><div class="me-info"><b id="myName">Your profile</b><small id="myHandle">@username</small></div><button class="icon-btn" id="signOut" title="Sign out">↗</button></div>
+  <div class="side-bottom"><button class="profile-trigger" id="openProfile" aria-label="Open profile"><div id="myAvatar" class="avatar small">B</div><div class="me-info"><b id="myName">Your profile</b><small id="myHandle">@username</small></div></button><button class="icon-btn" id="signOut" title="Sign out" aria-label="Sign out">⇥</button></div>
  </aside>
  <main class="chat">
   <div id="noChat" class="empty"><div><div class="empty-icon">✦</div><div class="brand" style="font-size:30px">Make it a <span>BOUNCY</span> moment.</div><p class="muted">Choose a conversation or start a new one.</p><button class="primary" id="startChat">Start a conversation</button></div></div>
@@ -68,16 +177,16 @@
  </main>
 </div>
 <div id="newModal" class="modal-back hidden"><div class="modal"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Find your people</h2><button class="icon-btn" id="closeModal">×</button></div><p class="muted" style="font-size:13px">Search by someone's exact username to start a private chat.</p><input id="userSearch" class="field" placeholder="Enter username"><div id="userResults" style="margin-top:12px;max-height:280px;overflow:auto"></div><button class="secondary" id="cancelModal" style="width:100%;margin-top:14px">Close</button></div></div>
-<div id="toast" class="toast"></div>
+<div id="profileModal" class="modal-back hidden"><div class="modal"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Your profile</h2><button class="icon-btn" id="closeProfile" aria-label="Close profile">×</button></div><div class="profile-modal-head"><div id="profileAvatar" class="avatar">B</div><div class="profile-meta"><b id="profileDisplay">Your profile</b><small id="profileUsername">@username</small></div></div><label for="profileName">DISPLAY NAME</label><input id="profileName" class="field" maxlength="40" placeholder="Your name"><label>ACCOUNT EMAIL</label><div id="profileEmail" class="field" style="color:var(--muted)"></div><div class="profile-note">Your username helps people find you. Phone-number discovery will be added after we finish secure phone verification.</div><div class="modal-actions"><button class="secondary" id="cancelProfile">Close</button><button class="primary" id="saveProfile">Save changes</button></div></div></div><div id="toast" class="toast"></div>
 <script>
-const SUPABASE_URL='https://lakupnehsetdazezlsrs.supabase.co';
+window.user=null;window.profile=null;window.sb=null;window.toast=()=>{};const SUPABASE_URL='https://lakupnehsetdazezlsrs.supabase.co';
 const SUPABASE_ANON_KEY='sb_publishable_3ePLMRIKVNms7Qi461FQXw_x2TGc75s';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);window.sb=sb;
 const $=id=>document.getElementById(id);
 let user=null,profile=null,activeConversation=null,activePeer=null,conversations=[],messageChannel=null,mode='signin',searchTimer=null,typingTimer=null,peerTyping=false,peerOnline=false;
 let activeMessageRows=[],messageSearchMatches=[],messageSearchIndex=0;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
+function toast(msg){window.toast=toast;const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2600)}
 function initials(name){return (name||'B').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
 function timeLabel(date){return new Date(date).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
 function showAuth(){ $('auth').classList.remove('hidden');$('app').classList.add('hidden');}
@@ -86,7 +195,7 @@ function setMode(next){mode=next;const signup=mode==='signup';$('authTitle').tex
 $('switchMode').onclick=()=>setMode(mode==='signin'?'signup':'signin');
 $('authForm').onsubmit=async e=>{e.preventDefault();const email=$('email').value.trim(),password=$('password').value,name=$('displayName').value.trim();$('authSubmit').disabled=true;try{if(mode==='signup'){const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:name||email.split('@')[0]}}});if(error)throw error;if(data.user&&data.session){await ensureProfile(data.user,name);await boot(data.user)}else toast('Account created. Check your email to confirm, then sign in.')}else{const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;await boot(data.user)}}catch(err){toast(err.message||'Could not sign in')}finally{$('authSubmit').disabled=false}};
 async function ensureProfile(u,name){const base=(u.email||'member').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g,'').slice(0,18)||'member';const display=name||u.user_metadata?.display_name||base;let username=base;const {data:existing}=await sb.from('profiles').select('username').eq('id',u.id).maybeSingle();if(existing){profile={...existing,id:u.id,display_name:display};return profile}let attempt=0;while(attempt<5){const candidate=attempt?base+Math.floor(1000+Math.random()*8999):base;const {data,error}=await sb.from('profiles').insert({id:u.id,username:candidate,display_name:display}).select().single();if(!error){profile=data;return data}if(error.code!=='23505')throw error;attempt++}throw new Error('Could not create a unique username. Contact support.')}
-async function boot(u){user=u;try{const {data:p,error}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();if(error)throw error;if(!p)await ensureProfile(u);else profile=p;$('myName').textContent=profile.display_name||profile.username;$('myHandle').textContent='@'+profile.username;$('myAvatar').textContent=initials(profile.display_name||profile.username);showApp();await loadConversations()}catch(e){toast(e.message||'Could not load your profile')}}
+async function boot(u){user=u;window.user=u;try{const {data:p,error}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();if(error)throw error;if(!p)await ensureProfile(u);else profile=p;window.profile=profile;$('myName').textContent=profile.display_name||profile.username;$('myHandle').textContent='@'+profile.username;$('myAvatar').textContent=initials(profile.display_name||profile.username);showApp();await loadConversations()}catch(e){toast(e.message||'Could not load your profile')}}
 async function loadConversations(){const {data:mine,error}=await sb.from('conversation_members').select('conversation_id,last_read_at').eq('user_id',user.id);if(error)throw error;const ids=(mine||[]).map(x=>x.conversation_id);if(!ids.length){conversations=[];renderConversations();return}const {data:cs,error:ce}=await sb.from('conversations').select('id,conversation_type,title,created_at,created_by').in('id',ids).order('created_at',{ascending:false});if(ce)throw ce;const {data:members,error:me}=await sb.from('conversation_members').select('conversation_id,user_id,last_read_at').in('conversation_id',ids);if(me)throw me;const otherIds=[...new Set((members||[]).map(m=>m.user_id).filter(id=>id!==user.id))];let profiles=[];if(otherIds.length){const {data,error:pe}=await sb.from('profiles').select('id,username,display_name,avatar_url').in('id',otherIds);if(pe)throw pe;profiles=data||[]}const pmap=Object.fromEntries(profiles.map(p=>[p.id,p]));const memberMap={};(members||[]).forEach(m=>(memberMap[m.conversation_id]??=[]).push(m));const {data:latest}=await sb.from('messages').select('conversation_id,body,sender_id,created_at').in('conversation_id',ids).order('created_at',{ascending:false}).limit(150);const lastMap={};(latest||[]).forEach(m=>{if(!lastMap[m.conversation_id])lastMap[m.conversation_id]=m});conversations=(cs||[]).map(c=>{const peers=(memberMap[c.id]||[]).filter(m=>m.user_id!==user.id).map(m=>pmap[m.user_id]).filter(Boolean);return {...c,peer:peers[0]||null,last:lastMap[c.id]||null,memberCount:(memberMap[c.id]||[]).length}});renderConversations()}
 function renderConversations(){const q=$('filterChats').value.toLowerCase();const list=conversations.filter(c=>((c.peer?.display_name||c.title||'Group')+' '+(c.peer?.username||'')).toLowerCase().includes(q));$('chatList').innerHTML=list.length?list.map(c=>{const title=c.conversation_type==='group'?(c.title||'Group chat'):(c.peer?.display_name||c.peer?.username||'New conversation');const preview=c.last?(c.last.sender_id===user.id?'You: ':'')+(c.last.body||'Attachment'):'Start the conversation';return '<button class="chat-row '+(activeConversation===c.id?'active':'')+'" data-id="'+c.id+'"><div class="avatar">'+esc(initials(title))+'</div><div class="chat-meta"><div class="chat-name"><span>'+esc(title)+'</span><span class="chat-time">'+(c.last?timeLabel(c.last.created_at):'')+'</span></div><div class="chat-preview">'+esc(preview)+'</div></div></button>'}).join(''):'<div class="muted" style="padding:24px 14px;text-align:center;font-size:13px">No conversations yet. Tap ＋ to find someone.</div>'}
 $('chatList').onclick=e=>{const b=e.target.closest('[data-id]');if(b)openConversation(b.dataset.id)};
@@ -135,5 +244,17 @@ sb.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.use
 })();
 </script>
 <script>if("serviceWorker" in navigator && location.protocol.startsWith("http")){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}</script>
+
+<script>
+(function(){
+ const $=id=>document.getElementById(id);
+ const open=()=>{if(!window.profile||!window.user)return;$('profileName').value=window.profile.display_name||'';$('profileDisplay').textContent=window.profile.display_name||window.profile.username;$('profileUsername').textContent='@'+window.profile.username;$('profileAvatar').textContent=(window.profile.display_name||window.profile.username||'B').split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileEmail').textContent=window.user.email||'Phone account';$('profileModal').classList.remove('hidden')};
+ const close=()=> $('profileModal').classList.add('hidden');
+ $('openProfile').addEventListener('click',open);$('closeProfile').addEventListener('click',close);$('cancelProfile').addEventListener('click',close);
+ $('profileModal').addEventListener('click',e=>{if(e.target===$('profileModal'))close()});
+ $('saveProfile').addEventListener('click',async()=>{const name=$('profileName').value.trim();if(!name){$('profileName').focus();return}const btn=$('saveProfile');btn.disabled=true;try{const {error}=await window.sb.from('profiles').update({display_name:name}).eq('id',window.user.id);if(error)throw error;window.profile.display_name=name;$('myName').textContent=name;$('myAvatar').textContent=name.split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();$('profileDisplay').textContent=name;$('profileAvatar').textContent=$('myAvatar').textContent;close();window.toast('Profile updated')}catch(e){window.toast(e.message||'Could not update profile')}finally{btn.disabled=false}});
+})();
+</script>
+
 </body>
 </html>
