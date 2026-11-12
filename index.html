@@ -237,12 +237,12 @@ async function loadChats(){
 }
 function render(){
  const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(filter.toLowerCase()));
- $("list").innerHTML=found.map(c=>'<div class="row" onclick="openChat(\''+c.id+'\')">'+avatar(c.person)+'<div class="mid"><div class="top"><span class="name">'+esc(c.name)+'</span><span class="time">'+esc(c.time)+'</span></div><div class="sub"><span class="last">'+esc(c.last)+'</span></div></div></div>').join("")||'<p style="padding:20px;color:#8a9aa8">'+(filter?"No matching chats":"No conversations yet. Tap the pencil to find someone by username.")+'</p>';
+ $("list").innerHTML=found.map(c=>'<div class="row" onclick="openChat(\''+c.id+'\')">'+avatar(c.person)+'<div class="mid"><div class="top"><span class="name'+(onlineIds.has(c.other_id)?' green':'')+'">'+esc(c.name)+'</span><span class="time">'+esc(c.time)+'</span></div><div class="sub"><span class="last">'+esc(c.last)+'</span></div></div></div>').join("")||'<p style="padding:20px;color:#8a9aa8">'+(filter?"No matching chats":"No conversations yet. Tap the pencil to find someone by username.")+'</p>';
 }
 async function openChat(id){
  cur=chats.find(c=>c.id===id);if(!cur)return;
  $("hName").textContent=cur.name;$("hAv").textContent=(cur.person.display_name||cur.name).slice(0,2).toUpperCase();
- $("chatView").classList.add("open");await loadMessages();subscribeMessages();
+ $("chatView").classList.add("open");updateChatPresence();await loadMessages();subscribeMessages();
 }
 async function loadMessages(){
  const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at").eq("conversation_id",cur.id).order("created_at",{ascending:true});
@@ -389,7 +389,7 @@ function cleanupCall(){
 }
 function toggleMute(){if(localStream)localStream.getAudioTracks().forEach(t=>t.enabled=!t.enabled);}
 function toggleCamera(){if(localStream)localStream.getVideoTracks().forEach(t=>t.enabled=!t.enabled);}
-window.authSubmit=authSubmit;window.authSwitch=authSwitch;window.openMenu=openMenu;window.closeAll=closeAll;window.openSearch=openSearch;window.closeSearch=closeSearch;window.doSearch=doSearch;window.showChats=showChats;window.showCalls=showCalls;window.openNewChat=openNewChat;window.createChat=()=>createChat().catch(e=>alert(err(e)));window.openChat=openChat;window.sendMsg=()=>sendMsg();window.closeChat=closeChat;window.startCall=startCall;window.acceptIncomingCall=acceptIncomingCall;window.endCall=endCall;window.toggleMute=toggleMute;window.toggleCamera=toggleCamera;
+window.authSubmit=authSubmit;window.authSwitch=authSwitch;window.logout=logout;window.searchPeople=searchPeople;window.pickPerson=pickPerson;window.openMenu=openMenu;window.closeAll=closeAll;window.openSearch=openSearch;window.closeSearch=closeSearch;window.doSearch=doSearch;window.showChats=showChats;window.showCalls=showCalls;window.openNewChat=openNewChat;window.createChat=()=>createChat().catch(e=>alert(err(e)));window.openChat=openChat;window.sendMsg=()=>sendMsg();window.closeChat=closeChat;window.startCall=startCall;window.acceptIncomingCall=acceptIncomingCall;window.endCall=endCall;window.toggleMute=toggleMute;window.toggleCamera=toggleCamera;
 $("newName").addEventListener("keydown",e=>{if(e.key==="Enter")window.createChat();});
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter")window.sendMsg();});
 const {data:{session}}=await sb.auth.getSession();
