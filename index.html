@@ -58,9 +58,61 @@ button{cursor:pointer}
 .box input,.box textarea{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:12px;border-radius:8px;margin:10px 0;font-size:16px}
 .box button{background:#2AABEE;border:0;color:#fff;padding:12px;border-radius:8px;width:100%;font-size:16px;font-weight:700;margin-top:6px}
 .box .cancel{background:#242f3d}
+
+/* AUTH + REAL CALL LAYERS (keeps the original Telegram-style interface) */
+#authGate{position:fixed;inset:0;background:#17212b;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+#authGate .authBox{width:100%;max-width:380px}
+#authGate h2{font-size:28px;margin-bottom:8px}
+#authGate p{color:#8a9aa8;margin-bottom:18px;line-height:1.45}
+#authGate input{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:14px;border-radius:8px;margin:7px 0;font-size:16px}
+#authGate button{width:100%;padding:13px;border:0;border-radius:8px;background:#2AABEE;color:white;font-weight:700;font-size:16px;margin-top:9px}
+#authGate .secondary{background:#242f3d}
+#authError{color:#ff8b8b;font-size:13px;min-height:18px;margin-top:8px}
+#callLayer{position:fixed;inset:0;background:#0e1621;z-index:95;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+#callLayer.show{display:flex}
+#callLayer .callAvatar{width:104px;height:104px;border-radius:50%;background:#2AABEE;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;margin:0 auto 20px}
+#callLayer .callActions{display:flex;gap:22px;margin-top:38px;justify-content:center}
+#callLayer .callActions button{border:0;border-radius:50%;width:62px;height:62px;color:white;font-size:23px;background:#2AABEE}
+#callLayer .callActions .end{background:#e5484d}
+#callLayer video{width:100%;max-height:42vh;object-fit:cover;background:#000;border-radius:12px;margin-top:12px}
+#callLayer .callSmall{width:110px;position:absolute;right:18px;top:18px;z-index:2}
+.callChoice{display:flex;gap:10px;margin-top:12px}
+.callChoice button{flex:1}
+
 </style>
 </head>
 <body>
+
+<div id="authGate">
+ <div class="authBox">
+  <div style="font-size:42px;margin-bottom:18px">✉️</div>
+  <h2>Welcome to BOUNCY</h2>
+  <p>Sign in or create your account to message and call people.</p>
+  <div id="signupFields" style="display:none">
+   <input id="authDisplay" placeholder="Your name" autocomplete="name">
+   <input id="authUsername" placeholder="Username (e.g. sisanda)" autocomplete="username">
+  </div>
+  <input id="authEmail" type="email" placeholder="Email address" autocomplete="email">
+  <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="authSubmit" onclick="authSubmit()">SIGN IN</button>
+  <button class="secondary" id="authSwitch" onclick="authSwitch()">CREATE ACCOUNT</button>
+  <div id="authError"></div>
+ </div>
+</div>
+<div id="callLayer">
+ <div id="callTitle" style="font-size:24px;font-weight:700">Calling…</div>
+ <div id="callStatus" style="color:#8a9aa8;margin-top:8px">Connecting</div>
+ <div id="callAvatar" class="callAvatar">B</div>
+ <video id="remoteVideo" autoplay playsinline></video>
+ <video id="localVideo" class="callSmall" autoplay muted playsinline></video>
+ <div class="callActions" id="callActions">
+  <button id="acceptCallBtn" style="display:none" onclick="acceptIncomingCall()">✓</button>
+  <button onclick="toggleMute()">🎙</button>
+  <button onclick="toggleCamera()">📷</button>
+  <button class="end" onclick="endCall()">✕</button>
+ </div>
+</div>
+
 
 <div id="overlay" onclick="closeAll()"></div>
 
@@ -110,42 +162,238 @@ button{cursor:pointer}
 <!-- NEW CHAT MODAL -->
 <div id="modal"><div class="box"><h3>New Chat</h3><input id="newName" placeholder="Name - e.g. Thabo"><textarea id="newMsg" placeholder="First message..."></textarea><button onclick="createChat()">START CHAT</button><button class="cancel" onclick="closeAll()">Cancel</button></div></div>
 
-<script>
-let chats=[
- {name:"Jane",last:"Well I do help animals.",time:"15:34",unread:5,badge:"blue",img:"https://i.pravatar.cc/100?img=47",msgs:[{f:"Jane",t:"Well I do help animals.",time:"15:34"}]},
- {name:"Tyrion Lannister",last:"Sometimes possession is an...",time:"18:12",unread:0,initial:"TL",color:"a2",msgs:[{f:"Tyrion",t:"Sometimes possession is an...",time:"18:12"}]},
- {name:"Alena Shy",last:"😍 Sticker",time:"19:30",unread:0,check:true,img:"https://i.pravatar.cc/100?img=32",msgs:[{f:"Alena",t:"😍 Sticker",time:"19:30"}]},
- {name:"Heisenberg",last:"You have my financial support if...",time:"18:32",unread:0,lock:true,img:"https://i.pravatar.cc/100?img=12",msgs:[{f:"Heisenberg",t:"You have my financial support if...",time:"18:32"}]},
- {name:"Bender",last:"I looove new Pixels! If fact, they...",time:"16:30",unread:0,img:"https://i.pravatar.cc/100?img=13",msgs:[{f:"Bender",t:"I looove new Pixels!",time:"16:30"}]},
- {name:"World News Today",last:"Telegram just updated their...",time:"15:12",unread:2,badge:"grey",muted:true,initial:"WNT",color:"a5",msgs:[{f:"WNT",t:"Telegram just updated their...",time:"15:12"}]},
- {name:"EVE",last:"LaserBlastSafetyGuide.pdf",time:"12:54",unread:0,img:"https://i.pravatar.cc/100?img=44",msgs:[{f:"EVE",t:"LaserBlastSafetyGuide.pdf",time:"12:54"}]},
- {name:"Nick",last:"We're gonna win this...",time:"12:22",unread:0,img:"https://i.pravatar.cc/100?img=59",msgs:[{f:"Nick",t:"We're gonna win this...",time:"12:22"}]},
-];
-let cur=0, filter="";
-function render(){
- let list=chats.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
- document.getElementById('list').innerHTML=list.map((c,idx)=>{
-  let realIdx=chats.indexOf(c);
-  return `<div class="row" onclick="openChat(${realIdx})">
-   ${c.img?`<img class="avatar" src="${c.img}">`:`<div class="avatar ${c.color}">${c.initial}</div>`}
-   <div class="mid"><div class="top"><span class="name ${c.lock?'green':''}">${c.lock?'🔒 ':''}${c.name} ${c.muted?'🔕':''}</span><span class="time">${c.check?'✓✓ ':''}${c.time}</span></div>
-   <div class="sub"><span class="last">${c.last}</span>${c.unread?`<span class="badge ${c.badge}">${c.unread}</span>`:''}</div></div></div>`
- }).join('') || '<p style="padding:20px;color:#8a9aa8">No chats found</p>';
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const SUPABASE_URL = "https://nruksvjkytpxbiemtalj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+let me=null, profile=null, chats=[], cur=null, filter="", authMode="signin";
+let call=null, pc=null, localStream=null, callChannel=null, incomingChannel=null;
+let seenSignals=new Set(), callStartedAt=null, callTimer=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clock=()=>new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+function err(e){return e?.message||String(e||"Something went wrong");}
+function avatar(c){return c?.avatar_url?'<img class="avatar" src="'+esc(c.avatar_url)+'">':'<div class="avatar a1">'+esc((c?.display_name||c?.username||"?").slice(0,2).toUpperCase())+'</div>';}
+function authSwitch(){authMode=authMode==="signin"?"signup":"signin";$("signupFields").style.display=authMode==="signup"?"block":"none";$("authSubmit").textContent=authMode==="signup"?"CREATE ACCOUNT":"SIGN IN";$("authSwitch").textContent=authMode==="signup"?"BACK TO SIGN IN":"CREATE ACCOUNT";$("authError").textContent="";}
+async function authSubmit(){
+ const email=$("authEmail").value.trim(), password=$("authPassword").value;
+ $("authError").textContent="";
+ if(!email||!password){$("authError").textContent="Enter your email and password.";return;}
+ $("authSubmit").disabled=true;
+ try{
+  if(authMode==="signup"){
+   const username=$("authUsername").value.trim().replace(/^@/,"").toLowerCase();
+   const display=$("authDisplay").value.trim();
+   if(!display||! /^[a-z0-9_]{3,24}$/.test(username)) throw new Error("Enter your name and a username (3–24 letters, numbers or _).");
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username}}});
+   if(error)throw error;
+   if(!data.session){$("authError").textContent="Check your email to confirm your account, then sign in.";return;}
+   me=data.user;
+   const {error:pe}=await sb.from("profiles").upsert({id:me.id,display_name:display,username},{onConflict:"id"});
+   if(pe)throw pe;
+  }else{
+   const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;me=data.user;
+  }
+  await enterApp();
+ }catch(e){$("authError").textContent=err(e);}finally{$("authSubmit").disabled=false;}
 }
-function openMenu(){document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('show')}
-function closeAll(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show');document.getElementById('modal').classList.remove('show')}
-function openSearch(){document.getElementById('searchBar').classList.add('show');document.getElementById('searchInput').focus()}
-function closeSearch(){document.getElementById('searchBar').classList.remove('show');filter="";document.getElementById('searchInput').value="";render()}
-function doSearch(){filter=document.getElementById('searchInput').value;render()}
-function showChats(){document.getElementById('tabChats').classList.add('on');document.getElementById('tabCalls').classList.remove('on');document.getElementById('list').style.display='block';document.getElementById('callsList').style.display='none'}
-function showCalls(){document.getElementById('tabChats').classList.remove('on');document.getElementById('tabCalls').classList.add('on');document.getElementById('list').style.display='none';let cl=document.getElementById('callsList');cl.style.display='block';cl.innerHTML=`<div class="row"><div class="avatar a2">J</div><div class="mid"><div class="top"><span class="name">Jane</span><span class="time">15:34</span></div><div class="sub"><span class="last">↙ Incoming • 2:34</span></div></div></div><div class="row"><div class="avatar a4">N</div><div class="mid"><div class="top"><span class="name">Nick</span><span class="time">12:22</span></div><div class="sub"><span class="last">↗ Outgoing • 0:45</span></div></div></div>`}
-function openNewChat(){document.getElementById('modal').classList.add('show')}
-function createChat(){let n=document.getElementById('newName').value.trim()||"New Friend";let m=document.getElementById('newMsg').value.trim()||"Hi!";chats.unshift({name:n,last:"You: "+m,time:"now",unread:0,initial:n[0].toUpperCase(),color:"a1",msgs:[{f:"You",t:m,time:"now"}]});closeAll();render();openChat(0)}
-function openChat(i){cur=i;let c=chats[i];c.unread=0;document.getElementById('hName').innerText=c.name;document.getElementById('hAv').innerText=c.initial||c.name[0];renderMsgs();document.getElementById('chatView').classList.add('open');render()}
-function renderMsgs(){document.getElementById('msgs').innerHTML=chats[cur].msgs.map(m=>m.f==="You"?`<div class="msg me">${m.t}<span class="t">${m.time} ✓✓</span></div>`:`<div class="msg"><b style="color:#2AABEE">${m.f}</b><br>${m.t}<span class="t">${m.time}</span></div>`).join('')}
-function sendMsg(){let v=document.getElementById('msgInp').value.trim();if(!v)return;let t=new Date().toTimeString().slice(0,5);chats[cur].msgs.push({f:"You",t:v,time:t});chats[cur].last="You: "+v;chats[cur].time=t;document.getElementById('msgInp').value="";renderMsgs();render();document.getElementById('msgs').scrollTop=9999}
-function closeChat(){document.getElementById('chatView').classList.remove('open')}
-render();
+async function enterApp(){
+ const {data:{user}}=await sb.auth.getUser();me=user;if(!me)return;
+ let {data:p,error}=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();
+ if(error)throw error;
+ if(!p){
+  const md=me.user_metadata||{};
+  const username=(md.username||("user_"+me.id.slice(0,8))).toLowerCase();
+  const display=md.display_name||"Bouncy User";
+  const ins=await sb.from("profiles").upsert({id:me.id,display_name:display,username},{onConflict:"id"}).select().single();
+  if(ins.error)throw ins.error;p=ins.data;
+ }
+ profile=p;
+ $("authGate").style.display="none";
+ document.querySelector("#drawer .me").innerHTML=avatar(profile)+'<div><b>'+esc(profile.display_name)+'</b><br><span style="color:#8a9aa8">@'+esc(profile.username||"")+'</span></div>';
+ await loadChats();subscribeIncomingCalls();
+}
+async function loadChats(){
+ const {data:members,error}=await sb.from("conversation_members").select("conversation_id").eq("user_id",me.id);
+ if(error)throw error;
+ const ids=[...new Set((members||[]).map(x=>x.conversation_id))];
+ chats=[];
+ if(ids.length){
+  const {data:convs,error:ce}=await sb.from("conversations").select("id,created_at").in("id",ids).order("created_at",{ascending:false});
+  if(ce)throw ce;
+  for(const cv of convs||[]){
+   const {data:ms,error:meErr}=await sb.from("conversation_members").select("user_id").eq("conversation_id",cv.id);
+   if(meErr)continue;
+   const other=ms?.find(x=>x.user_id!==me.id)?.user_id;
+   if(!other)continue;
+   const {data:person}=await sb.from("profiles").select("id,display_name,username,avatar_url").eq("id",other).maybeSingle();
+   const {data:latest}=await sb.from("messages").select("body,created_at,sender_id").eq("conversation_id",cv.id).order("created_at",{ascending:false}).limit(1);
+   chats.push({id:cv.id,other_id:other,person:person||{display_name:"Bouncy member"},name:person?.display_name||person?.username||"Bouncy member",last:latest?.[0]?.body||"No messages yet",time:latest?.[0]?new Date(latest[0].created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"",msgs:[]});
+  }
+ }
+ render();
+}
+function render(){
+ const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(filter.toLowerCase()));
+ $("list").innerHTML=found.map(c=>'<div class="row" onclick="openChat(\''+c.id+'\')">'+avatar(c.person)+'<div class="mid"><div class="top"><span class="name">'+esc(c.name)+'</span><span class="time">'+esc(c.time)+'</span></div><div class="sub"><span class="last">'+esc(c.last)+'</span></div></div></div>').join("")||'<p style="padding:20px;color:#8a9aa8">'+(filter?"No matching chats":"No conversations yet. Tap the pencil to find someone by username.")+'</p>';
+}
+async function openChat(id){
+ cur=chats.find(c=>c.id===id);if(!cur)return;
+ $("hName").textContent=cur.name;$("hAv").textContent=(cur.person.display_name||cur.name).slice(0,2).toUpperCase();
+ $("chatView").classList.add("open");await loadMessages();subscribeMessages();
+}
+async function loadMessages(){
+ const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at").eq("conversation_id",cur.id).order("created_at",{ascending:true});
+ if(error){alert(err(error));return;}
+ cur.msgs=data||[];renderMsgs();
+}
+function renderMsgs(){
+ $("msgs").innerHTML=(cur?.msgs||[]).map(m=>m.sender_id===me.id?'<div class="msg me">'+esc(m.body)+'<span class="t">'+new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+' ✓</span></div>':'<div class="msg">'+esc(m.body)+'<span class="t">'+new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+'</span></div>').join("");
+ $("msgs").scrollTop=$("msgs").scrollHeight;
+}
+let msgChannel=null;
+function subscribeMessages(){
+ if(msgChannel)sb.removeChannel(msgChannel);
+ msgChannel=sb.channel("messages-"+cur.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+cur.id},payload=>{
+  if(!cur||payload.new.conversation_id!==cur.id)return;
+  if(!cur.msgs.some(m=>m.id===payload.new.id)){cur.msgs.push(payload.new);renderMsgs();}
+  const c=chats.find(x=>x.id===cur.id);if(c){c.last=payload.new.body;c.time=clock();render();}
+ }).subscribe();
+}
+async function sendMsg(){
+ const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";
+ const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body}).select().single();
+ if(error){alert(err(error));input.value=body;return;}
+ if(!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
+ cur.last=body;cur.time=clock();render();
+}
+function openNewChat(){$("modal").classList.add("show");$("newName").placeholder="Username (e.g. thabo)";$("newMsg").placeholder="First message (optional)";}
+async function createChat(){
+ const username=$("newName").value.trim().replace(/^@/,"").toLowerCase(),first=$("newMsg").value.trim();
+ if(!username){alert("Enter the person's username.");return;}
+ const {data:person,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").eq("username",username).maybeSingle();
+ if(error)throw error;if(!person){alert("No BOUNCY account found with that username.");return;}
+ if(person.id===me.id){alert("That's your own username.");return;}
+ let existing=chats.find(c=>c.other_id===person.id);
+ let conversationId=existing?.id;
+ if(!conversationId){
+  const {data:cv,error:ce}=await sb.from("conversations").insert({created_by:me.id}).select("id").single();
+  if(ce)throw ce;conversationId=cv.id;
+  const {error:memberErr}=await sb.from("conversation_members").insert([{conversation_id:conversationId,user_id:me.id},{conversation_id:conversationId,user_id:person.id}]);
+  if(memberErr)throw memberErr;
+ }
+ if(first){const {error:sendErr}=await sb.from("messages").insert({conversation_id:conversationId,sender_id:me.id,body:first});if(sendErr)throw sendErr;}
+ $("newName").value="";$("newMsg").value="";closeAll();await loadChats();await openChat(conversationId);
+}
+function openMenu(){$("drawer").classList.add("open");$("overlay").classList.add("show");}
+function closeAll(){$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
+function openSearch(){$("searchBar").classList.add("show");$("searchInput").focus();}
+function closeSearch(){$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();}
+function doSearch(){filter=$("searchInput").value;render();}
+function showChats(){$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").style.display="block";$("callsList").style.display="none";}
+async function showCalls(){
+ $("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").style.display="none";
+ const cl=$("callsList");cl.style.display="block";
+ const {data,error}=await sb.from("call_sessions").select("id,caller_id,callee_id,call_type,status,created_at").or("caller_id.eq."+me.id+",callee_id.eq."+me.id).order("created_at",{ascending:false}).limit(40);
+ if(error){cl.innerHTML='<p style="padding:20px;color:#8a9aa8">'+esc(err(error))+'</p>';return;}
+ cl.innerHTML=(data||[]).map(c=>{const outgoing=c.caller_id===me.id;const other=outgoing?c.callee_id:c.caller_id;return '<div class="row"><div class="avatar a1">'+(c.call_type==="video"?"▣":"☎")+'</div><div class="mid"><div class="top"><span class="name">'+(outgoing?"Outgoing":"Incoming")+' '+c.call_type+'</span><span class="time">'+new Date(c.created_at).toLocaleDateString()+'</span></div><div class="sub"><span class="last">'+esc(c.status)+'</span></div></div></div>';}).join("")||'<p style="padding:20px;color:#8a9aa8">No calls yet</p>';
+}
+function closeChat(){$("chatView").classList.remove("open");if(msgChannel){sb.removeChannel(msgChannel);msgChannel=null;}}
+function subscribeIncomingCalls(){
+ if(incomingChannel)sb.removeChannel(incomingChannel);
+ incomingChannel=sb.channel("incoming-calls-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},async payload=>{
+  if(payload.new.status!=="ringing"||call)return;
+  const {data:p}=await sb.from("profiles").select("display_name,username").eq("id",payload.new.caller_id).maybeSingle();
+  call={id:payload.new.id,caller_id:payload.new.caller_id,callee_id:me.id,type:payload.new.call_type,incoming:true,otherName:p?.display_name||"Incoming caller"};
+  showCallUI(true);
+ }).subscribe();
+}
+function showCallUI(incoming){
+ $("callLayer").classList.add("show");$("callTitle").textContent=call?.otherName||"BOUNCY call";
+ $("callStatus").textContent=incoming?"Incoming "+call.type+" call":"Calling…";
+ $("callAvatar").style.display=call?.type==="video"?"none":"flex";
+ $("remoteVideo").style.display=call?.type==="video"?"block":"none";
+ $("localVideo").style.display=call?.type==="video"?"block":"none";
+ $("acceptCallBtn").style.display=incoming?"inline-flex":"none";
+}
+async function startCall(type){
+ if(!cur){alert("Open a conversation first.");return;}
+ call={caller_id:me.id,callee_id:cur.other_id,type,incoming:false,otherName:cur.name};
+ try{
+  const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select().single();
+  if(error)throw error;call.id=data.id;
+  showCallUI(false);
+  await preparePeer();
+  await subscribeCallSignals();
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await sendSignal({type:"offer",sdp:offer});
+  watchCallStatus();
+ }catch(e){alert("Could not start call: "+err(e));await cleanupCall();}
+}
+async function preparePeer(){
+ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:call.type==="video"});
+ $("localVideo").srcObject=localStream;
+ pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
+ localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+ pc.ontrack=e=>{$("remoteVideo").srcObject=e.streams[0];$("callStatus").textContent="Connected";};
+ pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(console.error);};
+ pc.onconnectionstatechange=()=>{if(pc&&["failed","disconnected"].includes(pc.connectionState))$("callStatus").textContent="Connection interrupted";};
+}
+async function subscribeCallSignals(){
+ if(callChannel)sb.removeChannel(callChannel);
+ callChannel=sb.channel("call-signals-"+call.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"call_id=eq."+call.id},p=>handleSignal(p.new)).subscribe();
+ const {data}=await sb.from("call_signals").select("*").eq("call_id",call.id).order("id");
+ for(const s of data||[])await handleSignal(s);
+}
+async function sendSignal(signal){
+ if(!call)return;
+ const recipient=me.id===call.caller_id?call.callee_id:call.caller_id;
+ const {error}=await sb.from("call_signals").insert({call_id:call.id,sender_id:me.id,recipient_id:recipient,signal});
+ if(error)throw error;
+}
+async function handleSignal(row){
+ if(!call||row.recipient_id!==me.id||seenSignals.has(row.id))return;seenSignals.add(row.id);
+ const s=row.signal;
+ try{
+  if(s.type==="offer"&&call.incoming){
+   await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));
+   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);await sendSignal({type:"answer",sdp:answer});
+  }else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));}
+  else if(s.type==="ice"&&s.candidate){await pc.addIceCandidate(new RTCIceCandidate(s.candidate));}
+  else if(s.type==="hangup"){cleanupCall();}
+ }catch(e){console.error("Call signal error",e);}
+}
+async function acceptIncomingCall(){
+ try{
+  await sb.from("call_sessions").update({status:"accepted",answered_at:new Date().toISOString()}).eq("id",call.id);
+  await preparePeer();await subscribeCallSignals();$("callStatus").textContent="Connecting…";
+ }catch(e){alert("Could not answer call: "+err(e));await cleanupCall();}
+}
+function watchCallStatus(){
+ if(callChannel)sb.removeChannel(callChannel);
+ callChannel=sb.channel("call-status-"+call.id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"call_sessions",filter:"id=eq."+call.id},p=>{if(["ended","rejected","missed"].includes(p.new.status))cleanupCall();}).subscribe();
+}
+async function endCall(){
+ if(call){try{await sendSignal({type:"hangup"});}catch(e){}try{await sb.from("call_sessions").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",call.id);}catch(e){}}
+ cleanupCall();
+}
+function cleanupCall(){
+ if(pc){pc.ontrack=null;pc.onicecandidate=null;pc.close();pc=null;}
+ if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
+ $("remoteVideo").srcObject=null;$("localVideo").srcObject=null;$("callLayer").classList.remove("show");
+ if(callChannel){sb.removeChannel(callChannel);callChannel=null;}
+ call=null;seenSignals.clear();if(callTimer){clearInterval(callTimer);callTimer=null;}
+}
+function toggleMute(){if(localStream)localStream.getAudioTracks().forEach(t=>t.enabled=!t.enabled);}
+function toggleCamera(){if(localStream)localStream.getVideoTracks().forEach(t=>t.enabled=!t.enabled);}
+window.authSubmit=authSubmit;window.authSwitch=authSwitch;window.openMenu=openMenu;window.closeAll=closeAll;window.openSearch=openSearch;window.closeSearch=closeSearch;window.doSearch=doSearch;window.showChats=showChats;window.showCalls=showCalls;window.openNewChat=openNewChat;window.createChat=()=>createChat().catch(e=>alert(err(e)));window.openChat=openChat;window.sendMsg=()=>sendMsg();window.closeChat=closeChat;window.startCall=startCall;window.acceptIncomingCall=acceptIncomingCall;window.endCall=endCall;window.toggleMute=toggleMute;window.toggleCamera=toggleCamera;
+$("newName").addEventListener("keydown",e=>{if(e.key==="Enter")window.createChat();});
+$("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter")window.sendMsg();});
+sb.auth.onAuthStateChange(async(event,session)=>{if(session?.user&&!me){me=session.user;try{await enterApp();}catch(e){$("authError").textContent=err(e);}}});
+const {data:{session}}=await sb.auth.getSession();
+if(session){me=session.user;try{await enterApp();}catch(e){$("authError").textContent=err(e);}}
 </script>
 </body>
 </html>
