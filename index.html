@@ -222,6 +222,11 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .pbtns{display:flex;gap:10px}.pbtns .btn{margin:0}.pbtns .btn.alt{width:60px;flex-shrink:0}
 #pushBar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 92px);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:center;z-index:60;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #pushBar span{flex:1;font-size:14px}#pushBar .btn{width:auto;height:38px;padding:0 16px;margin:0}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px}
+.thumb{position:relative;flex:0 0 auto;width:92px;height:92px;border-radius:12px;overflow:hidden;background:#000}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center}
+.thumb button svg{width:14px;height:14px}
 </style>
 </head>
 <body>
@@ -955,12 +960,25 @@ async function delMsg(a){
  cur.msgs=cur.msgs.filter(m=>m.id!==id);renderMsgs();
 }
 /* attachments */
-let attFile=null;
 function attach(){if(cur)$("attModal").classList.add("show");}
-async function attMedia(){closeAll();const f=await pickFile("image/*,video/*");if(!f)return;if(f.size>50*1048576){toast("File too big (50 MB max).");return;}attFile=f;showPrev("mdPrev",f);$("onceChk").checked=false;$("mediaModal").classList.add("show");}
-async function attDoc(){closeAll();const f=await pickFile("*/*");if(f)await sendAttachment(f,"file",false);}
-async function attAudio(){closeAll();const f=await pickFile("audio/*");if(f)await sendAttachment(f,"audio",false);}
-async function sendMedia(){const f=attFile;if(!f)return;const once=$("onceChk").checked;closeAll();attFile=null;await sendAttachment(f,f.type.startsWith("video")?"video":"image",once);}
+const ACC_MEDIA="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/3gpp";
+const ACC_AUDIO="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/flac,audio/x-m4a,audio/webm,.mp3,.m4a,.aac,.wav,.opus,.flac,.ogg";
+let attFiles=[];
+function pickFiles(accept){return new Promise(res=>{const i=$("fileIn");i.accept=accept;i.multiple=true;i.value="";i.onchange=()=>{i.multiple=false;res([...i.files]);};i.click();});}
+function okFiles(fs){const ok=fs.filter(f=>f.size<=50*1048576);if(ok.length<fs.length)toast("Some files were over 50 MB and were skipped.");return ok.slice(0,10);}
+function renderThumbs(){
+ $("mdPrev").className="thumbs";
+ $("mdPrev").innerHTML=attFiles.map((f,i)=>{const u=URL.createObjectURL(f);return `<div class="thumb">${f.type.startsWith("video")?`<video src="${u}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${u}" alt="">`}<button data-act="rmThumb" data-i="${i}" aria-label="Remove">${IC.x}</button></div>`;}).join("");
+ $("mdBtn").textContent=attFiles.length>1?"SEND "+attFiles.length:"SEND";
+}
+function rmThumb(a){attFiles.splice(+a.dataset.i,1);if(!attFiles.length){closeAll();return;}renderThumbs();}
+async function attMedia(){closeAll();const fs=okFiles(await pickFiles(ACC_MEDIA));if(!fs.length)return;attFiles=fs;$("onceChk").checked=false;renderThumbs();$("mediaModal").classList.add("show");}
+async function attDoc(){closeAll();for(const f of okFiles(await pickFiles("*/*")))await sendAttachment(f,"file",false);}
+async function attAudio(){closeAll();for(const f of okFiles(await pickFiles(ACC_AUDIO)))await sendAttachment(f,"audio",false);}
+async function sendMedia(){
+ const fs=attFiles,once=$("onceChk").checked;if(!fs.length)return;closeAll();attFiles=[];
+ for(const f of fs)await sendAttachment(f,f.type.startsWith("video")?"video":"image",once);
+}
 async function sendAttachment(f,kind,once){
  if(!cur)return;if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
  const conv=cur.id;toast("Sending…");
@@ -1072,7 +1090,7 @@ const actions={
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
- attach,attMedia,attDoc,attAudio,sendMedia,react,copyMsg,delMsg,openOnce,viewMedia,mvClose,share,replyCmt,cancelReply:()=>{replyTo=null;$("cmtReply").classList.add("hidden");},likeCmt,enablePush:()=>enablePush(false),pushLater:()=>{localStorage.setItem("pushAsked","1");$("pushBar").classList.add("hidden");},profMsg,profCall,
+ rmThumb,attach,attMedia,attDoc,attAudio,sendMedia,react,copyMsg,delMsg,openOnce,viewMedia,mvClose,share,replyCmt,cancelReply:()=>{replyTo=null;$("cmtReply").classList.add("hidden");},likeCmt,enablePush:()=>enablePush(false),pushLater:()=>{localStorage.setItem("pushAsked","1");$("pushBar").classList.add("hidden");},profMsg,profCall,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
  recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
  vplay:a=>vplay(a.dataset.id),like:a=>like(a.dataset.id),cmt:a=>cmt(a.dataset.id),delPost:a=>delPost(a.dataset.id),
