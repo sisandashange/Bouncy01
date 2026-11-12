@@ -58,6 +58,10 @@ button{cursor:pointer}
 .box input,.box textarea{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:12px;border-radius:8px;margin:10px 0;font-size:16px}
 .box button{background:#2AABEE;border:0;color:#fff;padding:12px;border-radius:8px;width:100%;font-size:16px;font-weight:700;margin-top:6px}
 .box .cancel{background:#242f3d}
+#peopleResults{max-height:230px;overflow:auto;margin-top:8px}
+.personHit{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #2b3948;cursor:pointer}
+.personHit small{display:block;color:#8a9aa8;margin-top:3px}
+.personHit .pick{margin-left:auto;color:#2AABEE;font-size:13px}
 
 /* AUTH + REAL CALL LAYERS (keeps the original Telegram-style interface) */
 #authGate{position:fixed;inset:0;background:#17212b;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -124,6 +128,7 @@ button{cursor:pointer}
   <div class="item" onclick="alert('Saved Messages')">🔖 Saved Messages</div>
   <div class="item" onclick="closeAll();showCalls()">📞 Calls</div>
   <div class="item" onclick="alert('Settings')">⚙️ Settings</div>
+  <div class="item" onclick="logout()" style="color:#ff7777">↪ Log out</div>
   <div class="item" onclick="closeAll()" style="color:#2AABEE">← Close Menu</div>
 </div>
 
@@ -160,7 +165,7 @@ button{cursor:pointer}
 </div>
 
 <!-- NEW CHAT MODAL -->
-<div id="modal"><div class="box"><h3>New Chat</h3><input id="newName" placeholder="Name - e.g. Thabo"><textarea id="newMsg" placeholder="First message..."></textarea><button onclick="createChat()">START CHAT</button><button class="cancel" onclick="closeAll()">Cancel</button></div></div>
+<div id="modal"><div class="box"><h3>New Chat</h3><input id="newName" placeholder="Search username (e.g. thabo)" oninput="searchPeople()"><div id="peopleResults"><p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Search for real BOUNCY members by username.</p></div><textarea id="newMsg" placeholder="First message..."></textarea><button onclick="createChat()">START CHAT</button><button class="cancel" onclick="closeAll()">Cancel</button></div></div>
 
 
 <script type="module">
@@ -170,6 +175,7 @@ const SUPABASE_KEY = "sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-";
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 let me=null, profile=null, chats=[], cur=null, filter="", authMode="signin";
 let call=null, pc=null, localStream=null, callChannel=null, incomingChannel=null;
+let presenceChannel=null, onlineIds=new Set(), peopleSearchTimer=null;
 let seenSignals=new Set(), pendingIce=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -213,7 +219,7 @@ async function enterApp(){
  profile=p;
  $("authGate").style.display="none";
  document.querySelector("#drawer .me").innerHTML=avatar(profile)+'<div><b>'+esc(profile.display_name)+'</b><br><span style="color:#8a9aa8">@'+esc(profile.username||"")+'</span></div>';
- await loadChats();subscribeIncomingCalls();
+ await loadChats();subscribeIncomingCalls();subscribePresence();
 }
 async function loadChats(){
  const {data:members,error}=await sb.from("conversation_members").select("conversation_id").eq("user_id",me.id);
@@ -269,7 +275,18 @@ async function sendMsg(){
  if(!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
  cur.last=body;cur.time=clock();render();
 }
-function openNewChat(){$("modal").classList.add("show");$("newName").placeholder="Username (e.g. thabo)";$("newMsg").placeholder="First message (optional)";}
+async function searchPeople(){
+ const term=$("newName").value.trim().replace(/^@/,"").toLowerCase();
+ clearTimeout(peopleSearchTimer);
+ if(term.length<2){$("peopleResults").innerHTML='<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Type at least 2 characters to find members.</p>';return;}
+ peopleSearchTimer=setTimeout(async()=>{
+  const {data,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(20);
+  if(error){$("peopleResults").innerHTML='<p style="color:#ff8b8b;padding:8px">'+esc(err(error))+'</p>';return;}
+  $("peopleResults").innerHTML=(data||[]).map(p=>'<div class="personHit" onclick="pickPerson(\''+esc(p.username)+'\')">'+avatar(p)+'<div><b>'+esc(p.display_name||p.username)+'</b><small>@'+esc(p.username)+'</small></div><span class="pick">MESSAGE</span></div>').join("")||'<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">No members found. Invite a friend to create a BOUNCY account.</p>';
+ },250);
+}
+function pickPerson(username){$("newName").value=username;$("peopleResults").innerHTML='<p style="color:#2AABEE;padding:8px">Selected @'+esc(username)+'</p>';}
+function openNewChat(){$("modal").classList.add("show");$("newName").value="";$("newName").placeholder="Search username (e.g. thabo)";$("newMsg").placeholder="First message (optional)";$("peopleResults").innerHTML='<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Search for real BOUNCY members by username.</p>';}
 async function createChat(){
  const username=$("newName").value.trim().replace(/^@/,"").toLowerCase(),first=$("newMsg").value.trim();
  if(!username){alert("Enter the person's username.");return;}
@@ -288,6 +305,35 @@ async function createChat(){
  $("newName").value="";$("newMsg").value="";closeAll();await loadChats();await openChat(conversationId);
 }
 function openMenu(){$("drawer").classList.add("open");$("overlay").classList.add("show");}
+async function logout(){
+ if(!confirm("Log out of BOUNCY?"))return;
+ try{
+  if(call)await endCall();
+  if(presenceChannel){try{await presenceChannel.untrack();}catch(e){}await sb.removeChannel(presenceChannel);presenceChannel=null;}
+  if(incomingChannel){await sb.removeChannel(incomingChannel);incomingChannel=null;}
+  if(msgChannel){await sb.removeChannel(msgChannel);msgChannel=null;}
+  const {error}=await sb.auth.signOut();if(error)throw error;
+  me=null;profile=null;chats=[];cur=null;onlineIds.clear();closeAll();closeChat();
+  $("authGate").style.display="flex";$("list").innerHTML="";$("callsList").innerHTML="";
+  $("authEmail").value="";$("authPassword").value="";$("authError").textContent="";
+ }catch(e){alert("Could not log out: "+err(e));}
+}
+function subscribePresence(){
+ if(presenceChannel)sb.removeChannel(presenceChannel);
+ presenceChannel=sb.channel("bouncy-online");
+ presenceChannel.on("presence",{event:"sync"},()=>{
+  const state=presenceChannel.presenceState();onlineIds=new Set();
+  Object.values(state).flat().forEach(p=>{if(p.user_id)onlineIds.add(p.user_id);});
+  render();if(cur)updateChatPresence();
+ }).subscribe(async status=>{
+  if(status==="SUBSCRIBED")await presenceChannel.track({user_id:me.id,username:profile.username,online_at:new Date().toISOString()});
+ });
+}
+function updateChatPresence(){
+ if(!cur)return;
+ const status=$("chatView").querySelector(".cHead small");
+ if(status)status.textContent=onlineIds.has(cur.other_id)?"online":"last seen recently";
+}
 function closeAll(){$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
 function openSearch(){$("searchBar").classList.add("show");$("searchInput").focus();}
 function closeSearch(){$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();}
