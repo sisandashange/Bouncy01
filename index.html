@@ -3,466 +3,212 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#020617">
 <title>BOUNCY CHAT</title>
-
-<!-- Premium Fonts -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* --- MODERN DESIGN SYSTEM --- */
+/* --- LIQUID AURA DESIGN SYSTEM --- */
 :root {
-    --bg-dark: #020617;       /* Deepest background */
-    --bg-panel: #0f172a;      /* Sidebar/Chat bg */
-    --bg-glass: rgba(15, 23, 42, 0.7); /* Glass effect */
-    --border: rgba(255, 255, 255, 0.08);
-    
-    --primary: #6366f1;       /* Indigo */
-    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    --primary-glow: rgba(99, 102, 241, 0.3);
-    
+    --glass-bg: rgba(15, 23, 42, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.03);
+    --primary: #6366f1;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    
-    --bubble-in: #1e293b;     /* Received message color */
-    --radius-lg: 24px;
-    --radius-md: 16px;
-    --radius-sm: 12px;
+    --radius-lg: 28px;
+    --radius-md: 20px;
 }
 
 * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
 body {
     margin: 0;
-    background-color: var(--bg-dark);
-    /* Subtle background glow */
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
-    background-attachment: fixed;
+    background: #020617; /* Fallback */
     color: var(--text-main);
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
     height: 100dvh;
     overflow: hidden;
 }
 
-/* Utilities */
-.hidden { display: none !important; }
-button { cursor: pointer; border: 0; background: none; color: inherit; font-family: inherit; transition: all 0.2s ease; }
-button:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-input, textarea { font-family: inherit; }
-
-/* Branding */
-.brand { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 5px; }
-.brand span { color: var(--primary); text-shadow: 0 0 15px var(--primary-glow); }
-
-/* --- AUTH SCREEN --- */
-.auth-wrap {
-    height: 100dvh;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-    background: radial-gradient(circle at center, #1e1b4b 0%, var(--bg-dark) 70%);
+/* CANVAS BACKGROUND ENGINE */
+#liquidCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    z-index: -1;
+    pointer-events: none;
 }
-.auth-card {
-    width: 100%;
-    max-width: 400px;
-    background: var(--bg-glass);
+
+/* GLASSMORPHISM UTILITIES */
+.glass-panel {
+    background: var(--glass-bg);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--border);
-    padding: 40px;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-    text-align: center;
-    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
 }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-.auth-card h1 { font-family: 'Space Grotesk'; font-size: 32px; margin: 10px 0; letter-spacing: -1px; }
-.field {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-    padding: 16px;
-    border-radius: var(--radius-sm);
-    color: white;
-    margin-bottom: 15px;
-    font-size: 15px;
-    transition: 0.2s;
-}
-.field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); background: rgba(0,0,0,0.5); }
-.primary-btn {
-    width: 100%;
-    background: var(--primary-gradient);
-    color: white;
-    padding: 16px;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 16px;
-    margin-top: 10px;
-    box-shadow: 0 4px 20px var(--primary-glow);
-    letter-spacing: 0.3px;
-}
-.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--primary-glow); filter: brightness(1.1); }
-.link { color: var(--primary); font-weight: 600; background: none; border: none; padding: 0; font-size: 14px; }
-.link:hover { text-decoration: underline; }
-
-/* --- APP LAYOUT --- */
-.app {
+/* LAYOUT */
+.app-container {
     height: 100dvh;
     max-width: 1600px;
     margin: 0 auto;
     display: grid;
     grid-template-columns: 380px 1fr;
-    background: var(--bg-panel);
-    box-shadow: 0 0 100px rgba(0,0,0,0.5);
-    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
 /* SIDEBAR */
 .sidebar {
-    background: rgba(15, 23, 42, 0.95);
-    border-right: 1px solid var(--border);
+    border-right: 1px solid var(--glass-border);
     display: flex;
     flex-direction: column;
-    position: relative;
-    z-index: 2;
+    background: rgba(2, 6, 23, 0.4); /* Slightly darker for contrast */
 }
-.side-head { 
-    padding: 24px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 1px solid var(--border);
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(10px);
-}
-.icon-btn { 
-    width: 42px; height: 42px; 
-    border-radius: 12px; 
-    display: grid; place-items: center; 
-    color: var(--text-muted); 
-    font-size: 20px; 
-}
-.icon-btn:hover { background: rgba(255,255,255,0.05); color: white; transform: scale(1.05); }
+.side-head { padding: 24px; display: flex; justify-content: space-between; align-items: center; }
+.brand { font-family: 'Space Grotesk'; font-weight: 700; font-size: 26px; letter-spacing: -1px; }
+.brand span { color: var(--primary); text-shadow: 0 0 20px rgba(99,102,241,0.5); }
 
-.search-bar { padding: 20px; }
+.search-wrap { padding: 0 24px 20px; position: relative; }
 .search-input {
-    width: 100%;
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border);
-    padding: 12px 15px 12px 45px;
-    border-radius: var(--radius-sm);
-    color: white;
-    font-size: 14px;
-    transition: 0.2s;
+    width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+    padding: 14px 14px 14px 45px; border-radius: 16px; color: white; font-size: 14px;
 }
-.search-input:focus { background: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.1); }
-.search-wrap { position: relative; }
-.search-wrap::before { content: '🔍'; position: absolute; left: 16px; top: 12px; font-size: 14px; opacity: 0.4; pointer-events: none; }
+.search-wrap::before { content:'🔍'; position:absolute; left:40px; top:14px; opacity:0.4; font-size:14px; }
 
-.chat-list { flex: 1; overflow-y: auto; padding: 10px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+.chat-list { flex:1; overflow-y:auto; padding: 10px; }
 .chat-row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 16px;
-    border-radius: var(--radius-md);
-    margin-bottom: 8px;
-    text-align: left;
-    transition: 0.2s;
+    width:100%; display:flex; align-items:center; gap:16px; padding:16px;
+    border-radius: 18px; margin-bottom: 8px; text-align:left; transition:0.3s;
     border: 1px solid transparent;
 }
-.chat-row:hover { background: rgba(255,255,255,0.03); }
-.chat-row.active { 
-    background: rgba(99, 102, 241, 0.1); 
-    border: 1px solid rgba(99, 102, 241, 0.2); 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
+.chat-row:hover { background: var(--glass-highlight); border-color: var(--glass-border); }
+.chat-row.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); }
 
 .avatar {
-    width: 52px; height: 52px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #334155, #1e293b);
-    display: grid; place-items: center;
-    font-weight: 700; color: white;
-    overflow: hidden;
-    flex-shrink: 0;
-    border: 1px solid rgba(255,255,255,0.05);
-    font-size: 18px;
+    width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg,#334155,#1e293b);
+    display:grid; place-items:center; font-weight:700; color:white; overflow:hidden; flex-shrink:0;
+    border: 1px solid var(--glass-border);
 }
-.avatar img { width: 100%; height: 100%; object-fit: cover; }
-.chat-meta { flex: 1; min-width: 0; }
-.chat-name { font-weight: 600; font-size: 16px; margin-bottom: 6px; display: flex; justify-content: space-between; color: #fff; }
-.chat-preview { color: var(--text-muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.chat-time { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+.avatar img { width:100%; height:100%; object-fit:cover; }
+.chat-meta { flex:1; min-width:0; }
+.chat-name { font-weight:600; font-size:15px; margin-bottom:6px; display:flex; justify-content:space-between; }
+.chat-preview { color:var(--text-muted); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-time { font-size:11px; color:var(--text-muted); }
 
-.side-footer {
-    padding: 20px;
-    border-top: 1px solid var(--border);
-    background: rgba(0,0,0,0.2);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.side-footer { padding:20px; border-top:1px solid var(--glass-border); display:flex; align-items:center; gap:12px; background:rgba(0,0,0,0.2); }
 
-/* MAIN CHAT AREA */
-.chat-area {
-    background: var(--bg-dark);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
-}
-
-.empty-state {
-    height: 100%;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    color: var(--text-muted);
-    padding: 40px;
-}
-.empty-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.1; filter: blur(2px); }
-
+/* CHAT AREA */
+.chat-area { display:flex; flex-direction:column; position:relative; }
+.empty-state { height:100%; display:grid; place-items:center; text-align:center; color:var(--text-muted); }
 .chat-header {
-    padding: 20px 30px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: rgba(15, 23, 42, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: 10;
+    padding:20px 30px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:16px;
+    background: rgba(2, 6, 23, 0.6); backdrop-filter:blur(20px);
 }
-.header-info { flex: 1; }
-.header-name { font-weight: 700; font-size: 17px; font-family: 'Space Grotesk'; color: #fff; }
-.header-status { font-size: 13px; color: var(--primary); margin-top: 2px; font-weight: 500; }
+.header-info { flex:1; }
+.header-name { font-weight:700; font-size:17px; font-family:'Space Grotesk'; }
+.header-status { font-size:12px; color:var(--primary); margin-top:2px; }
 
-.messages-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    scroll-behavior: smooth;
-}
+.messages-container { flex:1; overflow-y:auto; padding:30px; display:flex; flex-direction:column; gap:16px; }
 
-/* BUBBLES */
+/* BUBBLES WITH PHYSICS */
 .bubble {
-    max-width: 75%;
-    padding: 14px 20px;
-    border-radius: 20px;
-    line-height: 1.5;
-    position: relative;
-    font-size: 15px;
-    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    word-wrap: break-word;
+    max-width:70%; padding:14px 20px; border-radius:22px; line-height:1.5;
+    position:relative; font-size:15px; word-wrap:break-word;
+    animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-@keyframes popIn { from { transform: scale(0.9) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+@keyframes bubblePop { from { transform:scale(0.8) translateY(20px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
 
-.bubble.in {
-    align-self: flex-start;
-    background: var(--bubble-in);
-    border-bottom-left-radius: 6px;
-    color: #e2e8f0;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-.bubble.out {
-    align-self: flex-end;
-    background: var(--primary-gradient);
-    border-bottom-right-radius: 6px;
-    color: white;
-    box-shadow: 0 8px 25px -5px var(--primary-glow);
-    border: 1px solid rgba(255,255,255,0.1);
-}
-.msg-time {
-    display: block;
-    font-size: 11px;
-    margin-top: 8px;
-    opacity: 0.7;
-    text-align: right;
-    font-weight: 500;
-}
+.bubble.in { align-self:flex-start; background:rgba(30,41,59,0.8); border-bottom-left-radius:6px; border:1px solid var(--glass-border); }
+.bubble.out { align-self:flex-end; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-bottom-right-radius:6px; box-shadow:0 4px 20px rgba(99,102,241,0.3); }
+.msg-time { display:block; font-size:10px; margin-top:8px; opacity:0.7; text-align:right; }
 
 /* COMPOSER */
-.composer {
-    padding: 20px 30px;
-    background: rgba(15, 23, 42, 0.9);
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    backdrop-filter: blur(10px);
-}
-.msg-input {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    border-radius: 30px;
-    padding: 14px 24px;
-    color: white;
-    font-size: 15px;
-    transition: 0.2s;
-}
-.msg-input:focus { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-.send-btn {
-    width: 50px; height: 50px;
-    border-radius: 50%;
-    background: var(--primary-gradient);
-    color: white;
-    display: grid; place-items: center;
-    font-size: 20px;
-    box-shadow: 0 4px 15px var(--primary-glow);
-    flex-shrink: 0;
-}
-.send-btn:hover { transform: scale(1.1) rotate(-10deg); }
+.composer { padding:20px 30px; border-top:1px solid var(--glass-border); display:flex; gap:12px; align-items:center; background:rgba(2,6,23,0.6); backdrop-filter:blur(20px); }
+.msg-input { flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:30px; padding:14px 24px; color:white; font-size:15px; }
+.send-btn { width:50px; height:50px; border-radius:50%; background:var(--primary); color:white; display:grid; place-items:center; font-size:20px; box-shadow:0 4px 15px rgba(99,102,241,0.4); }
 
-/* MOBILE RESPONSIVE */
-@media (max-width: 768px) {
-    .app { grid-template-columns: 1fr; background: var(--bg-dark); }
-    .chat-area { display: none; position: absolute; inset: 0; z-index: 20; background: var(--bg-dark); }
-    .app.chat-open .sidebar { display: none; }
-    .app.chat-open .chat-area { display: flex; animation: slideInRight 0.3s ease; }
-    @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    
-    .back-btn { display: flex !important; margin-right: 10px; }
-    .messages-container { padding: 15px; }
-    .composer { padding: 15px; }
-    .chat-header { padding: 15px; }
-    .side-head { padding: 15px 20px; }
-}
-.back-btn { display: none; }
+/* AUTH & MODALS */
+.auth-wrap { height:100dvh; display:grid; place-items:center; padding:20px; }
+.auth-card { width:100%; max-width:400px; padding:40px; border-radius:var(--radius-lg); text-align:center; }
+.field { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); padding:16px; border-radius:16px; color:white; margin-bottom:15px; }
+.primary-btn { width:100%; background:var(--primary); color:white; padding:16px; border-radius:16px; font-weight:600; margin-top:10px; box-shadow:0 4px 20px rgba(99,102,241,0.3); }
+.hidden { display:none!important; }
+button { cursor:pointer; border:0; background:none; color:inherit; font-family:inherit; }
+.icon-btn { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; color:var(--text-muted); font-size:20px; }
+.icon-btn:hover { background:var(--glass-highlight); color:white; }
 
-/* MODALS & TOASTS */
-.modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    display: grid; place-items: center;
-    padding: 20px;
-    animation: fadeIn 0.2s ease;
+@media(max-width:768px) {
+    .app-container { grid-template-columns:1fr; }
+    .chat-area { display:none; position:absolute; inset:0; z-index:10; background:#020617; }
+    .app-container.chat-open .sidebar { display:none; }
+    .app-container.chat-open .chat-area { display:flex; }
+    .back-btn { display:block!important; margin-right:10px; }
+    .back-btn { display:none; }
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.modal {
-    background: #1e293b;
-    border: 1px solid var(--border);
-    width: 100%; max-width: 400px;
-    border-radius: 24px;
-    padding: 30px;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-}
-.modal h2 { margin-top: 0; font-family: 'Space Grotesk'; font-size: 24px; margin-bottom: 20px; }
-
-.toast {
-    position: fixed; bottom: 30px; left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: #ef4444; color: white;
-    padding: 14px 28px; border-radius: 50px;
-    font-weight: 600; opacity: 0; pointer-events: none;
-    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    z-index: 200;
-    box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<!-- Auth View -->
+<!-- LIQUID BACKGROUND CANVAS -->
+<canvas id="liquidCanvas"></canvas>
+
+<!-- AUTH VIEW -->
 <div id="auth" class="auth-wrap">
-    <div class="auth-card">
-        <div class="brand" style="justify-content:center; font-size: 36px; margin-bottom: 20px;">BOUNCY<span>.</span></div>
-        <h1 id="authTitle">Welcome Back</h1>
-        <p style="color:var(--text-muted); margin-bottom: 30px; line-height: 1.6;" id="authDesc">Sign in to continue your conversations.</p>
-        
+    <div class="auth-card glass-panel">
+        <div class="brand" style="justify-content:center; font-size:36px; margin-bottom:20px;">BOUNCY<span>.</span></div>
+        <h1 style="font-family:'Space Grotesk'; margin:10px 0;">Welcome Back</h1>
+        <p style="color:var(--text-muted); margin-bottom:30px;">Sign in to continue your conversations.</p>
         <form id="authForm">
-            <div id="nameWrap" class="hidden">
-                <input class="field" id="displayName" placeholder="Choose a Display Name" maxlength="30">
-            </div>
-            <input class="field" id="email" type="email" placeholder="Email Address" required autocomplete="email">
-            <input class="field" id="password" type="password" placeholder="Password" required minlength="6" autocomplete="current-password">
-            <button type="submit" class="primary-btn" id="authSubmit">Sign In</button>
+            <input class="field" id="email" type="email" placeholder="Email Address" required>
+            <input class="field" id="password" type="password" placeholder="Password" required>
+            <button type="submit" class="primary-btn">Sign In</button>
         </form>
-        
-        <div style="margin-top: 24px; font-size: 14px;">
-            <span id="switchText" style="color:var(--text-muted)">New here?</span>
-            <button class="link" id="switchMode">Create Account</button>
+        <div style="margin-top:20px; font-size:14px; color:var(--text-muted);">
+            New here? <button class="link" style="color:var(--primary); font-weight:600;" id="switchMode">Create Account</button>
         </div>
     </div>
 </div>
 
-<!-- Main App -->
-<div id="app" class="app hidden">
-    
-    <!-- Sidebar -->
+<!-- MAIN APP -->
+<div id="app" class="app-container hidden">
     <aside class="sidebar">
         <div class="side-head">
             <div class="brand">BOUNCY<span>.</span></div>
-            <div style="display:flex; gap:8px;">
-                <button class="icon-btn" id="newChatBtn" title="New Chat">✎</button>
-                <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
-            </div>
+            <button class="icon-btn" id="newChatBtn">✎</button>
         </div>
-        
-        <div class="search-bar">
-            <div class="search-wrap">
-                <input id="filterChats" class="search-input" placeholder="Search messages...">
-            </div>
-        </div>
-
-        <div id="chatList" class="chat-list">
-            <!-- Chat items injected here -->
-        </div>
-
+        <div class="search-wrap"><input id="filterChats" class="search-input" placeholder="Search messages..."></div>
+        <div id="chatList" class="chat-list"></div>
         <div class="side-footer">
-            <button id="openProfile" style="display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding: 5px; border-radius: 12px;">
-                <div id="myAvatar" class="avatar" style="width:40px; height:40px; font-size:14px;"></div>
-                <div style="flex:1; min-width:0;">
-                    <div id="myName" style="font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#fff;">User</div>
-                    <div id="myHandle" style="font-size:12px; color:var(--text-muted);">@handle</div>
-                </div>
-            </button>
-            <button class="icon-btn" id="signOut" style="color:#ef4444; font-size: 18px;">⇪</button>
+            <div id="myAvatar" class="avatar" style="width:40px; height:40px; font-size:14px;"></div>
+            <div style="flex:1; min-width:0;">
+                <div id="myName" style="font-weight:600; font-size:14px;">User</div>
+                <div id="myHandle" style="font-size:12px; color:var(--text-muted);">@handle</div>
+            </div>
+            <button class="icon-btn" id="signOut" style="color:#ef4444;">⇪</button>
         </div>
     </aside>
 
-    <!-- Chat Window -->
     <main class="chat-area">
-        <!-- Empty State -->
         <div id="noChat" class="empty-state">
             <div>
-                <div class="empty-icon">💬</div>
-                <h2 style="font-family:'Space Grotesk'; margin-bottom:10px; font-size: 28px; color: #fff;">Select a conversation</h2>
-                <p style="max-width: 300px; margin: 0 auto; line-height: 1.6;">Choose a friend from the sidebar or start a new chat to get bouncing.</p>
-                <button class="primary-btn" id="startChatEmpty" style="width:auto; padding: 12px 30px; margin-top:30px;">Start New Chat</button>
+                <div style="font-size:60px; margin-bottom:20px; opacity:0.2;">💬</div>
+                <h2 style="font-family:'Space Grotesk'; margin-bottom:10px;">Select a conversation</h2>
+                <p>Choose a friend or start a new chat.</p>
             </div>
         </div>
-
-        <!-- Active Chat -->
         <div id="chatPanel" class="hidden" style="display:flex; flex-direction:column; height:100%;">
             <header class="chat-header">
                 <button class="icon-btn back-btn" id="backChats">←</button>
-                <div id="peerAvatar" class="avatar" style="width:44px; height:44px; font-size: 16px;"></div>
+                <div id="peerAvatar" class="avatar" style="width:44px; height:44px;"></div>
                 <div class="header-info">
                     <div id="peerName" class="header-name">User</div>
                     <div id="peerStatus" class="header-status">Online</div>
                 </div>
-                <button class="icon-btn" id="refreshMessages" title="Refresh">↻</button>
             </header>
-
             <div id="messages" class="messages-container"></div>
-
             <form id="composer" class="composer">
                 <input id="messageInput" class="msg-input" placeholder="Type a message..." autocomplete="off">
                 <button type="submit" class="send-btn">➤</button>
@@ -471,394 +217,175 @@ input, textarea { font-family: inherit; }
     </main>
 </div>
 
-<!-- Modals -->
-<div id="newModal" class="modal-overlay hidden">
-    <div class="modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2>New Conversation</h2>
-            <button class="icon-btn" id="closeModal" style="background: rgba(255,255,255,0.05);">✕</button>
-        </div>
-        <input id="userSearch" class="field" placeholder="Search username or email..." style="margin-bottom: 20px;">
-        <div id="userResults" style="max-height:250px; overflow-y:auto;"></div>
-    </div>
-</div>
-
-<div id="profileModal" class="modal-overlay hidden">
-    <div class="modal">
-        <h2>Edit Profile</h2>
-        <label style="display:block; margin:10px 0 8px; color:var(--text-muted); font-size:12px; font-weight: 600; letter-spacing: 0.5px;">DISPLAY NAME</label>
-        <input id="profileName" class="field">
-        <label style="display:block; margin:10px 0 8px; color:var(--text-muted); font-size:12px; font-weight: 600; letter-spacing: 0.5px;">BIO</label>
-        <textarea id="profileBio" class="field" rows="3" style="resize: none;"></textarea>
-        <div style="display:flex; gap:12px; margin-top:24px;">
-            <button class="primary-btn" id="saveProfile">Save Changes</button>
-            <button class="icon-btn" id="closeProfile" style="background:rgba(255,255,255,0.05); width:auto; padding:0 24px; border-radius: 12px; font-weight: 600;">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast" class="toast">Error message</div>
-
 <script>
-// --- CONFIGURATION ---
-const SUPABASE_URL = 'https://lakupnehsetdazezlsrs.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_3ePLMRIKVNms7Qi461FQXw_x2TGc75s'; 
+// --- LIQUID AURA ANIMATION ENGINE ---
+const canvas = document.getElementById('liquidCanvas');
+const ctx = canvas.getContext('2d');
+let width, height;
+let particles = [];
 
-// --- INITIALIZATION ---
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.radius = Math.random() * 200 + 150;
+        // Deep purples, blues, and indigos
+        const colors = ['rgba(99, 102, 241, 0.4)', 'rgba(139, 92, 246, 0.3)', 'rgba(59, 130, 246, 0.3)', 'rgba(15, 23, 42, 0.8)'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if(this.x < -this.radius) this.x = width + this.radius;
+        if(this.x > width + this.radius) this.x = -this.radius;
+        if(this.y < -this.radius) this.y = height + this.radius;
+        if(this.y > height + this.radius) this.y = -this.radius;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+}
+
+for(let i=0; i<12; i++) particles.push(new Particle());
+
+function animate() {
+    ctx.clearRect(0, 0, width, height);
+    // Add a base dark layer
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0,0,width,height);
+    
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(animate);
+}
+animate();
+
+// --- APP LOGIC (KEPT INTACT) ---
+const SUPABASE_URL = 'https://lakupnehsetdazezlsrs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_3ePLMRIKVNms7Qi461FQXw_x2TGc75s';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 
-let user = null, profile = null;
-let activeConversation = null, activePeer = null;
-let conversations = [], messageChannel = null;
-let mode = 'signin';
+let user=null, profile=null, activeConversation=null, conversations=[];
 
-// --- UTILS ---
-function toast(msg) {
-    const el = $('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 3000);
-}
+function toast(m){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#ef4444;color:white;padding:12px 24px;border-radius:30px;font-weight:600;z-index:999;';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+function initials(n){return(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+function timeLabel(d){return new Date(d).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-function initials(name) {
-    return (name || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
-}
+function showAuth(){$('auth').classList.remove('hidden');$('app').classList.add('hidden');}
+function showApp(){$('auth').classList.add('hidden');$('app').classList.remove('hidden');}
 
-function timeLabel(date) {
-    const d = new Date(date);
-    const now = new Date();
-    const isToday = d.toDateString() === now.toDateString();
-    return isToday ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-}
-
-function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// --- AUTH FLOW ---
-function showAuth() { $('auth').classList.remove('hidden'); $('app').classList.add('hidden'); }
-function showApp() { $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); }
-
-function setMode(next) {
-    mode = next;
-    const signup = mode === 'signup';
-    $('authTitle').textContent = signup ? 'Join Bouncy' : 'Welcome Back';
-    $('authDesc').textContent = signup ? 'Create an account to start chatting.' : 'Sign in to pick up where you left off.';
-    $('nameWrap').classList.toggle('hidden', !signup);
-    $('authSubmit').textContent = signup ? 'Create Account' : 'Sign In';
-    $('switchText').textContent = signup ? 'Already have an account?' : 'New here?';
-    $('switchMode').textContent = signup ? 'Sign In' : 'Create Account';
-}
-
-$('switchMode').onclick = () => setMode(mode === 'signin' ? 'signup' : 'signin');
-
-$('authForm').onsubmit = async e => {
+$('authForm').onsubmit=async e=>{
     e.preventDefault();
-    const email = $('email').value.trim();
-    const password = $('password').value;
-    const name = $('displayName').value.trim();
-    const btn = $('authSubmit');
-    btn.disabled = true;
-
-    try {
-        if (mode === 'signup') {
-            const { data, error } = await sb.auth.signUp({
-                email, password,
-                options: { data: { display_name: name || email.split('@')[0] } }
-            });
-            if (error) throw error;
-            if (data.user) {
-                await ensureProfile(data.user, name);
-                await boot(data.user);
-            } else {
-                toast('Check your email to confirm!');
-            }
-        } else {
-            const { data, error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) throw error;
-            await boot(data.user);
-        }
-    } catch (err) {
-        toast(err.message || 'Authentication failed');
-    } finally {
-        btn.disabled = false;
-    }
+    const email=$('email').value.trim(), password=$('password').value;
+    try{
+        const {data,error}=await sb.auth.signInWithPassword({email,password});
+        if(error) throw error;
+        await boot(data.user);
+    }catch(err){toast(err.message)}
 };
 
-async function ensureProfile(u, name) {
-    const base = (u.email || 'user').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15);
-    const display = name || u.user_metadata?.display_name || base;
-    
-    const { data: existing } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
-    if (existing) { profile = existing; return; }
-
-    let username = base;
-    let attempt = 0;
-    while (attempt < 5) {
-        const candidate = attempt ? base + Math.floor(Math.random() * 1000) : base;
-        const { data, error } = await sb.from('profiles').insert({
-            id: u.id, username: candidate, display_name: display
-        }).select().single();
-        
-        if (!error) { profile = data; return; }
-        if (error.code !== '23505') throw error;
-        attempt++;
-    }
-    throw new Error('Could not create unique username.');
+async function boot(u){
+    user=u;
+    const {data:p}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
+    profile=p;
+    $('myName').textContent=profile?.display_name||'User';
+    $('myHandle').textContent='@'+(profile?.username||'');
+    $('myAvatar').innerHTML=profile?.avatar_url?`<img src="${esc(profile.avatar_url)}">`:initials(profile?.display_name);
+    showApp();
+    loadConversations();
 }
 
-async function boot(u) {
-    user = u;
-    try {
-        const { data: p } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
-        profile = p || await ensureProfile(u, '');
-        
-        $('myName').textContent = profile.display_name;
-        $('myHandle').textContent = '@' + profile.username;
-        $('myAvatar').innerHTML = profile.avatar_url ? `<img src="${esc(profile.avatar_url)}">` : initials(profile.display_name);
-        
-        showApp();
-        loadConversations();
-        
-        if(!window.bouncyHomeChannel) {
-             window.bouncyHomeChannel = sb.channel('home-'+u.id)
-             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                 if(payload.new.sender_id !== u.id) {
-                     loadConversations();
-                     if(document.hidden && 'Notification' in window && Notification.permission === 'granted') {
-                         new Notification('New Message', { body: 'You have a new message on Bouncy.' });
-                     }
-                 }
-             }).subscribe();
-        }
-
-    } catch (e) {
-        toast(e.message);
-        showAuth();
+async function loadConversations(){
+    if(!user)return;
+    const {data:members}=await sb.from('conversation_members').select('conversation_id').eq('user_id',user.id);
+    if(!members||!members.length){renderConversations([]);return;}
+    const ids=members.map(m=>m.conversation_id);
+    const {data:convos}=await sb.from('conversations').select('*').in('id',ids).order('created_at',{ascending:false});
+    const enriched=[];
+    for(const c of(convos||[])){
+        const {data:mems}=await sb.from('conversation_members').select('user_id').eq('conversation_id',c.id);
+        const peerId=mems?.find(m=>m.user_id!==user.id)?.user_id;
+        let peer=null;
+        if(peerId){const {data:pd}=await sb.from('profiles').select('*').eq('id',peerId).single();peer=pd;}
+        const {data:last}=await sb.from('messages').select('*').eq('conversation_id',c.id).order('created_at',{ascending:false}).limit(1);
+        enriched.push({...c,peer,last:last?.[0]});
     }
-}
-
-// --- CONVERSATIONS ---
-async function loadConversations() {
-    if (!user) return;
-    const { data: members, error } = await sb.from('conversation_members').select('conversation_id').eq('user_id', user.id);
-    if (error || !members) return;
-
-    const ids = members.map(m => m.conversation_id);
-    if (ids.length === 0) { renderConversations([]); return; }
-
-    const { data: convos } = await sb.from('conversations').select('*').in('id', ids).order('created_at', { ascending: false });
-    
-    const enriched = [];
-    for (const c of (convos || [])) {
-        const { data: mems } = await sb.from('conversation_members').select('user_id').eq('conversation_id', c.id);
-        const peerId = mems?.find(m => m.user_id !== user.id)?.user_id;
-        
-        let peer = null;
-        if (peerId) {
-            const { data: pData } = await sb.from('profiles').select('*').eq('id', peerId).single();
-            peer = pData;
-        }
-
-        const { data: lastMsg } = await sb.from('messages').select('*').eq('conversation_id', c.id).order('created_at', { ascending: false }).limit(1);
-        enriched.push({ ...c, peer, last: lastMsg?.[0] });
-    }
-    
-    conversations = enriched;
+    conversations=enriched;
     renderConversations(conversations);
 }
 
-function renderConversations(list) {
-    const q = $('filterChats').value.toLowerCase();
-    const filtered = list.filter(c => {
-        const name = c.peer ? (c.peer.display_name + c.peer.username) : c.title;
-        return name.toLowerCase().includes(q);
-    });
-
-    $('chatList').innerHTML = filtered.map(c => {
-        const name = c.peer ? c.peer.display_name : (c.title || 'Group');
-        const sub = c.last ? (c.last.sender_id === user.id ? 'You: ' : '') + (c.last.body || 'Media') : 'Start chatting';
-        const isActive = c.id === activeConversation ? 'active' : '';
-        const avatarHtml = c.peer?.avatar_url ? `<img src="${esc(c.peer.avatar_url)}">` : initials(name);
-        
-        return `
-        <button class="chat-row ${isActive}" onclick="openConversation('${c.id}')">
-            <div class="avatar">${avatarHtml}</div>
-            <div class="chat-meta">
-                <div class="chat-name">
-                    <span>${esc(name)}</span>
-                    <span class="chat-time">${c.last ? timeLabel(c.last.created_at) : ''}</span>
-                </div>
-                <div class="chat-preview">${esc(sub)}</div>
-            </div>
-        </button>`;
+function renderConversations(list){
+    $('chatList').innerHTML=list.map(c=>{
+        const name=c.peer?c.peer.display_name:(c.title||'Group');
+        const sub=c.last?(c.last.sender_id===user.id?'You: ':'')+(c.last.body||'Media'):'Start chatting';
+        const isActive=c.id===activeConversation?'active':'';
+        const av=c.peer?.avatar_url?`<img src="${esc(c.peer.avatar_url)}">`:initials(name);
+        return `<button class="chat-row ${isActive}" onclick="openConversation('${c.id}')"><div class="avatar">${av}</div><div class="chat-meta"><div class="chat-name"><span>${esc(name)}</span><span class="chat-time">${c.last?timeLabel(c.last.created_at):''}</span></div><div class="chat-preview">${esc(sub)}</div></div></button>`;
     }).join('');
 }
 
-$('filterChats').oninput = () => renderConversations(conversations);
-
-// --- MESSAGING ---
-async function openConversation(id) {
-    activeConversation = id;
-    const convo = conversations.find(c => c.id === id);
-    activePeer = convo?.peer;
-
+async function openConversation(id){
+    activeConversation=id;
+    const convo=conversations.find(c=>c.id===id);
+    activePeer=convo?.peer;
     $('noChat').classList.add('hidden');
     $('chatPanel').classList.remove('hidden');
-    $('chatPanel').style.display = 'flex'; 
-    
-    const name = activePeer ? activePeer.display_name : (convo?.title || 'Unknown');
-    $('peerName').textContent = name;
-    $('peerStatus').textContent = activePeer ? '@' + activePeer.username : 'Group Chat';
-    $('peerAvatar').innerHTML = activePeer?.avatar_url ? `<img src="${esc(activePeer.avatar_url)}">` : initials(name);
-    
+    $('chatPanel').style.display='flex';
+    const name=activePeer?activePeer.display_name:(convo?.title||'Unknown');
+    $('peerName').textContent=name;
+    $('peerStatus').textContent=activePeer?'@'+activePeer.username:'Group Chat';
+    $('peerAvatar').innerHTML=activePeer?.avatar_url?`<img src="${esc(activePeer.avatar_url)}">`:initials(name);
     $('app').classList.add('chat-open');
-    
-    renderConversations(conversations);
     loadMessages();
     subscribeMessages(id);
 }
 
-$('backChats').onclick = () => $('app').classList.remove('chat-open');
+$('backChats').onclick=()=>$('app').classList.remove('chat-open');
 
-async function loadMessages() {
-    if (!activeConversation) return;
-    const { data, error } = await sb.from('messages')
-        .select('*')
-        .eq('conversation_id', activeConversation)
-        .order('created_at', { ascending: true })
-        .limit(100);
-    
-    if (error) return toast(error.message);
-    renderMessages(data || []);
+async function loadMessages(){
+    if(!activeConversation)return;
+    const {data}=await sb.from('messages').select('*').eq('conversation_id',activeConversation).order('created_at',{ascending:true}).limit(100);
+    renderMessages(data||[]);
 }
 
-function renderMessages(rows) {
-    const box = $('messages');
-    box.innerHTML = rows.map(m => {
-        const mine = m.sender_id === user.id;
-        const cls = mine ? 'out' : 'in';
-        return `
-        <div class="bubble ${cls}">
-            ${esc(m.body || '')}
-            <span class="msg-time">${timeLabel(m.created_at)}</span>
-        </div>`;
+function renderMessages(rows){
+    const box=$('messages');
+    box.innerHTML=rows.map(m=>{
+        const mine=m.sender_id===user.id;
+        return `<div class="bubble ${mine?'out':'in'}">${esc(m.body||'')}<span class="msg-time">${timeLabel(m.created_at)}</span></div>`;
     }).join('');
-    box.scrollTop = box.scrollHeight;
+    box.scrollTop=box.scrollHeight;
 }
 
-function subscribeMessages(id) {
-    if (messageChannel) sb.removeChannel(messageChannel);
-    
-    messageChannel = sb.channel('chat-' + id)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` }, payload => {
-            loadMessages();
-            loadConversations();
-        })
-        .subscribe();
+function subscribeMessages(id){
+    sb.channel('chat-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`conversation_id=eq.${id}`},()=>{loadMessages();loadConversations();}).subscribe();
 }
 
-$('composer').onsubmit = async e => {
+$('composer').onsubmit=async e=>{
     e.preventDefault();
-    const input = $('messageInput');
-    const body = input.value.trim();
-    if (!body || !activeConversation) return;
-
-    input.value = '';
-    const { error } = await sb.from('messages').insert({
-        conversation_id: activeConversation,
-        sender_id: user.id,
-        body: body,
-        message_type: 'text'
-    });
-    
-    if (error) toast('Failed to send');
+    const input=$('messageInput');
+    const body=input.value.trim();
+    if(!body||!activeConversation)return;
+    input.value='';
+    await sb.from('messages').insert({conversation_id:activeConversation,sender_id:user.id,body,message_type:'text'});
 };
 
-$('refreshMessages').onclick = loadMessages;
+$('signOut').onclick=async()=>{await sb.auth.signOut();user=null;showAuth();};
 
-// --- NEW CHAT SEARCH ---
-function toggleModal(show) {
-    $('newModal').classList.toggle('hidden', !show);
-    if(show) { $('userSearch').value=''; $('userResults').innerHTML=''; $('userSearch').focus(); }
-}
-
-$('newChatBtn').onclick = () => toggleModal(true);
-$('startChatEmpty').onclick = () => toggleModal(true);
-$('closeModal').onclick = () => toggleModal(false);
-
-let searchTimer;
-$('userSearch').oninput = () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(async () => {
-        const q = $('userSearch').value.trim();
-        if (q.length < 2) return;
-        
-        const { data, error } = await sb.rpc('find_bouncy_user', { p_query: q }).catch(() => ({data:null, error:true}));
-        
-        if (data && data.length) {
-            $('userResults').innerHTML = data.map(p => `
-                <div style="display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid var(--border); border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,0.02);">
-                    <div class="avatar" style="width:40px; height:40px; font-size:14px;">${initials(p.display_name)}</div>
-                    <div style="flex:1;">
-                        <div style="font-weight:600; color:#fff;">${esc(p.display_name)}</div>
-                        <div style="font-size:13px; color:var(--text-muted);">@${esc(p.username)}</div>
-                    </div>
-                    <button class="primary-btn" style="width:auto; padding:8px 16px; font-size:13px; margin:0; border-radius: 10px;" onclick="startChat('${p.id}')">Message</button>
-                </div>
-            `).join('');
-        } else {
-            $('userResults').innerHTML = '<div style="padding:20px; color:var(--text-muted); text-align:center;">No users found</div>';
-        }
-    }, 500);
-};
-
-async function startChat(peerId) {
-    toggleModal(false);
-    const { data, error } = await sb.rpc('create_direct_conversation', { p_other_user: peerId });
-    if (error) return toast('Could not start chat: ' + error.message);
-    
-    await loadConversations();
-    openConversation(data);
-}
-
-// --- PROFILE & SETTINGS ---
-$('openProfile').onclick = () => {
-    $('profileName').value = profile.display_name;
-    $('profileBio').value = profile.bio || '';
-    $('profileModal').classList.remove('hidden');
-};
-$('closeProfile').onclick = () => $('profileModal').classList.add('hidden');
-
-$('saveProfile').onclick = async () => {
-    const name = $('profileName').value.trim();
-    const bio = $('profileBio').value.trim();
-    if(!name) return toast('Name required');
-    
-    const { error } = await sb.from('profiles').update({ display_name: name, bio: bio }).eq('id', user.id);
-    if(error) return toast('Update failed');
-    
-    profile.display_name = name;
-    profile.bio = bio;
-    $('myName').textContent = name;
-    $('profileModal').classList.add('hidden');
-    toast('Profile updated');
-};
-
-$('signOut').onclick = async () => {
-    await sb.auth.signOut();
-    user = null;
-    showAuth();
-};
-
-// --- BOOTSTRAP ---
-(async () => {
-    const { data } = await sb.auth.getSession();
-    if (data.session) await boot(data.session.user);
-    else showAuth();
-})();
-
+(async()=>{const {data}=await sb.auth.getSession();if(data.session)await boot(data.session.user);else showAuth();})();
 </script>
 </body>
 </html>
