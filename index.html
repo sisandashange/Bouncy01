@@ -132,6 +132,15 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .stx.del{right:56px;font-size:20px}
 #stMedia{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}#stMedia img,#stMedia video{max-width:100%;max-height:100%;object-fit:contain}
 .stzone{position:absolute;top:70px;bottom:0;width:40%;z-index:2}.stzone.l{left:0}.stzone.r{right:0;width:60%}
+.sn{font-size:12px;font-weight:700;color:var(--pink2);margin-bottom:2px}
+.chip{display:inline-block;background:var(--panel2);border-radius:14px;padding:4px 10px;margin:2px 4px 2px 0;font-size:13px;cursor:pointer}
+#stCap{position:absolute;left:0;right:0;bottom:96px;padding:10px 18px;text-align:center;z-index:3;background:linear-gradient(transparent,rgba(0,0,0,.65));display:none}
+#stFoot{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(env(safe-area-inset-bottom) + 12px);display:flex;gap:10px;z-index:5;align-items:center}
+#stFoot input{flex:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:22px;color:#fff;padding:12px 16px;font-size:16px;outline:0}
+#stFoot input::placeholder{color:#ddd}
+#stFoot .btn{margin:0}
+.stzone{bottom:90px!important}
+#vwModal{z-index:130}
 </style>
 </head>
 <body>
@@ -169,6 +178,9 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 <div id="overlay" class="overlay"></div>
 <div id="drawer">
  <div class="me" id="drawerMe"></div>
+ <button class="item" data-act="newGroup">👥 New group</button>
+ <button class="item" data-act="newChannel">📢 New channel</button>
+ <button class="item" data-act="findChannels">🔎 Find channels</button>
  <button class="item" data-act="settings">👤 My profile</button>
  <button class="item" data-act="addStory">✨ Add story</button>
  <button class="item" data-act="newPost">✍️ New post</button>
@@ -194,12 +206,13 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <div class="cHead">
   <button class="iconBtn" data-act="closeChat" aria-label="Back">←</button>
   <div class="avatar" id="hAv">J</div>
-  <div style="flex:1;min-width:0"><b id="hName"></b><br><small id="hStatus">last seen recently</small></div>
+  <div style="flex:1;min-width:0;cursor:pointer" data-act="info"><b id="hName"></b><br><small id="hStatus">last seen recently</small></div>
   <button class="iconBtn" data-act="voice" aria-label="Voice call">📞</button>
   <button class="iconBtn" data-act="video" aria-label="Video call">🎥</button>
  </div>
  <div class="msgs" id="msgs"></div>
  <div class="inp" id="inpBar"><input id="msgInp" placeholder="Message" maxlength="5000" autocomplete="off" aria-label="Message"><button class="send" id="sendBtn" data-act="recStart" aria-label="Record voice note"></button></div>
+ <div class="inp hidden" id="roBar" style="justify-content:center;color:var(--mute)">Only admins can post in this channel</div>
  <div class="inp hidden" id="recBar"><button class="iconBtn" data-act="recCancel" aria-label="Cancel recording"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><span class="recdot"></span><span id="recTime">0:00</span><div id="recWave"></div><button class="send" data-act="recSend" aria-label="Send voice note"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
 </div>
 
@@ -212,10 +225,16 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <button class="btn alt" data-act="closeAll">Cancel</button>
 </div></div>
 <input type="file" id="fileIn" class="hidden">
+<div id="grpModal" class="modal2"><div class="box"><h3 id="grpHead">New group</h3><input class="f" id="grpTitle" maxlength="50" placeholder="Name"><div id="grpDescWrap" class="hidden"><input class="f" id="grpDesc" maxlength="200" placeholder="Description (optional)"></div><div id="grpSearchWrap"><input class="f" id="grpSearch" placeholder="Add members by username" autocomplete="off" autocapitalize="none"><div id="grpChips"></div><div id="grpResults" style="max-height:170px;overflow:auto"></div></div><button class="btn" id="grpBtn" data-act="createGroup">CREATE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="chModal" class="modal2"><div class="box"><h3>Find channels</h3><input class="f" id="chQ" placeholder="Search channels" autocomplete="off"><div id="chRes" style="max-height:50vh;overflow:auto"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
+<div id="infoModal" class="modal2"><div class="box"><h3 id="infoTitle"></h3><p class="mute" id="infoSub"></p><div id="infoList" style="max-height:40vh;overflow:auto;margin:10px 0"></div><div id="infoAdd" class="hidden"><input class="f" id="infoUser" placeholder="Add member by username" autocapitalize="none"><button class="btn" data-act="addMember">ADD MEMBER</button></div><button class="btn alt" data-act="leaveChat" style="color:#ff7b7b">Leave</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
+<div id="stModal" class="modal2"><div class="box"><h3>New story</h3><p class="mute" id="stFileName"></p><input class="f" id="stCapInput" maxlength="200" placeholder="Add a caption (optional)"><button class="btn" id="stBtn" data-act="submitStory">SHARE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="vwModal" class="modal2"><div class="box"><h3>Viewed by</h3><div id="vwList" style="max-height:50vh;overflow:auto;margin:10px 0"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
 <div id="postModal" class="modal2"><div class="box"><h3>New post</h3><textarea class="f" id="postText" rows="4" maxlength="3000" placeholder="What's happening?"></textarea><button class="btn alt" data-act="pickPostFile">📷 Add photo or video</button><p class="mute" id="postFileName" style="margin-top:6px"></p><button class="btn" id="postBtn" data-act="submitPost">POST</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="cmtModal" class="modal2"><div class="box"><h3>Comments</h3><div id="cmtList"></div><input class="f" id="cmtInp" maxlength="1000" placeholder="Add a comment" autocomplete="off"><button class="btn" data-act="sendCmt">SEND</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
 <div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
-<div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story">✕</button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story">🗑</button><div id="stMedia"></div><div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
+<div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story">✕</button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story">🗑</button><div id="stMedia"></div><div id="stCap"></div><div id="stFoot"></div>
+<div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
 <div id="toast" role="status"></div>
 
 <script type="module">
@@ -283,25 +302,25 @@ async function logout(){
 async function loadChats(){
  const {data,error}=await sb.rpc("get_my_chats");
  if(error){toast(errMsg(error));return;}
- chats=(data||[]).map(r=>({id:r.conversation_id,other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,unread:0,msgs:[]}));
+ chats=(data||[]).map(r=>({id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,unread:0,msgs:[]}));
  render();
 }
 function render(){
  const f=filter.toLowerCase();
  const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(f));
- $("list").innerHTML=found.map(c=>`<div class="row" data-chat="${esc(c.id)}" role="button" tabindex="0">${avatar(c.person)}<div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
+ $("list").innerHTML=found.map(c=>`<div class="row" data-chat="${esc(c.id)}" role="button" tabindex="0">${chatAvatar(c)}<div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
 }
 async function openChat(id){
  cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;
- $("hName").textContent=cur.name;$("hAv").outerHTML=avatar(cur.person).replace('class="avatar','id="hAv" class="avatar');
- $("chatView").classList.add("open");updatePresence();render();
- const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at,kind,audio_url,audio_ms,peaks").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
+ $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
+ $("chatView").classList.add("open");applyChatMode();updatePresence();render();
+ const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at,kind,audio_url,audio_ms,peaks,profiles(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(error){toast(errMsg(error));return;}
- cur.msgs=(data||[]).reverse();renderMsgs();$("msgInp").focus();
+ for(const m of data||[])if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);cur.msgs=(data||[]).reverse();renderMsgs();$("msgInp").focus();
 }
 function renderMsgs(){
  const box=$("msgs");
- box.innerHTML=(cur?.msgs||[]).map(m=>`<div class="msg${m.sender_id===me.id?" me":""}${m.pending?" pending":""}">${m.kind==="voice"?voiceHTML(m):esc(m.body)}<span class="t">${fmt(m.created_at)}</span></div>`).join("");
+ box.innerHTML=(cur?.msgs||[]).map(m=>`<div class="msg${m.sender_id===me.id?" me":""}${m.pending?" pending":""}">${senderTag(m)}${m.kind==="voice"?voiceHTML(m):esc(m.body)}<span class="t">${fmt(m.created_at)}</span></div>`).join("");
  box.scrollTop=box.scrollHeight;updateSendBtn();applyPlaying();if(vid&&va.ontimeupdate)va.ontimeupdate();
 }
 function closeChat(){stopVoice();if(rec)recFinish(false);cur=null;$("chatView").classList.remove("open");render();}
@@ -357,7 +376,7 @@ function subscribePresence(){
  presenceChannel.on("presence",{event:"sync"},()=>{onlineIds=new Set(Object.keys(presenceChannel.presenceState()));render();updatePresence();})
   .subscribe(s=>{if(s==="SUBSCRIBED")presenceChannel.track({at:Date.now()});});
 }
-function updatePresence(){if(cur)$("hStatus").textContent=onlineIds.has(cur.other_id)?"online":"last seen recently";}
+function updatePresence(){if(cur)$("hStatus").textContent=cur.kind==="dm"?(onlineIds.has(cur.other_id)?"online":"last seen recently"):cur.members+(cur.kind==="channel"?" subscribers":" members");}
 function closeAll(){document.querySelectorAll(".modal2.show").forEach(m=>m.classList.remove("show"));$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
 function showChats(){$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="chats";$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").classList.remove("hidden");$("callsList").classList.add("hidden");}
 async function showCalls(){
@@ -614,25 +633,17 @@ $("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
 
 /* stories */
 async function loadStories(){
- const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,created_at,profiles(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
+ const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
  if(error)return;const m=new Map();
  for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
  storyGroups=[...m.values()].sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
-}
-async function addStory(){
- closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
- if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
- toast("Uploading story…");
- const url=await upload("posts",f);
- const {error}=await sb.from("stories").insert({author_id:me.id,media_url:url,media_type:f.type.startsWith("video")?"video":"image"});if(error)throw error;
- await loadStories();if(tab==="feed")renderFeed();toast("Story posted.");
 }
 function openStory(i){sv={g:storyGroups[i],i:0};$("storyView").classList.add("show");showStory();}
 function showStory(){
  const {g,i}=sv,s=g.items[i];clearTimeout(svTimer);
  $("stBars").innerHTML=g.items.map((_,k)=>`<i class="${k<i?"done":k===i?"cur":""}"></i>`).join("");
  $("stHead").innerHTML=avatar(g.author)+`<b>${esc(g.author.display_name||g.author.username)}</b><span class="time" style="color:#ddd">${ago(s.created_at)}</span>`;
- $("stDel").classList.toggle("hidden",g.author.id!==me.id);
+ $("stDel").classList.toggle("hidden",g.author.id!==me.id);afterShow(s,g);
  const box=$("stMedia");
  if(s.media_type==="video"){box.innerHTML=`<video src="${esc(s.media_url)}" autoplay playsinline></video>`;const v=box.firstChild;v.onended=nextStory;v.onerror=nextStory;}
  else{box.innerHTML=`<img src="${esc(s.media_url)}" alt="">`;svTimer=setTimeout(nextStory,5000);}
@@ -663,6 +674,114 @@ async function changePhoto(){
  profile=data;refreshMe();toast("Photo updated.");
 }
 
+/* ---------- GROUPS / CHANNELS / STORY EXTRAS ---------- */
+const names=new Map();let storyFile=null,grpKind="group",grpMembers=new Map(),grpTimer=null,chTimer=null;
+function chatAvatar(c){return c.kind==="group"?'<div class="avatar">👥</div>':c.kind==="channel"?'<div class="avatar">📢</div>':avatar(c.person);}
+function senderTag(m){
+ if(!cur||cur.kind==="dm"||m.sender_id===me.id)return"";
+ const n=names.get(m.sender_id);
+ if(n===undefined){names.set(m.sender_id,"");sb.from("profiles").select("display_name,username").eq("id",m.sender_id).maybeSingle().then(({data})=>{names.set(m.sender_id,data?.display_name||data?.username||"Member");renderMsgs();});}
+ return `<div class="sn">${esc(n||"…")}</div>`;
+}
+function applyChatMode(){
+ const dm=cur.kind==="dm",ro=cur.kind==="channel"&&!["owner","admin"].includes(cur.role);
+ document.querySelectorAll('[data-act="voice"],[data-act="video"]').forEach(b=>b.classList.toggle("hidden",!dm));
+ $("inpBar").classList.toggle("hidden",ro);$("roBar").classList.toggle("hidden",!ro);$("recBar").classList.add("hidden");
+}
+function openGroup(kind){
+ closeAll();grpKind=kind;grpMembers=new Map();
+ $("grpHead").textContent=kind==="channel"?"New channel":"New group";
+ $("grpDescWrap").classList.toggle("hidden",kind!=="channel");$("grpSearchWrap").classList.toggle("hidden",kind==="channel");
+ for(const i of ["grpTitle","grpDesc","grpSearch"])$(i).value="";$("grpResults").innerHTML="";renderChips();
+ $("grpModal").classList.add("show");$("grpTitle").focus();
+}
+function renderChips(){$("grpChips").innerHTML=[...grpMembers.values()].map(p=>`<span class="chip" data-act="rmChip" data-id="${esc(p.id)}">${esc(p.display_name||p.username)} ✕</span>`).join("");}
+$("grpSearch").addEventListener("input",()=>{
+ clearTimeout(grpTimer);const term=$("grpSearch").value.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9_]/g,"");
+ if(term.length<2){$("grpResults").innerHTML="";return;}
+ grpTimer=setTimeout(async()=>{
+  const {data}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(10);
+  $("grpResults").innerHTML=(data||[]).map(p=>`<div class="hit" data-act="grpPick" data-id="${esc(p.id)}" data-dn="${esc(p.display_name||"")}" data-un="${esc(p.username)}">${avatar(p)}<div><b>${esc(p.display_name||p.username)}</b><small>@${esc(p.username)}</small></div></div>`).join("")||'<p class="mute">No members found.</p>';
+ },250);
+});
+async function createGroup(){
+ const title=$("grpTitle").value.trim();
+ if(title.length<2){toast("Give it a name (2+ characters).");return;}
+ if(grpKind==="group"&&!grpMembers.size){toast("Add at least one member.");return;}
+ const b=$("grpBtn");b.disabled=true;
+ try{
+  const {data:id,error}=await sb.rpc("create_group",{p_title:title,p_members:[...grpMembers.keys()],p_kind:grpKind,p_description:$("grpDesc").value.trim()});
+  if(error)throw error;closeAll();await loadChats();await openChat(id);
+ }finally{b.disabled=false;}
+}
+async function searchChannels(){
+ const {data,error}=await sb.rpc("search_channels",{q:$("chQ").value.trim()});if(error){toast(errMsg(error));return;}
+ $("chRes").innerHTML=(data||[]).map(c=>`<div class="hit"><div class="avatar">📢</div><div style="flex:1;min-width:0"><b>${esc(c.title)}</b><small>${esc(c.description||"")} ${c.member_count} subscribers</small></div>${c.joined?`<button class="lnk" data-act="openCh" data-id="${esc(c.id)}">Open</button>`:`<button class="btn" style="width:auto;padding:8px 14px;margin:0" data-act="joinCh" data-id="${esc(c.id)}">Join</button>`}</div>`).join("")||'<p class="mute">No channels found.</p>';
+}
+async function findChannels(){closeAll();$("chQ").value="";$("chModal").classList.add("show");await searchChannels();$("chQ").focus();}
+$("chQ").addEventListener("input",()=>{clearTimeout(chTimer);chTimer=setTimeout(searchChannels,250);});
+async function joinCh(a){const id=a.dataset.id;const {error}=await sb.rpc("join_channel",{p_conv:id});if(error)throw error;closeAll();await loadChats();await openChat(id);}
+async function info(){
+ if(!cur||cur.kind==="dm")return;
+ $("infoTitle").textContent=cur.name;$("infoSub").textContent=cur.members+(cur.kind==="channel"?" subscribers":" members");
+ $("infoAdd").classList.toggle("hidden",!(cur.kind==="group"&&["owner","admin"].includes(cur.role)));
+ $("infoList").innerHTML='<p class="mute">Loading…</p>';$("infoModal").classList.add("show");
+ const {data}=await sb.from("conversation_members").select("user_id,role,profiles(display_name,username,avatar_url)").eq("conversation_id",cur.id).limit(200);
+ $("infoList").innerHTML=(data||[]).map(m=>`<div class="hit">${avatar(m.profiles)}<div><b>${esc(m.profiles?.display_name||m.profiles?.username||"Member")}</b><small>@${esc(m.profiles?.username||"")}${m.role!=="member"?" · "+esc(m.role):""}</small></div></div>`).join("");
+}
+async function addMember(){
+ const u=$("infoUser").value.trim();if(!u||!cur)return;
+ const {error}=await sb.rpc("add_member_by_username",{p_conv:cur.id,p_username:u});if(error)throw error;
+ $("infoUser").value="";cur.members++;updatePresence();toast("Member added.");await info();
+}
+async function leaveChat(){
+ if(!cur||!confirm("Leave "+cur.name+"?"))return;const id=cur.id;
+ const {error}=await sb.from("conversation_members").delete().eq("conversation_id",id).eq("user_id",me.id);if(error)throw error;
+ closeAll();closeChat();await loadChats();
+}
+
+/* stories: captions, views, replies */
+async function addStory(){
+ closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
+ if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
+ storyFile=f;$("stFileName").textContent=f.name;$("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
+}
+async function submitStory(){
+ if(!storyFile)return;const b=$("stBtn");b.disabled=true;
+ try{
+  toast("Uploading story…");const url=await upload("posts",storyFile);
+  const {error}=await sb.from("stories").insert({author_id:me.id,media_url:url,media_type:storyFile.type.startsWith("video")?"video":"image",caption:$("stCapInput").value.trim()});
+  if(error)throw error;storyFile=null;closeAll();await loadStories();if(tab==="feed")renderFeed();toast("Story posted.");
+ }finally{b.disabled=false;}
+}
+function afterShow(s,g){
+ $("stCap").textContent=s.caption||"";$("stCap").style.display=s.caption?"block":"none";
+ const foot=$("stFoot");
+ if(g.author.id===me.id){
+  foot.innerHTML='<button class="btn alt" id="vwBtn" data-act="stViews">👁 …</button>';
+  sb.from("story_views").select("viewer_id",{count:"exact",head:true}).eq("story_id",s.id).then(({count})=>{const b=$("vwBtn");if(b&&sv&&sv.g.items[sv.i].id===s.id)b.textContent="👁 "+(count||0)+" views";});
+ }else{
+  foot.innerHTML=`<input id="stReply" maxlength="500" placeholder="Reply to ${esc(g.author.display_name||g.author.username)}…" autocomplete="off"><button class="send" data-act="stSend" aria-label="Send reply">${SVG.send}</button>`;
+  sb.from("story_views").upsert({story_id:s.id,viewer_id:me.id},{onConflict:"story_id,viewer_id",ignoreDuplicates:true}).then(()=>{});
+ }
+}
+async function stSend(){
+ const t=$("stReply")?.value.trim();if(!t||!sv)return;
+ const {data:id,error}=await sb.rpc("get_or_create_dm",{other:sv.g.author.id});if(error)throw error;
+ const {error:e2}=await sb.from("messages").insert({conversation_id:id,sender_id:me.id,body:("↩ Story reply: "+t).slice(0,5000)});if(e2)throw e2;
+ $("stReply").value="";$("stReply").blur();toast("Reply sent.");
+}
+async function stViews(){
+ if(!sv)return;const s=sv.g.items[sv.i];clearTimeout(svTimer);
+ $("vwList").innerHTML='<p class="mute">Loading…</p>';$("vwModal").classList.add("show");
+ const {data,error}=await sb.from("story_views").select("viewed_at,profiles(display_name,username,avatar_url)").eq("story_id",s.id).order("viewed_at",{ascending:false}).limit(200);
+ if(error){toast(errMsg(error));return;}
+ $("vwList").innerHTML=(data||[]).map(v=>`<div class="hit">${avatar(v.profiles)}<div><b>${esc(v.profiles?.display_name||v.profiles?.username||"Member")}</b><small>${ago(v.viewed_at)} ago</small></div></div>`).join("")||'<p class="mute">No views yet.</p>';
+}
+document.addEventListener("focusin",e=>{if(e.target.id==="stReply"&&sv){clearTimeout(svTimer);$("stMedia").querySelector("video")?.pause();document.querySelectorAll("#stBars i.cur").forEach(i=>i.style.animationPlayState="paused");}});
+document.addEventListener("focusout",e=>{if(e.target.id==="stReply"&&sv){const s=sv.g.items[sv.i];if(s.media_type==="image")svTimer=setTimeout(nextStory,5000);else $("stMedia").querySelector("video")?.play();document.querySelectorAll("#stBars i.cur").forEach(i=>i.style.animationPlayState="running");}});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stReply")stSend().catch(x=>toast(errMsg(x)));});
+
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
@@ -670,6 +789,8 @@ const actions={
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
+ newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
+ findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
  recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
  vplay:a=>vplay(a.dataset.id),like:a=>like(a.dataset.id),cmt:a=>cmt(a.dataset.id),delPost:a=>delPost(a.dataset.id),
@@ -688,7 +809,7 @@ $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 history.scrollRestoration="manual";
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me&&!msgChannel)subscribeMessages();}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me)loadChats();if(me&&!msgChannel)subscribeMessages();}});
 window.addEventListener("online",()=>{if(me){subscribeMessages();subscribeIncomingCalls();loadChats();}});
 
 const {data:{session}}=await sb.auth.getSession();
