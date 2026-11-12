@@ -682,41 +682,41 @@ $('switchMode').onclick = () => {
 
 $('authForm').onsubmit = async e => {
     e.preventDefault();
+    console.log('[BOUNCY AUTH] Submit event fired');
     const btn = $('authSubmit');
     const email = $('email').value.trim();
     const password = $('password').value;
     const name = $('displayName')?.value.trim() || '';
-    if (!email || !password) { showBigError('Enter your email and password.'); return; }
+    console.log('[BOUNCY AUTH] Email entered:', !!email, 'Password entered:', !!password);
 
+    if (!email || !password) { showBigError('Enter your email and password.'); return; }
     btn.disabled = true;
-    btn.textContent = 'Signing in…';
+    btn.textContent = 'Connecting…';
+    btn.style.opacity = '0.65';
     $('bigErrorBox').style.display = 'none';
+
     try {
-        let result;
-        if (mode === 'signup') {
-            result = await sb.auth.signUp({ email, password, options: { data: { display_name: name || email.split('@')[0] } } });
-            if (result.error) throw result.error;
-            if (result.data?.user && result.data?.session) {
-                await ensureProfile(result.data.user, name);
-                await boot(result.data.user);
-                return;
-            }
-            if (result.data?.user && !result.data?.session) {
-                showBigError('Account created. Confirm your email, then sign in.');
-                return;
-            }
-        } else {
-            result = await sb.auth.signInWithPassword({ email, password });
-            if (result.error) throw result.error;
-            if (!result.data?.user) throw new Error('Login did not return an account. Please try again.');
-            await boot(result.data.user);
-            return;
-        }
+        console.log('[BOUNCY AUTH] Calling Supabase signInWithPassword');
+        const result = await sb.auth.signInWithPassword({ email, password });
+        console.log('[BOUNCY AUTH] Supabase response:', {
+            hasUser: !!result.data?.user,
+            hasSession: !!result.data?.session,
+            error: result.error ? { message: result.error.message, status: result.error.status, code: result.error.code } : null
+        });
+        if (result.error) throw result.error;
+        if (!result.data?.user) throw new Error('Supabase returned no user. Please try again.');
+
+        console.log('[BOUNCY AUTH] Login successful. Loading profile and chats.');
+        btn.textContent = 'Loading BOUNCY…';
+        await boot(result.data.user);
+        console.log('[BOUNCY AUTH] App boot completed.');
     } catch (err) {
-        console.error('BOUNCY authentication error:', err);
+        console.error('[BOUNCY AUTH] Login/boot failed:', err);
         showBigError(err?.message || 'Sign in failed. Please try again.');
+        showAuth();
     } finally {
         btn.disabled = false;
+        btn.style.opacity = '1';
         btn.textContent = mode === 'signup' ? 'Sign Up' : 'Sign In';
     }
 };
@@ -737,14 +737,21 @@ async function ensureProfile(u, name) {
 }
 
 async function boot(u) {
+    console.log('[BOUNCY BOOT] Starting for user:', u.id);
     user = u;
-    const { data: p } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
+    const { data: p, error: profileError } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
+    if (profileError) {
+        console.error('[BOUNCY BOOT] Profile query failed:', profileError);
+        throw new Error('Profile could not load: ' + profileError.message);
+    }
     profile = p || await ensureProfile(u, '');
-    $('myName').textContent = profile?.display_name || 'User';
-    $('myHandle').textContent = '@' + (profile?.username || '');
-    $('myAvatar').innerHTML = profile?.avatar_url ? `<img src="${esc(profile.avatar_url)}">` : initials(profile?.display_name);
+    if (!profile) throw new Error('BOUNCY could not create or load your profile.');
+    $('myName').textContent = profile.display_name || 'User';
+    $('myHandle').textContent = '@' + (profile.username || '');
+    $('myAvatar').innerHTML = profile.avatar_url ? `<img src="${esc(profile.avatar_url)}">` : initials(profile.display_name);
     showApp();
-    loadConversations();
+    console.log('[BOUNCY BOOT] Profile ready. Loading conversations.');
+    await loadConversations();
     subscribeHome();
 }
 
