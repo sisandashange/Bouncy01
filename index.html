@@ -725,15 +725,16 @@ async function ensureProfile(u, name) {
     const base = (u.email || 'user').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15);
     const display = name || u.user_metadata?.display_name || base;
     const { data: existing } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
-    if (existing) { profile = existing; return; }
+    if (existing) { profile = existing; return existing; }
     let username = base, attempt = 0;
     while (attempt < 5) {
         const candidate = attempt ? base + Math.floor(Math.random() * 1000) : base;
         const { data, error } = await sb.from('profiles').insert({ id: u.id, username: candidate, display_name: display }).select().single();
-        if (!error) { profile = data; return; }
+        if (!error) { profile = data; return data; }
         if (error.code !== '23505') throw error;
         attempt++;
     }
+    throw new Error('Could not create your BOUNCY profile. Please try again.');
 }
 
 async function boot(u) {
