@@ -432,6 +432,8 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
 </div>
 
 <script>
+// Define the DOM helper before any app code uses it.
+const $ = id => document.getElementById(id);
 // --- BIG ERROR HANDLER ---
 function showBigError(msg) {
     let el = document.getElementById('bigErrorBox');
@@ -743,7 +745,7 @@ $('quickStudio').onclick = () => { $('studioOverlay').classList.remove('hidden')
 const SUPABASE_URL = 'https://lakupnehsetdazezlsrs.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_3ePLMRIKVNms7Qi461FQXw_x2TGc75s';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const $ = id => document.getElementById(id);
+
 
 let user=null, profile=null, activeConversation=null, conversations=[], currentTab='active';
 let mediaRecorder = null, audioChunks = [], isOnline = navigator.onLine;
