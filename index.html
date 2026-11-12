@@ -103,7 +103,7 @@ button{cursor:pointer}
  <div id="callTitle" style="font-size:24px;font-weight:700">Calling…</div>
  <div id="callStatus" style="color:#8a9aa8;margin-top:8px">Connecting</div>
  <div id="callAvatar" class="callAvatar">B</div>
- <video id="remoteVideo" autoplay playsinline></video>
+ <video id="remoteVideo" autoplay playsinline></video><audio id="remoteAudio" autoplay></audio>
  <video id="localVideo" class="callSmall" autoplay muted playsinline></video>
  <div class="callActions" id="callActions">
   <button id="acceptCallBtn" style="display:none" onclick="acceptIncomingCall()">✓</button>
@@ -337,7 +337,7 @@ async function preparePeer(){
  $("localVideo").srcObject=localStream;
  pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
- pc.ontrack=e=>{$("remoteVideo").srcObject=e.streams[0];$("callStatus").textContent="Connected";};
+ pc.ontrack=e=>{if(call.type==="video")$("remoteVideo").srcObject=e.streams[0];else $("remoteAudio").srcObject=e.streams[0];$("callStatus").textContent="Connected";};
  pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(console.error);};
  pc.onconnectionstatechange=()=>{if(pc&&["failed","disconnected"].includes(pc.connectionState))$("callStatus").textContent="Connection interrupted";};
 }
@@ -383,7 +383,7 @@ async function endCall(){
 function cleanupCall(){
  if(pc){pc.ontrack=null;pc.onicecandidate=null;pc.close();pc=null;}
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
- $("remoteVideo").srcObject=null;$("localVideo").srcObject=null;$("callLayer").classList.remove("show");
+ $("remoteVideo").srcObject=null;$("remoteAudio").srcObject=null;$("localVideo").srcObject=null;$("callLayer").classList.remove("show");
  if(callChannel){sb.removeChannel(callChannel);callChannel=null;}
  call=null;seenSignals.clear();if(callTimer){clearInterval(callTimer);callTimer=null;}
 }
@@ -392,7 +392,6 @@ function toggleCamera(){if(localStream)localStream.getVideoTracks().forEach(t=>t
 window.authSubmit=authSubmit;window.authSwitch=authSwitch;window.openMenu=openMenu;window.closeAll=closeAll;window.openSearch=openSearch;window.closeSearch=closeSearch;window.doSearch=doSearch;window.showChats=showChats;window.showCalls=showCalls;window.openNewChat=openNewChat;window.createChat=()=>createChat().catch(e=>alert(err(e)));window.openChat=openChat;window.sendMsg=()=>sendMsg();window.closeChat=closeChat;window.startCall=startCall;window.acceptIncomingCall=acceptIncomingCall;window.endCall=endCall;window.toggleMute=toggleMute;window.toggleCamera=toggleCamera;
 $("newName").addEventListener("keydown",e=>{if(e.key==="Enter")window.createChat();});
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter")window.sendMsg();});
-sb.auth.onAuthStateChange(async(event,session)=>{if(session?.user&&!me){me=session.user;try{await enterApp();}catch(e){$("authError").textContent=err(e);}}});
 const {data:{session}}=await sb.auth.getSession();
 if(session){me=session.user;try{await enterApp();}catch(e){$("authError").textContent=err(e);}}
 </script>
