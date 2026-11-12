@@ -633,8 +633,8 @@ $("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
 
 /* stories */
 async function loadStories(){
- const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
- if(error)return;const m=new Map();
+ const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
+ if(error){toast("Stories: "+errMsg(error));return;}const m=new Map();
  for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
  storyGroups=[...m.values()].sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
 }
@@ -774,7 +774,7 @@ async function stSend(){
 async function stViews(){
  if(!sv)return;const s=sv.g.items[sv.i];clearTimeout(svTimer);
  $("vwList").innerHTML='<p class="mute">Loading…</p>';$("vwModal").classList.add("show");
- const {data,error}=await sb.from("story_views").select("viewed_at,profiles(display_name,username,avatar_url)").eq("story_id",s.id).order("viewed_at",{ascending:false}).limit(200);
+ const {data,error}=await sb.from("story_views").select("viewed_at,profiles!story_views_viewer_id_fkey(display_name,username,avatar_url)").eq("story_id",s.id).order("viewed_at",{ascending:false}).limit(200);
  if(error){toast(errMsg(error));return;}
  $("vwList").innerHTML=(data||[]).map(v=>`<div class="hit">${avatar(v.profiles)}<div><b>${esc(v.profiles?.display_name||v.profiles?.username||"Member")}</b><small>${ago(v.viewed_at)} ago</small></div></div>`).join("")||'<p class="mute">No views yet.</p>';
 }
