@@ -1,209 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1318">
+<title>BOUNCY</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Roboto,Arial}
-body{background:#17212b;color:#fff;overflow:hidden}
-button{cursor:pointer}
-/* TOP BAR - EXACT */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 0;background:#17212b}
-.iconBtn{background:none;border:0;color:#fff;font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
-.tabs{display:flex;gap:32px;font-size:19px;font-weight:700}
-.tabs span{padding-bottom:12px;color:#8a9aa8}
-.tabs span.on{color:#fff;border-bottom:3px solid #fff}
-/* DRAWER */
-#drawer{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#17212b;transition:.25s;z-index:20;padding:16px;box-shadow:5px 0 20px #000}
-#drawer.open{left:0}
-#drawer .me{display:flex;gap:12px;align-items:center;padding:20px 0}
-#drawer .item{padding:14px 8px;font-size:16px;border-bottom:1px solid #232e3a}
-#overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:15}
-#overlay.show{display:block}
-/* SEARCH */
-#searchBar{display:none;background:#242f3d;margin:10px 14px;padding:12px;border-radius:8px;align-items:center;gap:10px}
+:root{--bg:#0f1318;--panel:#171c23;--panel2:#1f262f;--line:#262e38;--text:#f2f5f8;--mute:#8b97a5;--pink:#ff2d87;--pink2:#ff5fa6;--mine:#8f1f52;--ok:#34d399;--bad:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+button{cursor:pointer;font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--pink2);outline-offset:2px}
+.hidden{display:none!important}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:0 auto;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 8px) 10px 0;background:var(--panel)}
+.iconBtn{background:none;border:0;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px}
+.iconBtn:active{background:var(--panel2)}
+.tabs{display:flex;gap:28px;font-weight:700;font-size:15px;letter-spacing:.06em}
+.tabs button{background:none;border:0;padding:12px 2px;color:var(--mute);border-bottom:3px solid transparent}
+.tabs button.on{color:var(--text);border-color:var(--pink)}
+#searchBar{display:none;background:var(--panel2);margin:10px 12px;padding:4px 12px;border-radius:12px;align-items:center;gap:8px}
 #searchBar.show{display:flex}
-#searchBar input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px}
-#searchBar button{background:0;border:0;color:#8a9aa8;font-size:20px}
-/* LIST */
-.list{height:calc(100vh - 58px);overflow-y:auto}
-.row{display:flex;gap:12px;padding:12px 14px;align-items:center}
-.row:active{background:#2b5278}
-.avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px}
-.a1{background:#2AABEE}.a2{background:#ff8a3d}.a3{background:#e17076}.a4{background:#3d9a50}.a5{background:#7a5af8}.a6{background:#a13d9a}
-.mid{flex:1;min-width:0;border-bottom:1px solid #232e3a;padding-bottom:12px}
-.top{display:flex;justify-content:space-between}
-.name{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.name.green{color:#4CAF50}
-.time{font-size:13px;color:#8a9aa8;white-space:nowrap;margin-left:8px}
-.sub{display:flex;justify-content:space-between;margin-top:4px}
-.last{font-size:15px;color:#8a9aa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.badge{min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 6px;margin-left:8px}
-.blue{background:#2AABEE}.grey{background:#6b7a88}
-.fab{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#2AABEE;border:0;color:#fff;z-index:10;display:flex;align-items:center;justify-content:center}
-/* CHAT VIEW */
-#chatView{position:fixed;inset:0;background:#0e1621;display:none;flex-direction:column;z-index:30}
+#searchBar input{flex:1;background:none;border:0;outline:0;color:var(--text);font-size:16px;padding:10px 0}
+#searchBar button{background:none;border:0;color:var(--mute);font-size:18px}
+.list{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.row{display:flex;gap:12px;padding:10px 14px;align-items:center;cursor:pointer}
+.row:active,.row:hover{background:var(--panel)}
+.avatar{width:50px;height:50px;border-radius:50%;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;background:linear-gradient(135deg,var(--pink),#7a5af8);position:relative}
+.mid{flex:1;min-width:0;border-bottom:1px solid var(--line);padding:2px 0 10px}
+.top,.sub{display:flex;justify-content:space-between;gap:8px}
+.name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);margin-left:6px}
+.time{font-size:12px;color:var(--mute);white-space:nowrap}
+.last{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{min-width:20px;height:20px;border-radius:10px;background:var(--pink);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.empty{padding:40px 24px;text-align:center;color:var(--mute)}
+.fab{position:fixed;right:max(18px,calc(50vw - 432px));bottom:calc(env(safe-area-inset-bottom) + 20px);width:58px;height:58px;border-radius:50%;background:var(--pink);border:0;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(255,45,135,.4);z-index:10}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:none}
+.overlay.show{display:block}
+#drawer{position:fixed;top:0;bottom:0;left:-300px;width:290px;background:var(--panel);transition:left .22s;z-index:60;padding:calc(env(safe-area-inset-top) + 16px) 16px 16px;display:flex;flex-direction:column}
+#drawer.open{left:0}
+#drawer .me{display:flex;gap:12px;align-items:center;padding:12px 0 20px;border-bottom:1px solid var(--line);margin-bottom:6px}
+#drawer .item{background:none;border:0;text-align:left;padding:14px 6px;font-size:16px;border-radius:8px}
+#drawer .item:active{background:var(--panel2)}
+#chatView{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:30;max-width:900px;margin:0 auto}
 #chatView.open{display:flex}
-.cHead{display:flex;align-items:center;gap:10px;padding:10px;background:#17212b}
-.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:75%;padding:10px 12px;border-radius:14px;background:#182533;align-self:flex-start}
-.msg.me{align-self:flex-end;background:#2b5278}
-.msg .t{font-size:11px;color:#8a9aa8;float:right;margin:8px 0 0 10px}
-.inp{display:flex;gap:10px;padding:12px;background:#17212b;align-items:center}
-.inp input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px}
-.inp button{background:#2AABEE;border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px}
-/* MODAL */
-#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:40}
+.cHead{display:flex;align-items:center;gap:8px;padding:calc(env(safe-area-inset-top) + 8px) 8px 8px;background:var(--panel)}
+.cHead .avatar{width:40px;height:40px;font-size:14px}
+.cHead small{color:var(--mute)}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:78%;padding:8px 12px;border-radius:16px 16px 16px 4px;background:var(--panel2);align-self:flex-start;word-break:break-word;white-space:pre-wrap}
+.msg.me{align-self:flex-end;background:var(--mine);border-radius:16px 16px 4px 16px}
+.msg .t{font-size:11px;color:#c2c9d2;opacity:.7;margin-left:10px;float:right;margin-top:6px}
+.msg.pending{opacity:.55}
+.inp{display:flex;gap:10px;padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);background:var(--panel);align-items:center}
+.inp input{flex:1;background:var(--panel2);border:0;outline:0;color:var(--text);font-size:16px;padding:12px 16px;border-radius:22px}
+.send{background:var(--pink);border:0;width:44px;height:44px;border-radius:50%;font-size:18px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
 #modal.show{display:flex}
-.box{background:#17212b;padding:20px;border-radius:12px;width:85%;max-width:360px}
-.box input,.box textarea{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:12px;border-radius:8px;margin:10px 0;font-size:16px}
-.box button{background:#2AABEE;border:0;color:#fff;padding:12px;border-radius:8px;width:100%;font-size:16px;font-weight:700;margin-top:6px}
-.box .cancel{background:#242f3d}
-#peopleResults{max-height:230px;overflow:auto;margin-top:8px}
-.personHit{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #2b3948;cursor:pointer}
-.personHit small{display:block;color:#8a9aa8;margin-top:3px}
-.personHit .pick{margin-left:auto;color:#2AABEE;font-size:13px}
-
-/* AUTH + REAL CALL LAYERS (keeps the original Telegram-style interface) */
-#authGate{position:fixed;inset:0;background:#17212b;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
-#authGate .authBox{width:100%;max-width:380px}
-#authGate h2{font-size:28px;margin-bottom:8px}
-#authGate p{color:#8a9aa8;margin-bottom:18px;line-height:1.45}
-#authGate input{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:14px;border-radius:8px;margin:7px 0;font-size:16px}
-#authGate button{width:100%;padding:13px;border:0;border-radius:8px;background:#2AABEE;color:white;font-weight:700;font-size:16px;margin-top:9px}
-#authGate .secondary{background:#242f3d}
-#authError{color:#ff8b8b;font-size:13px;min-height:18px;margin-top:8px}
-#callLayer{position:fixed;inset:0;background:#0e1621;z-index:95;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+.box{background:var(--panel);padding:20px;border-radius:16px;width:100%;max-width:380px}
+.box h3{margin-bottom:6px}
+input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:var(--text);padding:13px;border-radius:10px;margin:8px 0;font-size:16px;font-family:inherit}
+.btn{width:100%;background:var(--pink);border:0;color:#fff;padding:13px;border-radius:10px;font-weight:700;margin-top:6px}
+.btn.alt{background:var(--panel2)}
+.btn:disabled{opacity:.5}
+#peopleResults{max-height:220px;overflow:auto}
+.hit{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.hit small{display:block;color:var(--mute)}
+#authGate{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}
+.authBox{width:100%;max-width:380px}
+.logo{font-size:34px;font-weight:900;letter-spacing:.08em;background:linear-gradient(90deg,var(--pink),#7a5af8);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px}
+.authBox p{color:var(--mute);margin-bottom:16px}
+#authError{color:#ff8b8b;font-size:14px;min-height:20px;margin-top:10px}
+#callLayer{position:fixed;inset:0;background:#0a0d11;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
 #callLayer.show{display:flex}
-#callLayer .callAvatar{width:104px;height:104px;border-radius:50%;background:#2AABEE;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;margin:0 auto 20px}
-#callLayer .callActions{display:flex;gap:22px;margin-top:38px;justify-content:center}
-#callLayer .callActions button{border:0;border-radius:50%;width:62px;height:62px;color:white;font-size:23px;background:#2AABEE}
-#callLayer .callActions .end{background:#e5484d}
-#callLayer video{width:100%;max-height:42vh;object-fit:cover;background:#000;border-radius:12px;margin-top:12px}
-#callLayer .callSmall{width:110px;position:absolute;right:18px;top:18px;z-index:2}
-.callChoice{display:flex;gap:10px;margin-top:12px}
-.callChoice button{flex:1}
-
+.callAvatar{width:104px;height:104px;font-size:36px;margin:20px auto}
+#callLayer video{width:100%;max-height:50vh;object-fit:cover;background:#000;border-radius:14px}
+#localVideo{width:110px!important;position:absolute;right:16px;top:calc(env(safe-area-inset-top) + 16px)}
+.callActions{display:flex;gap:20px;margin-top:30px}
+.callActions button{border:0;border-radius:50%;width:62px;height:62px;font-size:22px;background:var(--panel2)}
+.callActions .end{background:var(--bad)}.callActions .acc{background:var(--ok)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%);background:#2a323d;padding:10px 16px;border-radius:10px;z-index:200;display:none;max-width:90%;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
 
 <div id="authGate">
- <div class="authBox">
-  <div style="font-size:42px;margin-bottom:18px">✉️</div>
-  <h2>Welcome to BOUNCY</h2>
-  <p>Sign in or create your account to message and call people.</p>
-  <div id="signupFields" style="display:none">
-   <input id="authDisplay" placeholder="Your name" autocomplete="name">
-   <input id="authUsername" placeholder="Username (e.g. sisanda)" autocomplete="username">
+ <form class="authBox" id="authForm" novalidate>
+  <div class="logo">BOUNCY</div>
+  <p id="authSub">Sign in to message and call people.</p>
+  <div id="signupFields" class="hidden">
+   <input class="f" id="authDisplay" placeholder="Your name" autocomplete="name" maxlength="40">
+   <input class="f" id="authUsername" placeholder="Username (e.g. sisanda)" autocomplete="username" maxlength="24" autocapitalize="none">
   </div>
-  <input id="authEmail" type="email" placeholder="Email address" autocomplete="email">
-  <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password">
-  <button id="authSubmit" onclick="authSubmit()">SIGN IN</button>
-  <button class="secondary" id="authSwitch" onclick="authSwitch()">CREATE ACCOUNT</button>
-  <div id="authError"></div>
- </div>
+  <input class="f" id="authEmail" type="email" placeholder="Email address" autocomplete="email">
+  <input class="f" id="authPassword" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8">
+  <button class="btn" id="authSubmit" type="submit">SIGN IN</button>
+  <button class="btn alt" id="authSwitch" type="button">CREATE ACCOUNT</button>
+  <div id="authError" role="alert"></div>
+ </form>
 </div>
+
 <div id="callLayer">
  <div id="callTitle" style="font-size:24px;font-weight:700">Calling…</div>
- <div id="callStatus" style="color:#8a9aa8;margin-top:8px">Connecting</div>
- <div id="callAvatar" class="callAvatar">B</div>
+ <div id="callStatus" style="color:var(--mute);margin-top:6px">Connecting</div>
+ <div id="callAvatar" class="avatar callAvatar">B</div>
  <video id="remoteVideo" autoplay playsinline></video><audio id="remoteAudio" autoplay></audio>
- <video id="localVideo" class="callSmall" autoplay muted playsinline></video>
- <div class="callActions" id="callActions">
-  <button id="acceptCallBtn" style="display:none" onclick="acceptIncomingCall()">✓</button>
-  <button onclick="toggleMute()">🎙</button>
-  <button onclick="toggleCamera()">📷</button>
-  <button class="end" onclick="endCall()">✕</button>
+ <video id="localVideo" autoplay muted playsinline></video>
+ <div class="callActions">
+  <button id="acceptBtn" class="acc hidden" aria-label="Answer" data-act="accept">✓</button>
+  <button data-act="mute" aria-label="Mute">🎙</button>
+  <button data-act="cam" aria-label="Camera">📷</button>
+  <button class="end" data-act="end" aria-label="End call">✕</button>
  </div>
 </div>
 
-
-<div id="overlay" onclick="closeAll()"></div>
-
-<!-- DRAWER / MENU - NOW WORKS -->
+<div id="overlay" class="overlay"></div>
 <div id="drawer">
-  <div class="me"><div class="avatar a1">BU</div><div><b>Bouncy User</b><br><span style="color:#8a9aa8">@user_87ee1</span></div></div>
-  <div class="item" onclick="alert('New Group - coming next')">👥 New Group</div>
-  <div class="item" onclick="alert('New Channel - coming next')">📢 New Channel</div>
-  <div class="item" onclick="alert('Saved Messages')">🔖 Saved Messages</div>
-  <div class="item" onclick="closeAll();showCalls()">📞 Calls</div>
-  <div class="item" onclick="alert('Settings')">⚙️ Settings</div>
-  <div class="item" onclick="logout()" style="color:#ff7777">↪ Log out</div>
-  <div class="item" onclick="closeAll()" style="color:#2AABEE">← Close Menu</div>
+ <div class="me" id="drawerMe"></div>
+ <button class="item" data-act="calls">📞 Calls</button>
+ <button class="item" data-act="logout" style="color:#ff7b7b">↪ Log out</button>
+ <button class="item" data-act="closeAll" style="color:var(--pink2)">← Close</button>
 </div>
 
-<div class="topbar">
-  <button class="iconBtn" onclick="openMenu()">☰</button>
-  <div class="tabs"><span id="tabChats" class="on" onclick="showChats()">CHATS</span><span id="tabCalls" onclick="showCalls()">CALLS</span></div>
-  <button class="iconBtn" onclick="openSearch()">
-    <!-- CLEAN WHITE SEARCH LIKE TELEGRAM, NOT EMOJI -->
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
-  </button>
+<div id="app">
+ <div class="topbar">
+  <button class="iconBtn" data-act="menu" aria-label="Menu">☰</button>
+  <div class="tabs"><button id="tabChats" class="on" data-act="chats">CHATS</button><button id="tabCalls" data-act="calls">CALLS</button></div>
+  <button class="iconBtn" data-act="search" aria-label="Search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg></button>
+ </div>
+ <div id="searchBar"><input id="searchInput" placeholder="Search chats" aria-label="Search chats"><button data-act="closeSearch" aria-label="Close search">✕</button></div>
+ <div class="list" id="list"></div>
+ <div class="list hidden" id="callsList"></div>
+ <button class="fab" data-act="newChat" aria-label="New chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
 </div>
 
-<div id="searchBar"><span>🔍</span><input id="searchInput" placeholder="Search" oninput="doSearch()"><button onclick="closeSearch()">✕</button></div>
-
-<div class="list" id="list"></div>
-<div class="list" id="callsList" style="display:none"></div>
-
-<!-- PENCIL - NOW WORKS, SOLID LIKE TELEGRAM -->
-<button class="fab" onclick="openNewChat()">
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-</button>
-
-<!-- CHAT WINDOW -->
 <div id="chatView">
-  <div class="cHead">
-    <button class="iconBtn" onclick="closeChat()">←</button>
-    <div class="avatar a1" id="hAv">J</div>
-    <div style="flex:1"><b id="hName" style="font-size:18px">Jane</b><br><small style="color:#8a9aa8">online</small></div>
-    <button class="iconBtn" onclick="startCall('voice')">📞</button><button class="iconBtn" onclick="startCall('video')">▣</button>
-    <button class="iconBtn" onclick="alert('Profile')">⋮</button>
-  </div>
-  <div class="msgs" id="msgs"></div>
-  <div class="inp"><span style="font-size:22px">😊</span><input id="msgInp" placeholder="Message" onkeydown="if(event.key==='Enter')sendMsg()"><span>📎</span><button onclick="sendMsg()">➤</button></div>
+ <div class="cHead">
+  <button class="iconBtn" data-act="closeChat" aria-label="Back">←</button>
+  <div class="avatar" id="hAv">J</div>
+  <div style="flex:1;min-width:0"><b id="hName"></b><br><small id="hStatus">last seen recently</small></div>
+  <button class="iconBtn" data-act="voice" aria-label="Voice call">📞</button>
+  <button class="iconBtn" data-act="video" aria-label="Video call">🎥</button>
+ </div>
+ <div class="msgs" id="msgs"></div>
+ <div class="inp"><input id="msgInp" placeholder="Message" maxlength="5000" autocomplete="off" aria-label="Message"><button class="send" data-act="send" aria-label="Send">➤</button></div>
 </div>
 
-<!-- NEW CHAT MODAL -->
-<div id="modal"><div class="box"><h3>New Chat</h3><input id="newName" placeholder="Search username (e.g. thabo)" oninput="searchPeople()"><div id="peopleResults"><p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Search for real BOUNCY members by username.</p></div><textarea id="newMsg" placeholder="First message..."></textarea><button onclick="createChat()">START CHAT</button><button class="cancel" onclick="closeAll()">Cancel</button></div></div>
-
+<div id="modal"><div class="box">
+ <h3>New chat</h3>
+ <input class="f" id="newName" placeholder="Search username" autocapitalize="none" autocomplete="off">
+ <div id="peopleResults"></div>
+ <textarea class="f" id="newMsg" rows="2" maxlength="5000" placeholder="First message (optional)"></textarea>
+ <button class="btn" id="startBtn" data-act="createChat">START CHAT</button>
+ <button class="btn alt" data-act="closeAll">Cancel</button>
+</div></div>
+<div id="toast" role="status"></div>
 
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const SUPABASE_URL = "https://nruksvjkytpxbiemtalj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-";
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-let me=null, profile=null, chats=[], cur=null, filter="", authMode="signin";
-let call=null, pc=null, localStream=null, callChannel=null, incomingChannel=null;
-let presenceChannel=null, onlineIds=new Set(), peopleSearchTimer=null;
-let seenSignals=new Set(), pendingIce=[];
+const sb = createClient("https://nruksvjkytpxbiemtalj.supabase.co","sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-");
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const clock=()=>new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-function err(e){return e?.message||String(e||"Something went wrong");}
-function avatar(c){return c?.avatar_url?'<img class="avatar" src="'+esc(c.avatar_url)+'">':'<div class="avatar a1">'+esc((c?.display_name||c?.username||"?").slice(0,2).toUpperCase())+'</div>';}
-function authSwitch(){authMode=authMode==="signin"?"signup":"signin";$("signupFields").style.display=authMode==="signup"?"block":"none";$("authSubmit").textContent=authMode==="signup"?"CREATE ACCOUNT":"SIGN IN";$("authSwitch").textContent=authMode==="signup"?"BACK TO SIGN IN":"CREATE ACCOUNT";$("authError").textContent="";}
-async function authSubmit(){
- const email=$("authEmail").value.trim(), password=$("authPassword").value;
- $("authError").textContent="";
- if(!email||!password){$("authError").textContent="Enter your email and password.";return;}
+const fmt=d=>d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
+const errMsg=e=>e?.message||String(e||"Something went wrong");
+let me=null,profile=null,chats=[],cur=null,filter="",authMode="signin",onlineIds=new Set();
+let call=null,pc=null,localStream=null,callChannel=null,incomingChannel=null,msgChannel=null,presenceChannel=null;
+let seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
+
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500);}
+function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url)}">`:`<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;}
+
+/* ---------- AUTH ---------- */
+function setAuthMode(m){authMode=m;const s=m==="signup";$("signupFields").classList.toggle("hidden",!s);$("authSubmit").textContent=s?"CREATE ACCOUNT":"SIGN IN";$("authSwitch").textContent=s?"BACK TO SIGN IN":"CREATE ACCOUNT";$("authPassword").autocomplete=s?"new-password":"current-password";$("authError").textContent="";}
+async function authSubmit(e){
+ e.preventDefault();
+ const email=$("authEmail").value.trim(),password=$("authPassword").value,out=$("authError");out.textContent="";
+ if(!email||password.length<8){out.textContent="Enter your email and a password of 8+ characters.";return;}
  $("authSubmit").disabled=true;
  try{
   if(authMode==="signup"){
-   const username=$("authUsername").value.trim().replace(/^@/,"").toLowerCase();
-   const display=$("authDisplay").value.trim();
-   if(!display||! /^[a-z0-9_]{3,24}$/.test(username)) throw new Error("Enter your name and a username (3–24 letters, numbers or _).");
-   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username},emailRedirectTo:window.location.href.split("?")[0]}});
+   const username=$("authUsername").value.trim().replace(/^@/,"").toLowerCase(),display=$("authDisplay").value.trim();
+   if(display.length<2||!/^[a-z0-9_]{3,24}$/.test(username))throw new Error("Enter your name and a username (3–24 letters, numbers or _).");
+   const {data:taken}=await sb.from("profiles").select("id").eq("username",username).maybeSingle();
+   if(taken)throw new Error("That username is taken.");
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username},emailRedirectTo:location.href.split("?")[0]}});
    if(error)throw error;
-   if(!data.session){$("authError").textContent="Check your email to confirm your account, then sign in.";return;}
-   me=data.user;
-   const {error:pe}=await sb.from("profiles").upsert({id:me.id,display_name:display,username},{onConflict:"id"});
-   if(pe)throw pe;
+   if(!data.session){out.textContent="Check your email to confirm your account, then sign in.";return;}
   }else{
-   const {data,error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;me=data.user;
+   const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;
   }
   await enterApp();
- }catch(e){$("authError").textContent=err(e);}finally{$("authSubmit").disabled=false;}
+ }catch(x){out.textContent=errMsg(x);}finally{$("authSubmit").disabled=false;}
 }
 async function enterApp(){
  const {data:{user}}=await sb.auth.getUser();me=user;if(!me)return;
@@ -211,235 +200,231 @@ async function enterApp(){
  if(error)throw error;
  if(!p){
   const md=me.user_metadata||{};
-  const username=(md.username||("user_"+me.id.slice(0,8))).toLowerCase();
-  const display=md.display_name||"Bouncy User";
-  const ins=await sb.from("profiles").upsert({id:me.id,display_name:display,username},{onConflict:"id"}).select().single();
-  if(ins.error)throw ins.error;p=ins.data;
+  const r=await sb.from("profiles").upsert({id:me.id,display_name:md.display_name||"New member",username:(md.username||("user_"+me.id.slice(0,8))).toLowerCase()},{onConflict:"id"}).select().single();
+  if(r.error)throw r.error;p=r.data;
  }
- profile=p;
- $("authGate").style.display="none";
- document.querySelector("#drawer .me").innerHTML=avatar(profile)+'<div><b>'+esc(profile.display_name)+'</b><br><span style="color:#8a9aa8">@'+esc(profile.username||"")+'</span></div>';
- await loadChats();subscribeIncomingCalls();subscribePresence();
+ profile=p;$("authGate").classList.add("hidden");
+ $("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;
+ await loadChats();subscribeMessages();subscribeIncomingCalls();subscribePresence();
 }
-async function loadChats(){
- const {data:members,error}=await sb.from("conversation_members").select("conversation_id").eq("user_id",me.id);
- if(error)throw error;
- const ids=[...new Set((members||[]).map(x=>x.conversation_id))];
- chats=[];
- if(ids.length){
-  const {data:convs,error:ce}=await sb.from("conversations").select("id,created_at").in("id",ids).order("created_at",{ascending:false});
-  if(ce)throw ce;
-  for(const cv of convs||[]){
-   const {data:ms,error:meErr}=await sb.from("conversation_members").select("user_id").eq("conversation_id",cv.id);
-   if(meErr)continue;
-   const other=ms?.find(x=>x.user_id!==me.id)?.user_id;
-   if(!other)continue;
-   const {data:person}=await sb.from("profiles").select("id,display_name,username,avatar_url").eq("id",other).maybeSingle();
-   const {data:latest}=await sb.from("messages").select("body,created_at,sender_id").eq("conversation_id",cv.id).order("created_at",{ascending:false}).limit(1);
-   chats.push({id:cv.id,other_id:other,person:person||{display_name:"Bouncy member"},name:person?.display_name||person?.username||"Bouncy member",last:latest?.[0]?.body||"No messages yet",time:latest?.[0]?new Date(latest[0].created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"",msgs:[]});
-  }
- }
- render();
-}
-function render(){
- const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(filter.toLowerCase()));
- $("list").innerHTML=found.map(c=>'<div class="row" onclick="openChat(\''+c.id+'\')">'+avatar(c.person)+'<div class="mid"><div class="top"><span class="name'+(onlineIds.has(c.other_id)?' green':'')+'">'+esc(c.name)+'</span><span class="time">'+esc(c.time)+'</span></div><div class="sub"><span class="last">'+esc(c.last)+'</span></div></div></div>').join("")||'<p style="padding:20px;color:#8a9aa8">'+(filter?"No matching chats":"No conversations yet. Tap the pencil to find someone by username.")+'</p>';
-}
-async function openChat(id){
- cur=chats.find(c=>c.id===id);if(!cur)return;
- $("hName").textContent=cur.name;$("hAv").textContent=(cur.person.display_name||cur.name).slice(0,2).toUpperCase();
- $("chatView").classList.add("open");updateChatPresence();await loadMessages();subscribeMessages();
-}
-async function loadMessages(){
- const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at").eq("conversation_id",cur.id).order("created_at",{ascending:true});
- if(error){alert(err(error));return;}
- cur.msgs=data||[];renderMsgs();
-}
-function renderMsgs(){
- $("msgs").innerHTML=(cur?.msgs||[]).map(m=>m.sender_id===me.id?'<div class="msg me">'+esc(m.body)+'<span class="t">'+new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+' ✓</span></div>':'<div class="msg">'+esc(m.body)+'<span class="t">'+new Date(m.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})+'</span></div>').join("");
- $("msgs").scrollTop=$("msgs").scrollHeight;
-}
-let msgChannel=null;
-function subscribeMessages(){
- if(msgChannel)sb.removeChannel(msgChannel);
- msgChannel=sb.channel("messages-"+cur.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+cur.id},payload=>{
-  if(!cur||payload.new.conversation_id!==cur.id)return;
-  if(!cur.msgs.some(m=>m.id===payload.new.id)){cur.msgs.push(payload.new);renderMsgs();}
-  const c=chats.find(x=>x.id===cur.id);if(c){c.last=payload.new.body;c.time=clock();render();}
- }).subscribe();
-}
-async function sendMsg(){
- const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";
- const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body}).select().single();
- if(error){alert(err(error));input.value=body;return;}
- if(!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
- cur.last=body;cur.time=clock();render();
-}
-async function searchPeople(){
- const term=$("newName").value.trim().replace(/^@/,"").toLowerCase();
- clearTimeout(peopleSearchTimer);
- if(term.length<2){$("peopleResults").innerHTML='<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Type at least 2 characters to find members.</p>';return;}
- peopleSearchTimer=setTimeout(async()=>{
-  const {data,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(20);
-  if(error){$("peopleResults").innerHTML='<p style="color:#ff8b8b;padding:8px">'+esc(err(error))+'</p>';return;}
-  $("peopleResults").innerHTML=(data||[]).map(p=>'<div class="personHit" onclick="pickPerson(\''+esc(p.username)+'\')">'+avatar(p)+'<div><b>'+esc(p.display_name||p.username)+'</b><small>@'+esc(p.username)+'</small></div><span class="pick">MESSAGE</span></div>').join("")||'<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">No members found. Invite a friend to create a BOUNCY account.</p>';
- },250);
-}
-function pickPerson(username){$("newName").value=username;$("peopleResults").innerHTML='<p style="color:#2AABEE;padding:8px">Selected @'+esc(username)+'</p>';}
-function openNewChat(){$("modal").classList.add("show");$("newName").value="";$("newName").placeholder="Search username (e.g. thabo)";$("newMsg").placeholder="First message (optional)";$("peopleResults").innerHTML='<p style="color:#8a9aa8;font-size:13px;padding:8px 2px">Search for real BOUNCY members by username.</p>';}
-async function createChat(){
- const username=$("newName").value.trim().replace(/^@/,"").toLowerCase(),first=$("newMsg").value.trim();
- if(!username){alert("Enter the person's username.");return;}
- const {data:person,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").eq("username",username).maybeSingle();
- if(error)throw error;if(!person){alert("No BOUNCY account found with that username.");return;}
- if(person.id===me.id){alert("That's your own username.");return;}
- let existing=chats.find(c=>c.other_id===person.id);
- let conversationId=existing?.id;
- if(!conversationId){
-  const {data:cv,error:ce}=await sb.from("conversations").insert({created_by:me.id}).select("id").single();
-  if(ce)throw ce;conversationId=cv.id;
-  const {error:memberErr}=await sb.from("conversation_members").insert([{conversation_id:conversationId,user_id:me.id},{conversation_id:conversationId,user_id:person.id}]);
-  if(memberErr)throw memberErr;
- }
- if(first){const {error:sendErr}=await sb.from("messages").insert({conversation_id:conversationId,sender_id:me.id,body:first});if(sendErr)throw sendErr;}
- $("newName").value="";$("newMsg").value="";closeAll();await loadChats();await openChat(conversationId);
-}
-function openMenu(){$("drawer").classList.add("open");$("overlay").classList.add("show");}
 async function logout(){
  if(!confirm("Log out of BOUNCY?"))return;
  try{
   if(call)await endCall();
-  if(presenceChannel){try{await presenceChannel.untrack();}catch(e){}await sb.removeChannel(presenceChannel);presenceChannel=null;}
-  if(incomingChannel){await sb.removeChannel(incomingChannel);incomingChannel=null;}
-  if(msgChannel){await sb.removeChannel(msgChannel);msgChannel=null;}
-  const {error}=await sb.auth.signOut();if(error)throw error;
-  me=null;profile=null;chats=[];cur=null;onlineIds.clear();closeAll();closeChat();
-  $("authGate").style.display="flex";$("list").innerHTML="";$("callsList").innerHTML="";
-  $("authEmail").value="";$("authPassword").value="";$("authError").textContent="";
- }catch(e){alert("Could not log out: "+err(e));}
+  for(const c of [presenceChannel,incomingChannel,msgChannel])if(c)await sb.removeChannel(c);
+  presenceChannel=incomingChannel=msgChannel=null;
+  await sb.auth.signOut();
+  me=profile=cur=null;chats=[];onlineIds.clear();closeAll();closeChat();
+  $("list").innerHTML="";$("callsList").innerHTML="";$("authPassword").value="";$("authGate").classList.remove("hidden");
+ }catch(e){toast("Could not log out: "+errMsg(e));}
 }
+
+/* ---------- CHATS ---------- */
+async function loadChats(){
+ const {data,error}=await sb.rpc("get_my_chats");
+ if(error){toast(errMsg(error));return;}
+ chats=(data||[]).map(r=>({id:r.conversation_id,other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,unread:0,msgs:[]}));
+ render();
+}
+function render(){
+ const f=filter.toLowerCase();
+ const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(f));
+ $("list").innerHTML=found.map(c=>`<div class="row" data-chat="${esc(c.id)}" role="button" tabindex="0">${avatar(c.person)}<div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
+}
+async function openChat(id){
+ cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;
+ $("hName").textContent=cur.name;$("hAv").outerHTML=avatar(cur.person).replace('class="avatar','id="hAv" class="avatar');
+ $("chatView").classList.add("open");updatePresence();render();
+ const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
+ if(error){toast(errMsg(error));return;}
+ cur.msgs=(data||[]).reverse();renderMsgs();$("msgInp").focus();
+}
+function renderMsgs(){
+ const box=$("msgs");
+ box.innerHTML=(cur?.msgs||[]).map(m=>`<div class="msg${m.sender_id===me.id?" me":""}${m.pending?" pending":""}">${esc(m.body)}<span class="t">${fmt(m.created_at)}</span></div>`).join("");
+ box.scrollTop=box.scrollHeight;
+}
+function closeChat(){cur=null;$("chatView").classList.remove("open");render();}
+function subscribeMessages(){
+ if(msgChannel)sb.removeChannel(msgChannel);
+ msgChannel=sb.channel("my-messages").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},async p=>{
+  const m=p.new;let c=chats.find(x=>x.id===m.conversation_id);
+  if(!c){await loadChats();c=chats.find(x=>x.id===m.conversation_id);if(!c)return;}
+  c.last=m.body;c.at=m.created_at;
+  if(cur&&cur.id===c.id){if(!cur.msgs.some(x=>x.id===m.id)){cur.msgs=cur.msgs.filter(x=>!(x.pending&&x.body===m.body&&x.sender_id===m.sender_id));cur.msgs.push(m);renderMsgs();}}
+  else if(m.sender_id!==me.id)c.unread++;
+  chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
+ }).subscribe();
+}
+async function sendMsg(){
+ const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";
+ const tmp={id:"tmp"+Date.now(),body,sender_id:me.id,created_at:new Date().toISOString(),pending:true};
+ cur.msgs.push(tmp);renderMsgs();
+ const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body}).select().single();
+ cur.msgs=cur.msgs.filter(m=>m!==tmp);
+ if(error){toast("Message not sent: "+errMsg(error));input.value=body;renderMsgs();return;}
+ if(!cur.msgs.some(m=>m.id===data.id))cur.msgs.push(data);
+ cur.last=body;cur.at=data.created_at;renderMsgs();render();
+}
+
+/* ---------- NEW CHAT ---------- */
+let picked=null;
+function openNewChat(){picked=null;$("modal").classList.add("show");$("newName").value="";$("newMsg").value="";$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';$("newName").focus();}
+function searchPeople(){
+ picked=null;const term=$("newName").value.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9_]/g,"");clearTimeout(searchTimer);
+ if(term.length<2){$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';return;}
+ searchTimer=setTimeout(async()=>{
+  const {data,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(20);
+  if(error){$("peopleResults").innerHTML=`<p style="color:#ff8b8b">${esc(errMsg(error))}</p>`;return;}
+  $("peopleResults").innerHTML=(data||[]).map(p=>`<div class="hit" data-pick="${esc(p.id)}" data-un="${esc(p.username)}">${avatar(p)}<div><b>${esc(p.display_name||p.username)}</b><small>@${esc(p.username)}</small></div></div>`).join("")||'<p style="color:var(--mute);font-size:13px">No members found.</p>';
+ },250);
+}
+async function createChat(){
+ const btn=$("startBtn"),first=$("newMsg").value.trim();
+ if(!picked){toast("Tap a person from the results first.");return;}
+ btn.disabled=true;
+ try{
+  const {data:id,error}=await sb.rpc("get_or_create_dm",{other:picked});if(error)throw error;
+  if(first){const {error:e2}=await sb.from("messages").insert({conversation_id:id,sender_id:me.id,body:first});if(e2)throw e2;}
+  closeAll();await loadChats();await openChat(id);
+ }catch(e){toast(errMsg(e));}finally{btn.disabled=false;}
+}
+
+/* ---------- PRESENCE & UI ---------- */
 function subscribePresence(){
  if(presenceChannel)sb.removeChannel(presenceChannel);
- presenceChannel=sb.channel("bouncy-online");
- presenceChannel.on("presence",{event:"sync"},()=>{
-  const state=presenceChannel.presenceState();onlineIds=new Set();
-  Object.values(state).flat().forEach(p=>{if(p.user_id)onlineIds.add(p.user_id);});
-  render();if(cur)updateChatPresence();
- }).subscribe(async status=>{
-  if(status==="SUBSCRIBED")await presenceChannel.track({user_id:me.id,username:profile.username,online_at:new Date().toISOString()});
- });
+ presenceChannel=sb.channel("bouncy-online",{config:{presence:{key:me.id}}});
+ presenceChannel.on("presence",{event:"sync"},()=>{onlineIds=new Set(Object.keys(presenceChannel.presenceState()));render();updatePresence();})
+  .subscribe(s=>{if(s==="SUBSCRIBED")presenceChannel.track({at:Date.now()});});
 }
-function updateChatPresence(){
- if(!cur)return;
- const status=$("chatView").querySelector(".cHead small");
- if(status)status.textContent=onlineIds.has(cur.other_id)?"online":"last seen recently";
-}
+function updatePresence(){if(cur)$("hStatus").textContent=onlineIds.has(cur.other_id)?"online":"last seen recently";}
 function closeAll(){$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
-function openSearch(){$("searchBar").classList.add("show");$("searchInput").focus();}
-function closeSearch(){$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();}
-function doSearch(){filter=$("searchInput").value;render();}
-function showChats(){$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").style.display="block";$("callsList").style.display="none";}
+function showChats(){$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").classList.remove("hidden");$("callsList").classList.add("hidden");}
 async function showCalls(){
- $("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").style.display="none";
- const cl=$("callsList");cl.style.display="block";
- const {data,error}=await sb.from("call_sessions").select("id,caller_id,callee_id,call_type,status,created_at").or("caller_id.eq."+me.id+",callee_id.eq."+me.id).order("created_at",{ascending:false}).limit(40);
- if(error){cl.innerHTML='<p style="padding:20px;color:#8a9aa8">'+esc(err(error))+'</p>';return;}
- cl.innerHTML=(data||[]).map(c=>{const outgoing=c.caller_id===me.id;const other=outgoing?c.callee_id:c.caller_id;return '<div class="row"><div class="avatar a1">'+(c.call_type==="video"?"▣":"☎")+'</div><div class="mid"><div class="top"><span class="name">'+(outgoing?"Outgoing":"Incoming")+' '+c.call_type+'</span><span class="time">'+new Date(c.created_at).toLocaleDateString()+'</span></div><div class="sub"><span class="last">'+esc(c.status)+'</span></div></div></div>';}).join("")||'<p style="padding:20px;color:#8a9aa8">No calls yet</p>';
+ closeAll();$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
+ const cl=$("callsList");cl.classList.remove("hidden");
+ const {data,error}=await sb.from("call_sessions").select("id,caller_id,call_type,status,created_at").order("created_at",{ascending:false}).limit(40);
+ if(error){cl.innerHTML=`<div class="empty">${esc(errMsg(error))}</div>`;return;}
+ cl.innerHTML=(data||[]).map(c=>{const out=c.caller_id===me.id;return `<div class="row"><div class="avatar">${c.call_type==="video"?"🎥":"📞"}</div><div class="mid"><div class="top"><span class="name">${out?"Outgoing":"Incoming"} ${esc(c.call_type)}</span><span class="time">${new Date(c.created_at).toLocaleDateString()}</span></div><div class="sub"><span class="last">${esc(c.status)}</span></div></div></div>`;}).join("")||'<div class="empty">No calls yet.</div>';
 }
-function closeChat(){$("chatView").classList.remove("open");if(msgChannel){sb.removeChannel(msgChannel);msgChannel=null;}}
+
+/* ---------- CALLS ---------- */
 function subscribeIncomingCalls(){
  if(incomingChannel)sb.removeChannel(incomingChannel);
- incomingChannel=sb.channel("incoming-calls-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},async payload=>{
-  if(payload.new.status!=="ringing"||call)return;
-  const {data:p}=await sb.from("profiles").select("display_name,username").eq("id",payload.new.caller_id).maybeSingle();
-  call={id:payload.new.id,caller_id:payload.new.caller_id,callee_id:me.id,type:payload.new.call_type,incoming:true,otherName:p?.display_name||"Incoming caller"};
-  showCallUI(true);
+ incomingChannel=sb.channel("incoming-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},async p=>{
+  if(p.new.status!=="ringing")return;
+  if(call){await sb.from("call_sessions").update({status:"rejected"}).eq("id",p.new.id);return;}
+  const {data:pr}=await sb.from("profiles").select("display_name").eq("id",p.new.caller_id).maybeSingle();
+  call={id:p.new.id,caller_id:p.new.caller_id,callee_id:me.id,type:p.new.call_type,incoming:true,otherName:pr?.display_name||"Incoming caller"};
+  showCallUI(true);watchCallStatus();
  }).subscribe();
 }
 function showCallUI(incoming){
- $("callLayer").classList.add("show");$("callTitle").textContent=call?.otherName||"BOUNCY call";
- $("callStatus").textContent=incoming?"Incoming "+call.type+" call":"Calling…";
- $("callAvatar").style.display=call?.type==="video"?"none":"flex";
- $("remoteVideo").style.display=call?.type==="video"?"block":"none";
- $("localVideo").style.display=call?.type==="video"?"block":"none";
- $("acceptCallBtn").style.display=incoming?"inline-flex":"none";
+ const v=call.type==="video";$("callLayer").classList.add("show");$("callTitle").textContent=call.otherName||"BOUNCY call";
+ $("callStatus").textContent=incoming?`Incoming ${call.type} call`:"Calling…";
+ $("callAvatar").classList.toggle("hidden",v);$("remoteVideo").classList.toggle("hidden",!v);$("localVideo").classList.toggle("hidden",!v);
+ $("acceptBtn").classList.toggle("hidden",!incoming);
+ clearTimeout(ringTimer);if(!incoming)ringTimer=setTimeout(()=>{if(call&&$("callStatus").textContent==="Calling…"){toast("No answer.");sb.from("call_sessions").update({status:"missed"}).eq("id",call.id).then(()=>{});endCall();}},45000);
+}
+function watchCallStatus(){
+ if(callChannel)sb.removeChannel(callChannel);const id=call.id;
+ callChannel=sb.channel("call-status-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"call_sessions",filter:"id=eq."+id},p=>{
+  if(!call||call.id!==id)return;
+  if(["ended","rejected","missed"].includes(p.new.status)){if(p.new.status==="rejected")toast("Call declined.");cleanupCall();}
+ }).subscribe();
 }
 async function startCall(type){
- if(!cur){alert("Open a conversation first.");return;}
+ if(!cur){toast("Open a conversation first.");return;}
+ if(call)return;
  call={caller_id:me.id,callee_id:cur.other_id,type,incoming:false,otherName:cur.name};
  try{
   const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select().single();
-  if(error)throw error;call.id=data.id;
-  showCallUI(false);
-  await preparePeer();
-  await subscribeCallSignals();
-  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-  await sendSignal({type:"offer",sdp:offer});
-  
- }catch(e){alert("Could not start call: "+err(e));await cleanupCall();}
+  if(error)throw error;call.id=data.id;showCallUI(false);
+  await preparePeer();await subscribeCallSignals();watchCallStatus();
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);await sendSignal({type:"offer",sdp:offer});
+ }catch(e){toast("Could not start call: "+errMsg(e));await endCall();}
 }
 async function preparePeer(){
  localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:call.type==="video"});
  $("localVideo").srcObject=localStream;
  pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
- pc.ontrack=e=>{if(call.type==="video")$("remoteVideo").srcObject=e.streams[0];else $("remoteAudio").srcObject=e.streams[0];$("callStatus").textContent="Connected";};
- pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(console.error);};
- pc.onconnectionstatechange=()=>{if(pc&&["failed","disconnected"].includes(pc.connectionState))$("callStatus").textContent="Connection interrupted";};
+ pc.ontrack=e=>{(call.type==="video"?$("remoteVideo"):$("remoteAudio")).srcObject=e.streams[0];$("callStatus").textContent="Connected";clearTimeout(ringTimer);};
+ pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(()=>{});};
+ pc.onconnectionstatechange=()=>{if(pc&&pc.connectionState==="failed"){toast("Connection lost.");endCall();}};
 }
 async function subscribeCallSignals(){
- if(callChannel)sb.removeChannel(callChannel);
- callChannel=sb.channel("call-signals-"+call.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"call_id=eq."+call.id},p=>handleSignal(p.new)).subscribe();
- const {data}=await sb.from("call_signals").select("*").eq("call_id",call.id).order("id");
+ const id=call.id;
+ const ch=sb.channel("call-signals-"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"call_id=eq."+id},p=>handleSignal(p.new)).subscribe();
+ callSignalChannel=ch;
+ const {data}=await sb.from("call_signals").select("*").eq("call_id",id).order("id");
  for(const s of data||[])await handleSignal(s);
 }
+let callSignalChannel=null;
 async function sendSignal(signal){
- if(!call)return;
- const recipient=me.id===call.caller_id?call.callee_id:call.caller_id;
- const {error}=await sb.from("call_signals").insert({call_id:call.id,sender_id:me.id,recipient_id:recipient,signal});
- if(error)throw error;
+ if(!call)return;const to=me.id===call.caller_id?call.callee_id:call.caller_id;
+ const {error}=await sb.from("call_signals").insert({call_id:call.id,sender_id:me.id,recipient_id:to,signal});if(error)throw error;
 }
 async function handleSignal(row){
- if(!call||row.recipient_id!==me.id||seenSignals.has(row.id))return;seenSignals.add(row.id);
- const s=row.signal;
+ if(!call||!pc||row.recipient_id!==me.id||seen.has(row.id))return;seen.add(row.id);const s=row.signal;
+ const flush=async()=>{for(const c of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(c));};
  try{
-  if(s.type==="offer"&&call.incoming){
-   await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));
-   for(const candidate of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(candidate));
-   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);await sendSignal({type:"answer",sdp:answer});
-  }else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));for(const candidate of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(candidate));}
+  if(s.type==="offer"&&call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();const a=await pc.createAnswer();await pc.setLocalDescription(a);await sendSignal({type:"answer",sdp:a});}
+  else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();}
   else if(s.type==="ice"&&s.candidate){if(pc.remoteDescription)await pc.addIceCandidate(new RTCIceCandidate(s.candidate));else pendingIce.push(s.candidate);}
-  else if(s.type==="hangup"){cleanupCall();}
- }catch(e){console.error("Call signal error",e);}
+  else if(s.type==="hangup")cleanupCall();
+ }catch(e){console.error("signal",e);}
 }
-async function acceptIncomingCall(){
+async function acceptCall(){
  try{
+  $("acceptBtn").classList.add("hidden");$("callStatus").textContent="Connecting…";
   await sb.from("call_sessions").update({status:"accepted",answered_at:new Date().toISOString()}).eq("id",call.id);
-  await preparePeer();await subscribeCallSignals();$("callStatus").textContent="Connecting…";
- }catch(e){alert("Could not answer call: "+err(e));await cleanupCall();}
-}
-function watchCallStatus(){
- if(callChannel)sb.removeChannel(callChannel);
- callChannel=sb.channel("call-status-"+call.id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"call_sessions",filter:"id=eq."+call.id},p=>{if(["ended","rejected","missed"].includes(p.new.status))cleanupCall();}).subscribe();
+  await preparePeer();await subscribeCallSignals();
+ }catch(e){toast("Could not answer: "+errMsg(e));await endCall();}
 }
 async function endCall(){
- if(call){try{await sendSignal({type:"hangup"});}catch(e){}try{await sb.from("call_sessions").update({status:"ended",ended_at:new Date().toISOString()}).eq("id",call.id);}catch(e){}}
+ if(call){
+  const wasRinging=call.incoming&&!$("acceptBtn").classList.contains("hidden");
+  try{await sendSignal({type:"hangup"});}catch{}
+  try{await sb.from("call_sessions").update({status:wasRinging?"rejected":"ended",ended_at:new Date().toISOString()}).eq("id",call.id);}catch{}
+ }
  cleanupCall();
 }
 function cleanupCall(){
- if(pc){pc.ontrack=null;pc.onicecandidate=null;pc.close();pc=null;}
+ clearTimeout(ringTimer);
+ if(pc){pc.ontrack=pc.onicecandidate=pc.onconnectionstatechange=null;pc.close();pc=null;}
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
- $("remoteVideo").srcObject=null;$("remoteAudio").srcObject=null;$("localVideo").srcObject=null;$("callLayer").classList.remove("show");
- if(callChannel){sb.removeChannel(callChannel);callChannel=null;}
- call=null;seenSignals.clear();if(callTimer){clearInterval(callTimer);callTimer=null;}
+ for(const id of ["remoteVideo","remoteAudio","localVideo"])$(id).srcObject=null;
+ $("callLayer").classList.remove("show");
+ for(const c of [callChannel,callSignalChannel])if(c)sb.removeChannel(c);
+ callChannel=callSignalChannel=null;call=null;seen.clear();pendingIce=[];
 }
-function toggleMute(){if(localStream)localStream.getAudioTracks().forEach(t=>t.enabled=!t.enabled);}
-function toggleCamera(){if(localStream)localStream.getVideoTracks().forEach(t=>t.enabled=!t.enabled);}
-window.authSubmit=authSubmit;window.authSwitch=authSwitch;window.logout=logout;window.searchPeople=searchPeople;window.pickPerson=pickPerson;window.openMenu=openMenu;window.closeAll=closeAll;window.openSearch=openSearch;window.closeSearch=closeSearch;window.doSearch=doSearch;window.showChats=showChats;window.showCalls=showCalls;window.openNewChat=openNewChat;window.createChat=()=>createChat().catch(e=>alert(err(e)));window.openChat=openChat;window.sendMsg=()=>sendMsg();window.closeChat=closeChat;window.startCall=startCall;window.acceptIncomingCall=acceptIncomingCall;window.endCall=endCall;window.toggleMute=toggleMute;window.toggleCamera=toggleCamera;
-$("newName").addEventListener("keydown",e=>{if(e.key==="Enter")window.createChat();});
-$("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter")window.sendMsg();});
+const toggle=kind=>localStream?.[kind==="a"?"getAudioTracks":"getVideoTracks"]().forEach(t=>t.enabled=!t.enabled);
+
+/* ---------- EVENTS ---------- */
+const actions={
+ menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
+ closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,
+ search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
+ closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
+ voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v")
+};
+document.addEventListener("click",e=>{
+ const a=e.target.closest("[data-act]");if(a){Promise.resolve(actions[a.dataset.act]?.()).catch(x=>toast(errMsg(x)));return;}
+ const r=e.target.closest("[data-chat]");if(r){openChat(r.dataset.chat);return;}
+ const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;$("newName").value=h.dataset.un;$("peopleResults").innerHTML=`<p style="color:var(--pink2);padding:6px 0">Selected @${esc(h.dataset.un)}</p>`;}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset?.chat!==undefined)openChat(e.target.dataset.chat);if(e.key==="Escape")closeAll();});
+$("overlay").onclick=closeAll;
+$("authForm").addEventListener("submit",authSubmit);
+$("authSwitch").onclick=()=>setAuthMode(authMode==="signin"?"signup":"signin");
+$("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
+$("newName").addEventListener("input",searchPeople);
+$("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
+history.scrollRestoration="manual";
+
 const {data:{session}}=await sb.auth.getSession();
-if(session){me=session.user;try{await enterApp();}catch(e){$("authError").textContent=err(e);}}
+if(session){try{await enterApp();}catch(e){$("authError").textContent=errMsg(e);}}
 </script>
 </body>
 </html>
