@@ -142,6 +142,24 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 #stFoot .btn{margin:0}
 .stzone{bottom:90px!important}
 #vwModal{z-index:130}
+/* ---- professional bottom sheets ---- */
+#modal,.modal2{align-items:flex-end!important;padding:0!important;background:rgba(5,8,12,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.box{position:relative;max-width:520px!important;width:100%!important;margin:0 auto;border-radius:22px 22px 0 0!important;padding:10px 18px calc(env(safe-area-inset-bottom) + 18px)!important;max-height:90dvh;overflow:auto;animation:sheet .24s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.45)}
+@keyframes sheet{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.box::before{content:"";display:block;width:42px;height:4px;border-radius:2px;background:#374151;margin:2px auto 14px}
+.box h3{font-size:20px;font-weight:700;margin:0 44px 12px 0}
+.sx{position:absolute;top:14px;right:12px;width:40px;height:40px;border-radius:50%;border:0;background:var(--panel2);display:flex;align-items:center;justify-content:center;color:var(--mute)}
+.sx svg{width:18px;height:18px}
+.box .btn.alt[data-act="closeAll"]{display:none}
+.f{border:1px solid transparent!important;transition:border-color .15s}.f:focus{border-color:var(--pink)!important}
+.btn{height:50px;border-radius:14px!important;font-size:15px;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn.alt{background:transparent;border:1px solid var(--line);color:var(--text)}
+.who{display:flex;align-items:center;gap:10px;margin-bottom:8px}.who .avatar{width:42px;height:42px;font-size:14px}
+.prev{position:relative;margin:8px 0}.prev img,.prev video{width:100%;max-height:220px;object-fit:cover;border-radius:12px;display:block}
+.prev button{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;display:flex;align-items:center;justify-content:center}
+.prev button svg{width:16px;height:16px}
+.count{text-align:right;font-size:12px;color:var(--mute)}
+.hit{border-radius:12px;padding:10px 8px;border-bottom:0!important}.hit:active,.hit:hover{background:var(--panel2)}.hit.sel{background:var(--panel2);outline:1px solid var(--pink)}
 </style>
 </head>
 <body>
@@ -221,7 +239,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <h3>New chat</h3>
  <input class="f" id="newName" placeholder="Search username" autocapitalize="none" autocomplete="off">
  <div id="peopleResults"></div>
- <textarea class="f" id="newMsg" rows="2" maxlength="5000" placeholder="First message (optional)"></textarea>
+ <textarea class="f hidden" id="newMsg" rows="2" maxlength="5000" placeholder="First message (optional)"></textarea>
  <button class="btn" id="startBtn" data-act="createChat">START CHAT</button>
  <button class="btn alt" data-act="closeAll">Cancel</button>
 </div></div>
@@ -229,11 +247,11 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 <div id="grpModal" class="modal2"><div class="box"><h3 id="grpHead">New group</h3><input class="f" id="grpTitle" maxlength="50" placeholder="Name"><div id="grpDescWrap" class="hidden"><input class="f" id="grpDesc" maxlength="200" placeholder="Description (optional)"></div><div id="grpSearchWrap"><input class="f" id="grpSearch" placeholder="Add members by username" autocomplete="off" autocapitalize="none"><div id="grpChips"></div><div id="grpResults" style="max-height:170px;overflow:auto"></div></div><button class="btn" id="grpBtn" data-act="createGroup">CREATE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="chModal" class="modal2"><div class="box"><h3>Find channels</h3><input class="f" id="chQ" placeholder="Search channels" autocomplete="off"><div id="chRes" style="max-height:50vh;overflow:auto"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
 <div id="infoModal" class="modal2"><div class="box"><h3 id="infoTitle"></h3><p class="mute" id="infoSub"></p><div id="infoList" style="max-height:40vh;overflow:auto;margin:10px 0"></div><div id="infoAdd" class="hidden"><input class="f" id="infoUser" placeholder="Add member by username" autocapitalize="none"><button class="btn" data-act="addMember">ADD MEMBER</button></div><button class="btn alt" data-act="leaveChat" style="color:#ff7b7b">Leave</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
-<div id="stModal" class="modal2"><div class="box"><h3>New story</h3><p class="mute" id="stFileName"></p><input class="f" id="stCapInput" maxlength="200" placeholder="Add a caption (optional)"><button class="btn" id="stBtn" data-act="submitStory">SHARE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
-<div id="vwModal" class="modal2"><div class="box"><h3>Viewed by</h3><div id="vwList" style="max-height:50vh;overflow:auto;margin:10px 0"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
-<div id="postModal" class="modal2"><div class="box"><h3>New post</h3><textarea class="f" id="postText" rows="4" maxlength="3000" placeholder="What's happening?"></textarea><button class="btn alt" data-act="pickPostFile"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Add photo or video</span></button><p class="mute" id="postFileName" style="margin-top:6px"></p><button class="btn" id="postBtn" data-act="submitPost">POST</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="stModal" class="modal2"><div class="box"><h3>New story</h3><p class="hidden" id="stFileName"></p><div id="stPrev" class="prev hidden"></div><input class="f" id="stCapInput" maxlength="200" placeholder="Add a caption (optional)"><button class="btn" id="stBtn" data-act="submitStory">SHARE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="vwModal" class="modal2"><div class="box"><h3 id="vwTitle">Viewed by</h3><div id="vwList" style="max-height:50vh;overflow:auto;margin:10px 0"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
+<div id="postModal" class="modal2"><div class="box"><h3>New post</h3><div class="who" id="postWho"></div><textarea class="f" id="postText" rows="4" maxlength="3000" placeholder="What's happening?"></textarea><div class="count"><span id="postCount">0</span>/3000</div><button class="btn alt" data-act="pickPostFile"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Add photo or video</span></button><p class="hidden" id="postFileName"></p><div id="postPrev" class="prev hidden"></div><button class="btn" id="postBtn" data-act="submitPost">POST</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="cmtModal" class="modal2"><div class="box"><h3>Comments</h3><div id="cmtList"></div><input class="f" id="cmtInp" maxlength="1000" placeholder="Add a comment" autocomplete="off"><button class="btn" data-act="sendCmt">SEND</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
-<div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><div class="who" id="setWho"></div><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><div id="stMedia"></div><div id="stCap"></div><div id="stFoot"></div>
 <div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
 <div id="toast" role="status"></div>
@@ -349,9 +367,9 @@ async function sendMsg(){
 
 /* ---------- NEW CHAT ---------- */
 let picked=null;
-function openNewChat(){picked=null;$("modal").classList.add("show");$("newName").value="";$("newMsg").value="";$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';$("newName").focus();}
+function openNewChat(){picked=null;$("newMsg").classList.add("hidden");$("startBtn").disabled=true;$("modal").classList.add("show");$("newName").value="";$("newMsg").value="";$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';$("newName").focus();}
 function searchPeople(){
- picked=null;const term=$("newName").value.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9_]/g,"");clearTimeout(searchTimer);
+ picked=null;$("startBtn").disabled=true;$("newMsg").classList.add("hidden");const term=$("newName").value.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9_]/g,"");clearTimeout(searchTimer);
  if(term.length<2){$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';return;}
  searchTimer=setTimeout(async()=>{
   const {data,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(20);
@@ -595,8 +613,8 @@ function storiesHTML(){
 }
 function renderFeed(){$("feedList").innerHTML=storiesHTML()+(feed.map(postHTML).join("")||'<div class="empty">No posts yet.<br>Tap the pencil to share the first one.</div>');}
 $("feedList").addEventListener("scroll",e=>{const f=e.target;if(f.scrollTop+f.clientHeight>f.scrollHeight-600)loadFeed();});
-function newPost(){closeAll();postFile=null;$("postText").value="";$("postFileName").textContent="";$("postModal").classList.add("show");$("postText").focus();}
-async function pickPostFile(){const f=await pickFile("image/*,video/*");if(f){postFile=f;$("postFileName").textContent=f.name;}}
+function newPost(){closeAll();postFile=null;$("postText").value="";$("postFileName").textContent="";showPrev("postPrev",null);$("postCount").textContent="0";$("postWho").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><div class="mute">@${esc(profile.username||"")}</div></div>`;$("postModal").classList.add("show");$("postText").focus();}
+async function pickPostFile(){const f=await pickFile("image/*,video/*");if(f){postFile=f;$("postFileName").textContent=f.name;showPrev("postPrev",f);}}
 async function submitPost(){
  const body=$("postText").value.trim();if(!body&&!postFile){toast("Write something or add a photo or video.");return;}
  if(postFile&&postFile.size>50*1048576){toast("File too big (50 MB max).");return;}
@@ -659,8 +677,8 @@ async function stDel(){
 }
 
 /* profile / settings */
-function refreshMe(){$("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;}
-function settings(){closeAll();$("setName").value=profile.display_name||"";$("setBio").value=profile.bio||"";$("setModal").classList.add("show");}
+function refreshMe(){const w=$("setWho");if(w)w.innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><div class="mute">@${esc(profile.username||"")}</div></div>`;$("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;}
+function settings(){closeAll();refreshMe();$("setName").value=profile.display_name||"";$("setBio").value=profile.bio||"";$("setModal").classList.add("show");}
 async function saveSettings(){
  const display_name=$("setName").value.trim(),bio=$("setBio").value.trim();
  if(display_name.length<2){toast("Name must be at least 2 characters.");return;}
@@ -746,7 +764,7 @@ async function leaveChat(){
 async function addStory(){
  closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
  if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
- storyFile=f;$("stFileName").textContent=f.name;$("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
+ storyFile=f;$("stFileName").textContent=f.name;showPrev("stPrev",f);$("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
 }
 async function submitStory(){
  if(!storyFile)return;const b=$("stBtn");b.disabled=true;
@@ -778,11 +796,22 @@ async function stViews(){
  $("vwList").innerHTML='<p class="mute">Loading…</p>';$("vwModal").classList.add("show");
  const {data,error}=await sb.from("story_views").select("viewed_at,profiles!story_views_viewer_id_fkey(display_name,username,avatar_url)").eq("story_id",s.id).order("viewed_at",{ascending:false}).limit(200);
  if(error){toast(errMsg(error));return;}
- $("vwList").innerHTML=(data||[]).map(v=>`<div class="hit">${avatar(v.profiles)}<div><b>${esc(v.profiles?.display_name||v.profiles?.username||"Member")}</b><small>${ago(v.viewed_at)} ago</small></div></div>`).join("")||'<p class="mute">No views yet.</p>';
+ $("vwTitle").textContent="Viewed by "+(data||[]).length;$("vwList").innerHTML=(data||[]).map(v=>`<div class="hit">${avatar(v.profiles)}<div><b>${esc(v.profiles?.display_name||v.profiles?.username||"Member")}</b><small>${ago(v.viewed_at)} ago</small></div></div>`).join("")||'<p class="mute">No views yet.</p>';
 }
 document.addEventListener("focusin",e=>{if(e.target.id==="stReply"&&sv){clearTimeout(svTimer);$("stMedia").querySelector("video")?.pause();document.querySelectorAll("#stBars i.cur").forEach(i=>i.style.animationPlayState="paused");}});
 document.addEventListener("focusout",e=>{if(e.target.id==="stReply"&&sv){const s=sv.g.items[sv.i];if(s.media_type==="image")svTimer=setTimeout(nextStory,5000);else $("stMedia").querySelector("video")?.play();document.querySelectorAll("#stBars i.cur").forEach(i=>i.style.animationPlayState="running");}});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stReply")stSend().catch(x=>toast(errMsg(x)));});
+
+/* ---------- SHEET POLISH ---------- */
+function showPrev(id,f){
+ const el=$(id);if(!f){el.classList.add("hidden");el.innerHTML="";return;}
+ const u=URL.createObjectURL(f);
+ el.innerHTML=(f.type.startsWith("video")?`<video src="${u}" muted playsinline></video>`:`<img src="${u}" alt="">`)+(id==="postPrev"?`<button data-act="rmPostFile" aria-label="Remove">${IC.x}</button>`:"");
+ el.classList.remove("hidden");
+}
+document.querySelectorAll(".box").forEach(b=>b.insertAdjacentHTML("afterbegin",`<button class="sx" data-act="closeAll" aria-label="Close">${IC.x}</button>`));
+document.addEventListener("click",e=>{if(e.target.classList?.contains("modal2")||e.target.id==="modal")closeAll();});
+$("postText").addEventListener("input",e=>{$("postCount").textContent=e.target.value.length;});
 
 /* ---------- EVENTS ---------- */
 const actions={
@@ -791,7 +820,7 @@ const actions={
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
- newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
+ newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
  recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
@@ -801,7 +830,7 @@ const actions={
 document.addEventListener("click",e=>{
  const a=e.target.closest("[data-act]");if(a){Promise.resolve(actions[a.dataset.act]?.(a)).catch(x=>toast(errMsg(x)));return;}
  const r=e.target.closest("[data-chat]");if(r){openChat(r.dataset.chat);return;}
- const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;$("newName").value=h.dataset.un;$("peopleResults").innerHTML=`<p style="color:var(--pink2);padding:6px 0">Selected @${esc(h.dataset.un)}</p>`;}
+ const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;$("newName").value=h.dataset.un;document.querySelectorAll("#peopleResults .hit").forEach(x=>x.classList.toggle("sel",x===h));$("newMsg").classList.remove("hidden");$("startBtn").disabled=false;$("newMsg").focus();}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset?.chat!==undefined)openChat(e.target.dataset.chat);if(e.key==="Escape")closeAll();});
 $("overlay").onclick=closeAll;
