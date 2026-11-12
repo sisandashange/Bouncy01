@@ -122,7 +122,7 @@ button{cursor:pointer}
   <div class="item" onclick="alert('New Group - coming next')">👥 New Group</div>
   <div class="item" onclick="alert('New Channel - coming next')">📢 New Channel</div>
   <div class="item" onclick="alert('Saved Messages')">🔖 Saved Messages</div>
-  <div class="item" onclick="alert('Calls')">📞 Calls</div>
+  <div class="item" onclick="closeAll();showCalls()">📞 Calls</div>
   <div class="item" onclick="alert('Settings')">⚙️ Settings</div>
   <div class="item" onclick="closeAll()" style="color:#2AABEE">← Close Menu</div>
 </div>
@@ -152,7 +152,7 @@ button{cursor:pointer}
     <button class="iconBtn" onclick="closeChat()">←</button>
     <div class="avatar a1" id="hAv">J</div>
     <div style="flex:1"><b id="hName" style="font-size:18px">Jane</b><br><small style="color:#8a9aa8">online</small></div>
-    <button class="iconBtn" onclick="alert('Call')">📞</button>
+    <button class="iconBtn" onclick="startCall('voice')">📞</button><button class="iconBtn" onclick="startCall('video')">▣</button>
     <button class="iconBtn" onclick="alert('Profile')">⋮</button>
   </div>
   <div class="msgs" id="msgs"></div>
@@ -170,7 +170,7 @@ const SUPABASE_KEY = "sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-";
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 let me=null, profile=null, chats=[], cur=null, filter="", authMode="signin";
 let call=null, pc=null, localStream=null, callChannel=null, incomingChannel=null;
-let seenSignals=new Set(), callStartedAt=null, callTimer=null;
+let seenSignals=new Set(), pendingIce=[];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clock=()=>new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
@@ -329,7 +329,7 @@ async function startCall(type){
   await subscribeCallSignals();
   const offer=await pc.createOffer();await pc.setLocalDescription(offer);
   await sendSignal({type:"offer",sdp:offer});
-  watchCallStatus();
+  
  }catch(e){alert("Could not start call: "+err(e));await cleanupCall();}
 }
 async function preparePeer(){
@@ -359,9 +359,10 @@ async function handleSignal(row){
  try{
   if(s.type==="offer"&&call.incoming){
    await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));
+   for(const candidate of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(candidate));
    const answer=await pc.createAnswer();await pc.setLocalDescription(answer);await sendSignal({type:"answer",sdp:answer});
-  }else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));}
-  else if(s.type==="ice"&&s.candidate){await pc.addIceCandidate(new RTCIceCandidate(s.candidate));}
+  }else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));for(const candidate of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(candidate));}
+  else if(s.type==="ice"&&s.candidate){if(pc.remoteDescription)await pc.addIceCandidate(new RTCIceCandidate(s.candidate));else pendingIce.push(s.candidate);}
   else if(s.type==="hangup"){cleanupCall();}
  }catch(e){console.error("Call signal error",e);}
 }
