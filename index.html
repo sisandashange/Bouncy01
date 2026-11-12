@@ -80,6 +80,9 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 #callLayer.video{padding:0;justify-content:flex-end}
 #callLayer.video #remoteVideo{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0}
 #callLayer.video #callTitle,#callLayer.video #callStatus{position:absolute;left:0;right:0;z-index:2;text-shadow:0 1px 6px #000}
+#callLayer.video #callStatus{color:#fff!important;font-weight:600}
+#callLayer.video .callActions button{background:rgba(15,19,24,.65);backdrop-filter:blur(6px)}
+#callLayer.video .callActions .end{background:var(--bad)}
 #callLayer.video #callTitle{top:calc(env(safe-area-inset-top) + 18px)}
 #callLayer.video #callStatus{top:calc(env(safe-area-inset-top) + 52px)}
 #callLayer.video .callActions{position:relative;z-index:2;margin-bottom:calc(env(safe-area-inset-bottom) + 30px)}
@@ -89,6 +92,46 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .callActions button{border:0;border-radius:50%;width:62px;height:62px;font-size:22px;background:var(--panel2)}
 .callActions .end{background:var(--bad)}.callActions .acc{background:var(--ok)}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%);background:#2a323d;padding:10px 16px;border-radius:10px;z-index:200;display:none;max-width:90%;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+
+.voice{display:flex;align-items:center;gap:10px;min-width:210px}
+.vplay{width:38px;height:38px;border-radius:50%;border:0;background:var(--pink);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg.me .vplay{background:#fff;color:var(--mine)}
+.wave{display:flex;align-items:center;gap:2px;height:32px;flex:1}
+.wave i{width:3px;border-radius:2px;background:rgba(255,255,255,.3);transition:background .15s;transform-origin:center}
+.wave i.on{background:#fff}
+.voice.playing .wave i{animation:wv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}
+@keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.5)}}
+.vdur{font-size:12px;opacity:.8;min-width:32px;text-align:right}
+.recdot{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:bl 1s infinite;flex-shrink:0}
+@keyframes bl{50%{opacity:.2}}
+#recBar{align-items:center}#recTime{min-width:38px;font-variant-numeric:tabular-nums}
+#recWave{flex:1;display:flex;align-items:center;gap:2px;height:34px;overflow:hidden;justify-content:flex-end}
+#recWave i{width:3px;border-radius:2px;background:var(--pink2);flex-shrink:0}
+.modal2{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal2.show{display:flex}
+#cmtList{max-height:45vh;overflow:auto;margin:10px 0}.cm{padding:8px 0;border-bottom:1px solid var(--line)}.mute{color:var(--mute);font-size:13px}
+.stories{display:flex;gap:12px;padding:12px;overflow-x:auto;border-bottom:1px solid var(--line)}
+.st{display:flex;flex-direction:column;align-items:center;gap:4px;width:66px;flex-shrink:0;font-size:12px;cursor:pointer}
+.st span{width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ring{padding:3px;border-radius:50%;background:linear-gradient(45deg,var(--pink),#7a5af8)}.ring.add{background:var(--panel2)}
+.ring .avatar{width:56px;height:56px;border:3px solid var(--bg)}.ring.add .avatar{background:var(--panel2);font-size:26px}
+.post{border-bottom:8px solid var(--panel)}
+.ph{display:flex;gap:10px;padding:12px 14px;align-items:center}.ph .avatar{width:40px;height:40px;font-size:14px}
+.pb{padding:0 14px 10px;white-space:pre-wrap;word-break:break-word}
+.post img,.post video{width:100%;max-height:70vh;object-fit:cover;background:#000;display:block}
+.pa{display:flex;gap:20px;padding:10px 14px}.act{background:none;border:0;display:flex;gap:6px;align-items:center}
+.lnk{background:none;border:0;color:var(--mute);font-size:13px}
+#storyView{position:fixed;inset:0;background:#000;z-index:120;display:none}#storyView.show{display:block}
+#stBars{position:absolute;top:calc(env(safe-area-inset-top) + 8px);left:10px;right:10px;display:flex;gap:4px;z-index:3}
+#stBars i{flex:1;height:3px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden;position:relative}
+#stBars i.done{background:#fff}#stBars i.cur::after{content:"";position:absolute;inset:0;background:#fff;transform-origin:left;animation:fill 5s linear forwards}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.sthead{position:absolute;top:calc(env(safe-area-inset-top) + 20px);left:12px;display:flex;align-items:center;gap:10px;z-index:3;text-shadow:0 1px 4px #000}
+.sthead .avatar{width:38px;height:38px;font-size:14px}
+.stx{position:absolute;top:calc(env(safe-area-inset-top) + 18px);right:10px;z-index:4;background:none;border:0;font-size:24px;width:44px;height:44px;color:#fff}
+.stx.del{right:56px;font-size:20px}
+#stMedia{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}#stMedia img,#stMedia video{max-width:100%;max-height:100%;object-fit:contain}
+.stzone{position:absolute;top:70px;bottom:0;width:40%;z-index:2}.stzone.l{left:0}.stzone.r{right:0;width:60%}
 </style>
 </head>
 <body>
@@ -117,7 +160,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <video id="localVideo" autoplay muted playsinline></video>
  <div class="callActions">
   <button id="acceptBtn" class="acc hidden" aria-label="Answer" data-act="accept">✓</button>
-  <button data-act="mute" aria-label="Mute">🎙</button>
+  <button data-act="mute" aria-label="Mute"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
   <button data-act="cam" aria-label="Camera">📷</button>
   <button class="end" data-act="end" aria-label="End call">✕</button>
  </div>
@@ -126,6 +169,9 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 <div id="overlay" class="overlay"></div>
 <div id="drawer">
  <div class="me" id="drawerMe"></div>
+ <button class="item" data-act="settings">👤 My profile</button>
+ <button class="item" data-act="addStory">✨ Add story</button>
+ <button class="item" data-act="newPost">✍️ New post</button>
  <button class="item" data-act="calls">📞 Calls</button>
  <button class="item" data-act="logout" style="color:#ff7b7b">↪ Log out</button>
  <button class="item" data-act="closeAll" style="color:var(--pink2)">← Close</button>
@@ -134,13 +180,14 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 <div id="app">
  <div class="topbar">
   <button class="iconBtn" data-act="menu" aria-label="Menu">☰</button>
-  <div class="tabs"><button id="tabChats" class="on" data-act="chats">CHATS</button><button id="tabCalls" data-act="calls">CALLS</button></div>
+  <div class="tabs"><button id="tabChats" class="on" data-act="chats">CHATS</button><button id="tabFeed" data-act="feed">FEED</button><button id="tabCalls" data-act="calls">CALLS</button></div>
   <button class="iconBtn" data-act="search" aria-label="Search"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg></button>
  </div>
  <div id="searchBar"><input id="searchInput" placeholder="Search chats" aria-label="Search chats"><button data-act="closeSearch" aria-label="Close search">✕</button></div>
  <div class="list" id="list"></div>
  <div class="list hidden" id="callsList"></div>
- <button class="fab" data-act="newChat" aria-label="New chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+ <div class="list hidden" id="feedList"></div>
+ <button class="fab" data-act="fab" aria-label="New chat"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fff"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
 </div>
 
 <div id="chatView">
@@ -152,7 +199,8 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
   <button class="iconBtn" data-act="video" aria-label="Video call">🎥</button>
  </div>
  <div class="msgs" id="msgs"></div>
- <div class="inp"><input id="msgInp" placeholder="Message" maxlength="5000" autocomplete="off" aria-label="Message"><button class="send" data-act="send" aria-label="Send">➤</button></div>
+ <div class="inp" id="inpBar"><input id="msgInp" placeholder="Message" maxlength="5000" autocomplete="off" aria-label="Message"><button class="send" id="sendBtn" data-act="recStart" aria-label="Record voice note"></button></div>
+ <div class="inp hidden" id="recBar"><button class="iconBtn" data-act="recCancel" aria-label="Cancel recording"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><span class="recdot"></span><span id="recTime">0:00</span><div id="recWave"></div><button class="send" data-act="recSend" aria-label="Send voice note"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
 </div>
 
 <div id="modal"><div class="box">
@@ -163,6 +211,11 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <button class="btn" id="startBtn" data-act="createChat">START CHAT</button>
  <button class="btn alt" data-act="closeAll">Cancel</button>
 </div></div>
+<input type="file" id="fileIn" class="hidden">
+<div id="postModal" class="modal2"><div class="box"><h3>New post</h3><textarea class="f" id="postText" rows="4" maxlength="3000" placeholder="What's happening?"></textarea><button class="btn alt" data-act="pickPostFile">📷 Add photo or video</button><p class="mute" id="postFileName" style="margin-top:6px"></p><button class="btn" id="postBtn" data-act="submitPost">POST</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="cmtModal" class="modal2"><div class="box"><h3>Comments</h3><div id="cmtList"></div><input class="f" id="cmtInp" maxlength="1000" placeholder="Add a comment" autocomplete="off"><button class="btn" data-act="sendCmt">SEND</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
+<div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story">✕</button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story">🗑</button><div id="stMedia"></div><div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
 <div id="toast" role="status"></div>
 
 <script type="module">
@@ -242,16 +295,16 @@ async function openChat(id){
  cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;
  $("hName").textContent=cur.name;$("hAv").outerHTML=avatar(cur.person).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");updatePresence();render();
- const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
+ const {data,error}=await sb.from("messages").select("id,body,sender_id,created_at,kind,audio_url,audio_ms,peaks").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(error){toast(errMsg(error));return;}
  cur.msgs=(data||[]).reverse();renderMsgs();$("msgInp").focus();
 }
 function renderMsgs(){
  const box=$("msgs");
- box.innerHTML=(cur?.msgs||[]).map(m=>`<div class="msg${m.sender_id===me.id?" me":""}${m.pending?" pending":""}">${esc(m.body)}<span class="t">${fmt(m.created_at)}</span></div>`).join("");
- box.scrollTop=box.scrollHeight;
+ box.innerHTML=(cur?.msgs||[]).map(m=>`<div class="msg${m.sender_id===me.id?" me":""}${m.pending?" pending":""}">${m.kind==="voice"?voiceHTML(m):esc(m.body)}<span class="t">${fmt(m.created_at)}</span></div>`).join("");
+ box.scrollTop=box.scrollHeight;updateSendBtn();applyPlaying();if(vid&&va.ontimeupdate)va.ontimeupdate();
 }
-function closeChat(){cur=null;$("chatView").classList.remove("open");render();}
+function closeChat(){stopVoice();if(rec)recFinish(false);cur=null;$("chatView").classList.remove("open");render();}
 function subscribeMessages(){
  if(msgChannel)sb.removeChannel(msgChannel);
  msgChannel=sb.channel("my-messages").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},async p=>{
@@ -264,7 +317,7 @@ function subscribeMessages(){
  }).subscribe();
 }
 async function sendMsg(){
- const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";
+ const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";updateSendBtn();
  const tmp={id:"tmp"+Date.now(),body,sender_id:me.id,created_at:new Date().toISOString(),pending:true};
  cur.msgs.push(tmp);renderMsgs();
  const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body}).select().single();
@@ -305,10 +358,10 @@ function subscribePresence(){
   .subscribe(s=>{if(s==="SUBSCRIBED")presenceChannel.track({at:Date.now()});});
 }
 function updatePresence(){if(cur)$("hStatus").textContent=onlineIds.has(cur.other_id)?"online":"last seen recently";}
-function closeAll(){$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
-function showChats(){$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").classList.remove("hidden");$("callsList").classList.add("hidden");}
+function closeAll(){document.querySelectorAll(".modal2.show").forEach(m=>m.classList.remove("show"));$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
+function showChats(){$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="chats";$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").classList.remove("hidden");$("callsList").classList.add("hidden");}
 async function showCalls(){
- closeAll();$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
+ closeAll();$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="calls";$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
  const cl=$("callsList");cl.classList.remove("hidden");
  const {data,error}=await sb.from("call_sessions").select("id,caller_id,call_type,status,created_at").order("created_at",{ascending:false}).limit(40);
  if(error){cl.innerHTML=`<div class="empty">${esc(errMsg(error))}</div>`;return;}
@@ -418,16 +471,212 @@ function cleanupCall(){
 }
 const toggle=kind=>localStream?.[kind==="a"?"getAudioTracks":"getVideoTracks"]().forEach(t=>t.enabled=!t.enabled);
 
+/* ---------- VOICE NOTES / FEED / STORIES ---------- */
+let tab="chats",feed=[],feedEnd=false,feedBusy=false,storyGroups=[],sv=null,svTimer=null,openPost=null,postFile=null,rec=null,vid=null;
+const SVG={
+ play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+ pause:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
+ mic:'<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg>',
+ send:'<svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>',
+ heart:on=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="${on?"#ff2d87":"none"}" stroke="${on?"#ff2d87":"currentColor"}" stroke-width="2"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg>`,
+ cmt:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>'
+};
+const dur=ms=>{const t=Math.round((ms||0)/1000);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");};
+const ago=d=>{const t=(Date.now()-new Date(d))/1000;return t<60?"now":t<3600?Math.floor(t/60)+"m":t<86400?Math.floor(t/3600)+"h":Math.floor(t/86400)+"d";};
+function pickFile(accept){return new Promise(res=>{const i=$("fileIn");i.accept=accept;i.value="";i.onchange=()=>res(i.files[0]||null);i.click();});}
+async function upload(bucket,file){
+ const ext=((file.name.split(".").pop())||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");
+ const path=`${me.id}/${crypto.randomUUID()}.${ext}`;
+ const {error}=await sb.storage.from(bucket).upload(path,file,{contentType:file.type});if(error)throw error;
+ return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+function updateSendBtn(){
+ const b=$("sendBtn");if(!b)return;const has=$("msgInp").value.trim().length>0;
+ b.dataset.act=has?"send":"recStart";b.innerHTML=has?SVG.send:SVG.mic;b.setAttribute("aria-label",has?"Send":"Record voice note");
+}
+$("msgInp").addEventListener("input",updateSendBtn);updateSendBtn();
+
+/* recording */
+const pickMime=()=>["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t))||"";
+function drawRec(pk){$("recWave").innerHTML=pk.slice(-60).map(h=>`<i style="height:${Math.max(8,h)}%"></i>`).join("");}
+async function recStart(){
+ if(!cur||rec)return;if(call){toast("Finish your call first.");return;}
+ if(!window.MediaRecorder){toast("Voice notes are not supported in this browser.");return;}
+ try{
+  stopVoice();
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  const mime=pickMime(),mr=new MediaRecorder(stream,mime?{mimeType:mime}:{});
+  const ac=new (window.AudioContext||window.webkitAudioContext)(),an=ac.createAnalyser();an.fftSize=256;ac.createMediaStreamSource(stream).connect(an);
+  const buf=new Uint8Array(an.fftSize),chunks=[],peaks=[],t0=Date.now();
+  const tick=setInterval(()=>{an.getByteTimeDomainData(buf);let m=0;for(const v of buf)m=Math.max(m,Math.abs(v-128));peaks.push(Math.min(100,Math.round(m/128*150)));drawRec(peaks);$("recTime").textContent=dur(Date.now()-t0);if(Date.now()-t0>=299000)recFinish(true);},100);
+  mr.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+  rec={mr,stream,ac,chunks,peaks,tick,t0,mime:mr.mimeType||mime,conv:cur.id};
+  mr.start();$("inpBar").classList.add("hidden");$("recBar").classList.remove("hidden");$("recTime").textContent="0:00";$("recWave").innerHTML="";
+ }catch(e){toast("Allow microphone access to record voice notes.");}
+}
+function bars(pk,n=40){if(!pk.length)return Array(n).fill(15);const o=[];for(let i=0;i<n;i++){const a=Math.floor(i*pk.length/n),b=Math.max(a+1,Math.floor((i+1)*pk.length/n));o.push(Math.max(10,Math.max(...pk.slice(a,b))));}return o;}
+async function recFinish(send){
+ if(!rec)return;const r=rec;rec=null;clearInterval(r.tick);const ms=Date.now()-r.t0;
+ await new Promise(res=>{r.mr.onstop=res;if(r.mr.state!=="inactive")r.mr.stop();else res();});
+ r.stream.getTracks().forEach(t=>t.stop());r.ac.close().catch(()=>{});
+ $("recBar").classList.add("hidden");$("inpBar").classList.remove("hidden");
+ if(!send)return;if(ms<700){toast("Hold on a little longer to record.");return;}
+ try{
+  const type=r.mime||"audio/webm",blob=new Blob(r.chunks,{type}),ext=type.includes("mp4")?"m4a":type.includes("ogg")?"ogg":"webm";
+  const path=`${me.id}/${crypto.randomUUID()}.${ext}`;
+  const {error:ue}=await sb.storage.from("voice").upload(path,blob,{contentType:type});if(ue)throw ue;
+  const url=sb.storage.from("voice").getPublicUrl(path).data.publicUrl;
+  const {data,error}=await sb.from("messages").insert({conversation_id:r.conv,sender_id:me.id,body:"Voice message",kind:"voice",audio_url:url,audio_ms:Math.min(ms,300000),peaks:bars(r.peaks)}).select().single();
+  if(error)throw error;
+  if(cur&&cur.id===r.conv&&!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
+  const c=chats.find(x=>x.id===r.conv);if(c){c.last="Voice message";c.at=data.created_at;render();}
+ }catch(e){toast("Voice note not sent: "+errMsg(e));}
+}
+
+/* playback with animated waveform */
+const va=new Audio();
+function voiceHTML(m){const pk=Array.isArray(m.peaks)?m.peaks:[];return `<div class="voice" data-voice="${esc(m.id)}"><button class="vplay" data-act="vplay" data-id="${esc(m.id)}" aria-label="Play voice note">${SVG.play}</button><div class="wave">${pk.map((h,i)=>`<i style="height:${Math.max(12,Math.min(100,h))}%;--i:${i}"></i>`).join("")}</div><span class="vdur">${dur(m.audio_ms)}</span></div>`;}
+function applyPlaying(){document.querySelectorAll(".voice").forEach(el=>{const on=el.dataset.voice===vid&&!va.paused;el.classList.toggle("playing",on);el.querySelector(".vplay").innerHTML=on?SVG.pause:SVG.play;});}
+function resetBars(){document.querySelectorAll(".voice").forEach(el=>{el.querySelectorAll("i.on").forEach(i=>i.classList.remove("on"));const m=cur?.msgs.find(x=>x.id===el.dataset.voice);el.querySelector(".vdur").textContent=dur(m?.audio_ms);});}
+function stopVoice(){va.pause();vid=null;resetBars();applyPlaying();}
+function vplay(id){
+ const m=cur?.msgs.find(x=>x.id===id);if(!m)return;
+ if(vid===id&&!va.paused){va.pause();return;}
+ if(vid!==id){va.src=m.audio_url;vid=id;resetBars();}
+ va.play().catch(()=>toast("Could not play this voice note."));
+}
+va.ontimeupdate=()=>{
+ const el=document.querySelector(`.voice[data-voice="${vid}"]`);if(!el)return;
+ const total=cur?.msgs.find(x=>x.id===vid)?.audio_ms||(va.duration*1000)||1,p=Math.min(1,va.currentTime*1000/total);
+ const b=el.querySelectorAll("i"),n=Math.round(p*b.length);b.forEach((x,i)=>x.classList.toggle("on",i<n));
+ el.querySelector(".vdur").textContent=dur(va.currentTime*1000);
+};
+va.onplay=va.onpause=applyPlaying;
+va.onended=()=>{vid=null;resetBars();applyPlaying();};
+
+/* feed */
+async function showFeed(){
+ closeAll();tab="feed";$("tabChats").classList.remove("on");$("tabCalls").classList.remove("on");$("tabFeed").classList.add("on");
+ $("list").classList.add("hidden");$("callsList").classList.add("hidden");$("feedList").classList.remove("hidden");
+ feed=[];feedEnd=false;await Promise.all([loadStories(),loadFeed()]);renderFeed();
+}
+async function loadFeed(){
+ if(feedBusy||feedEnd)return;feedBusy=true;
+ const {data,error}=await sb.rpc("get_feed",{before:feed.length?feed[feed.length-1].created_at:null});feedBusy=false;
+ if(error){toast(errMsg(error));return;}
+ if((data||[]).length<20)feedEnd=true;feed=feed.concat(data||[]);renderFeed();
+}
+function postHTML(p){
+ const media=p.media_url?(p.media_type==="video"?`<video src="${esc(p.media_url)}" controls playsinline preload="metadata"></video>`:`<img src="${esc(p.media_url)}" loading="lazy" alt="">`):"";
+ return `<article class="post" data-post="${esc(p.id)}"><div class="ph">${avatar(p)}<div style="flex:1;min-width:0"><b>${esc(p.display_name||p.username)}</b><div class="time">@${esc(p.username||"")} · ${ago(p.created_at)}</div></div>${p.author_id===me.id?`<button class="lnk" data-act="delPost" data-id="${esc(p.id)}">Delete</button>`:""}</div>${p.body?`<p class="pb">${esc(p.body)}</p>`:""}${media}<div class="pa"><button class="act likeBtn" data-act="like" data-id="${esc(p.id)}" aria-label="Like">${SVG.heart(p.liked)}<span>${p.like_count}</span></button><button class="act" data-act="cmt" data-id="${esc(p.id)}" aria-label="Comments">${SVG.cmt}<span class="cc">${p.comment_count}</span></button></div></article>`;
+}
+function storiesHTML(){
+ return `<div class="stories"><div class="st" data-act="addStory"><div class="ring add"><div class="avatar">+</div></div><span>Add story</span></div>${storyGroups.map((g,i)=>`<div class="st" data-act="openStory" data-i="${i}"><div class="ring">${avatar(g.author)}</div><span>${esc(g.author.id===me.id?"Your story":(g.author.display_name||g.author.username))}</span></div>`).join("")}</div>`;
+}
+function renderFeed(){$("feedList").innerHTML=storiesHTML()+(feed.map(postHTML).join("")||'<div class="empty">No posts yet.<br>Tap the pencil to share the first one.</div>');}
+$("feedList").addEventListener("scroll",e=>{const f=e.target;if(f.scrollTop+f.clientHeight>f.scrollHeight-600)loadFeed();});
+function newPost(){closeAll();postFile=null;$("postText").value="";$("postFileName").textContent="";$("postModal").classList.add("show");$("postText").focus();}
+async function pickPostFile(){const f=await pickFile("image/*,video/*");if(f){postFile=f;$("postFileName").textContent=f.name;}}
+async function submitPost(){
+ const body=$("postText").value.trim();if(!body&&!postFile){toast("Write something or add a photo or video.");return;}
+ if(postFile&&postFile.size>50*1048576){toast("File too big (50 MB max).");return;}
+ const b=$("postBtn");b.disabled=true;
+ try{
+  let media_url=null,media_type=null;
+  if(postFile){media_url=await upload("posts",postFile);media_type=postFile.type.startsWith("video")?"video":"image";}
+  const {error}=await sb.from("posts").insert({author_id:me.id,body,media_url,media_type});if(error)throw error;
+  closeAll();if(tab!=="feed")await showFeed();else{feed=[];feedEnd=false;await loadFeed();$("feedList").scrollTop=0;}
+ }finally{b.disabled=false;}
+}
+function updateLikeUI(p){const b=document.querySelector(`[data-post="${p.id}"] .likeBtn`);if(b)b.innerHTML=SVG.heart(p.liked)+`<span>${p.like_count}</span>`;}
+async function like(id){
+ const p=feed.find(x=>x.id===id);if(!p)return;
+ p.liked=!p.liked;p.like_count+=p.liked?1:-1;updateLikeUI(p);
+ const r=p.liked?await sb.from("likes").insert({post_id:id,user_id:me.id}):await sb.from("likes").delete().eq("post_id",id).eq("user_id",me.id);
+ if(r.error){p.liked=!p.liked;p.like_count+=p.liked?1:-1;updateLikeUI(p);toast(errMsg(r.error));}
+}
+async function delPost(id){if(!confirm("Delete this post?"))return;const {error}=await sb.from("posts").delete().eq("id",id);if(error)throw error;feed=feed.filter(p=>p.id!==id);renderFeed();}
+async function loadComments(){
+ const {data,error}=await sb.from("comments").select("id,body,created_at,profiles(display_name,username)").eq("post_id",openPost).order("created_at",{ascending:true}).limit(100);
+ if(error){toast(errMsg(error));return;}
+ $("cmtList").innerHTML=(data||[]).map(c=>`<div class="cm"><b>${esc(c.profiles?.display_name||c.profiles?.username||"Member")}</b> <span class="time">${ago(c.created_at)}</span><div>${esc(c.body)}</div></div>`).join("")||'<p class="mute">No comments yet.</p>';
+ $("cmtList").scrollTop=1e6;
+}
+async function cmt(id){openPost=id;$("cmtList").innerHTML='<p class="mute">Loading…</p>';$("cmtModal").classList.add("show");await loadComments();}
+async function sendCmt(){
+ const body=$("cmtInp").value.trim();if(!body||!openPost)return;$("cmtInp").value="";
+ const {error}=await sb.from("comments").insert({post_id:openPost,author_id:me.id,body});
+ if(error){toast(errMsg(error));$("cmtInp").value=body;return;}
+ const p=feed.find(x=>x.id===openPost);if(p){p.comment_count++;const c=document.querySelector(`[data-post="${p.id}"] .cc`);if(c)c.textContent=p.comment_count;}
+ await loadComments();
+}
+$("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
+
+/* stories */
+async function loadStories(){
+ const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,created_at,profiles(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
+ if(error)return;const m=new Map();
+ for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
+ storyGroups=[...m.values()].sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
+}
+async function addStory(){
+ closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
+ if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
+ toast("Uploading story…");
+ const url=await upload("posts",f);
+ const {error}=await sb.from("stories").insert({author_id:me.id,media_url:url,media_type:f.type.startsWith("video")?"video":"image"});if(error)throw error;
+ await loadStories();if(tab==="feed")renderFeed();toast("Story posted.");
+}
+function openStory(i){sv={g:storyGroups[i],i:0};$("storyView").classList.add("show");showStory();}
+function showStory(){
+ const {g,i}=sv,s=g.items[i];clearTimeout(svTimer);
+ $("stBars").innerHTML=g.items.map((_,k)=>`<i class="${k<i?"done":k===i?"cur":""}"></i>`).join("");
+ $("stHead").innerHTML=avatar(g.author)+`<b>${esc(g.author.display_name||g.author.username)}</b><span class="time" style="color:#ddd">${ago(s.created_at)}</span>`;
+ $("stDel").classList.toggle("hidden",g.author.id!==me.id);
+ const box=$("stMedia");
+ if(s.media_type==="video"){box.innerHTML=`<video src="${esc(s.media_url)}" autoplay playsinline></video>`;const v=box.firstChild;v.onended=nextStory;v.onerror=nextStory;}
+ else{box.innerHTML=`<img src="${esc(s.media_url)}" alt="">`;svTimer=setTimeout(nextStory,5000);}
+}
+function nextStory(){if(!sv)return;if(sv.i<sv.g.items.length-1){sv.i++;showStory();}else closeStory();}
+function prevStory(){if(sv&&sv.i>0){sv.i--;showStory();}}
+function closeStory(){clearTimeout(svTimer);sv=null;$("stMedia").innerHTML="";$("storyView").classList.remove("show");}
+async function stDel(){
+ if(!sv||!confirm("Delete this story?"))return;const id=sv.g.items[sv.i].id;
+ const {error}=await sb.from("stories").delete().eq("id",id);if(error)throw error;
+ closeStory();await loadStories();if(tab==="feed")renderFeed();
+}
+
+/* profile / settings */
+function refreshMe(){$("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;}
+function settings(){closeAll();$("setName").value=profile.display_name||"";$("setBio").value=profile.bio||"";$("setModal").classList.add("show");}
+async function saveSettings(){
+ const display_name=$("setName").value.trim(),bio=$("setBio").value.trim();
+ if(display_name.length<2){toast("Name must be at least 2 characters.");return;}
+ const {data,error}=await sb.from("profiles").update({display_name,bio,updated_at:new Date().toISOString()}).eq("id",me.id).select().single();
+ if(error)throw error;profile=data;refreshMe();closeAll();toast("Profile saved.");
+}
+async function changePhoto(){
+ const f=await pickFile("image/jpeg,image/png,image/webp");if(!f)return;
+ if(f.size>5*1048576){toast("Photo must be under 5 MB.");return;}
+ const url=await upload("posts",f);
+ const {data,error}=await sb.from("profiles").update({avatar_url:url}).eq("id",me.id).select().single();if(error)throw error;
+ profile=data;refreshMe();toast("Photo updated.");
+}
+
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
- voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v")
+ voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
+ feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
+ recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
+ vplay:a=>vplay(a.dataset.id),like:a=>like(a.dataset.id),cmt:a=>cmt(a.dataset.id),delPost:a=>delPost(a.dataset.id),
+ openStory:a=>openStory(+a.dataset.i),stClose:closeStory,stNext:nextStory,stPrev:prevStory,stDel
 };
 document.addEventListener("click",e=>{
- const a=e.target.closest("[data-act]");if(a){Promise.resolve(actions[a.dataset.act]?.()).catch(x=>toast(errMsg(x)));return;}
+ const a=e.target.closest("[data-act]");if(a){Promise.resolve(actions[a.dataset.act]?.(a)).catch(x=>toast(errMsg(x)));return;}
  const r=e.target.closest("[data-chat]");if(r){openChat(r.dataset.chat);return;}
  const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;$("newName").value=h.dataset.un;$("peopleResults").innerHTML=`<p style="color:var(--pink2);padding:6px 0">Selected @${esc(h.dataset.un)}</p>`;}
 });
