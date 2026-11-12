@@ -167,7 +167,7 @@ const fmt=d=>d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit
 const errMsg=e=>e?.message||String(e||"Something went wrong");
 let me=null,profile=null,chats=[],cur=null,filter="",authMode="signin",onlineIds=new Set();
 let call=null,pc=null,localStream=null,callChannel=null,incomingChannel=null,msgChannel=null,presenceChannel=null;
-let seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
+let ringPoll=null,seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
 
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500);}
 function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url)}">`:`<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;}
@@ -212,7 +212,7 @@ async function logout(){
  try{
   if(call)await endCall();
   for(const c of [presenceChannel,incomingChannel,msgChannel])if(c)await sb.removeChannel(c);
-  presenceChannel=incomingChannel=msgChannel=null;
+  presenceChannel=incomingChannel=msgChannel=null;clearInterval(ringPoll);
   await sb.auth.signOut();
   me=profile=cur=null;chats=[];onlineIds.clear();closeAll();closeChat();
   $("list").innerHTML="";$("callsList").innerHTML="";$("authPassword").value="";$("authGate").classList.remove("hidden");
@@ -309,15 +309,25 @@ async function showCalls(){
 }
 
 /* ---------- CALLS ---------- */
+async function onRinging(row){
+ if(!row||row.status!=="ringing"||row.callee_id!==me.id)return;
+ if(Date.now()-new Date(row.created_at).getTime()>45000)return;
+ if(call){if(call.id!==row.id)await sb.from("call_sessions").update({status:"rejected"}).eq("id",row.id);return;}
+ const {data:pr}=await sb.from("profiles").select("display_name").eq("id",row.caller_id).maybeSingle();
+ if(call)return;
+ call={id:row.id,caller_id:row.caller_id,callee_id:me.id,type:row.call_type,incoming:true,otherName:pr?.display_name||"Incoming caller"};
+ showCallUI(true);watchCallStatus();
+}
+async function checkRinging(){
+ if(!me||call)return;
+ const since=new Date(Date.now()-40000).toISOString();
+ const {data}=await sb.from("call_sessions").select("*").eq("callee_id",me.id).eq("status","ringing").gt("created_at",since).order("created_at",{ascending:false}).limit(1);
+ if(data&&data[0])await onRinging(data[0]);
+}
 function subscribeIncomingCalls(){
  if(incomingChannel)sb.removeChannel(incomingChannel);
- incomingChannel=sb.channel("incoming-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},async p=>{
-  if(p.new.status!=="ringing")return;
-  if(call){await sb.from("call_sessions").update({status:"rejected"}).eq("id",p.new.id);return;}
-  const {data:pr}=await sb.from("profiles").select("display_name").eq("id",p.new.caller_id).maybeSingle();
-  call={id:p.new.id,caller_id:p.new.caller_id,callee_id:me.id,type:p.new.call_type,incoming:true,otherName:pr?.display_name||"Incoming caller"};
-  showCallUI(true);watchCallStatus();
- }).subscribe();
+ incomingChannel=sb.channel("incoming-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},p=>onRinging(p.new)).subscribe();
+ clearInterval(ringPoll);ringPoll=setInterval(checkRinging,3000);
 }
 function showCallUI(incoming){
  const v=call.type==="video";$("callLayer").classList.add("show");$("callTitle").textContent=call.otherName||"BOUNCY call";
@@ -422,6 +432,8 @@ $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 history.scrollRestoration="manual";
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me&&!msgChannel)subscribeMessages();}});
+window.addEventListener("online",()=>{if(me){subscribeMessages();subscribeIncomingCalls();loadChats();}});
 
 const {data:{session}}=await sb.auth.getSession();
 if(session){try{await enterApp();}catch(e){$("authError").textContent=errMsg(e);}}
