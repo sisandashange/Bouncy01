@@ -4,63 +4,148 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Roboto,Arial}
-body{background:#17212b;color:#fff}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 0;background:#17212b;position:sticky;top:0}
-.topbar .left{font-size:22px}
-.tabs{display:flex;gap:36px;font-size:19px;font-weight:700;letter-spacing:.5px}
-.tabs span{padding-bottom:12px;color:#8a9aa8;cursor:pointer}
+body{background:#17212b;color:#fff;overflow:hidden}
+button{cursor:pointer}
+/* TOP BAR - EXACT */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 0;background:#17212b}
+.iconBtn{background:none;border:0;color:#fff;font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.tabs{display:flex;gap:32px;font-size:19px;font-weight:700}
+.tabs span{padding-bottom:12px;color:#8a9aa8}
 .tabs span.on{color:#fff;border-bottom:3px solid #fff}
-.search{font-size:22px}
-.list{margin-top:4px}
-.row{display:flex;gap:12px;padding:12px 14px;cursor:pointer;align-items:center}
+/* DRAWER */
+#drawer{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#17212b;transition:.25s;z-index:20;padding:16px;box-shadow:5px 0 20px #000}
+#drawer.open{left:0}
+#drawer .me{display:flex;gap:12px;align-items:center;padding:20px 0}
+#drawer .item{padding:14px 8px;font-size:16px;border-bottom:1px solid #232e3a}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:15}
+#overlay.show{display:block}
+/* SEARCH */
+#searchBar{display:none;background:#242f3d;margin:10px 14px;padding:12px;border-radius:8px;align-items:center;gap:10px}
+#searchBar.show{display:flex}
+#searchBar input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px}
+#searchBar button{background:0;border:0;color:#8a9aa8;font-size:20px}
+/* LIST */
+.list{height:calc(100vh - 58px);overflow-y:auto}
+.row{display:flex;gap:12px;padding:12px 14px;align-items:center}
 .row:active{background:#2b5278}
-.avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+.avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px}
 .a1{background:#2AABEE}.a2{background:#ff8a3d}.a3{background:#e17076}.a4{background:#3d9a50}.a5{background:#7a5af8}.a6{background:#a13d9a}
 .mid{flex:1;min-width:0;border-bottom:1px solid #232e3a;padding-bottom:12px}
-.top{display:flex;justify-content:space-between;align-items:center}
-.name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top{display:flex;justify-content:space-between}
+.name{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .name.green{color:#4CAF50}
 .time{font-size:13px;color:#8a9aa8;white-space:nowrap;margin-left:8px}
-.sub{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.sub{display:flex;justify-content:space-between;margin-top:4px}
 .last{font-size:15px;color:#8a9aa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .badge{min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 6px;margin-left:8px}
-.badge.blue{background:#2AABEE;color:#fff}
-.badge.grey{background:#6b7a88;color:#fff}
-.check{color:#2AABEE}
-.fab{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#2AABEE;border:0;color:#fff;font-size:26px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.blue{background:#2AABEE}.grey{background:#6b7a88}
+.fab{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#2AABEE;border:0;color:#fff;z-index:10;display:flex;align-items:center;justify-content:center}
+/* CHAT VIEW */
+#chatView{position:fixed;inset:0;background:#0e1621;display:none;flex-direction:column;z-index:30}
+#chatView.open{display:flex}
+.cHead{display:flex;align-items:center;gap:10px;padding:10px;background:#17212b}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:75%;padding:10px 12px;border-radius:14px;background:#182533;align-self:flex-start}
+.msg.me{align-self:flex-end;background:#2b5278}
+.msg .t{font-size:11px;color:#8a9aa8;float:right;margin:8px 0 0 10px}
+.inp{display:flex;gap:10px;padding:12px;background:#17212b;align-items:center}
+.inp input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px}
+.inp button{background:#2AABEE;border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px}
+/* MODAL */
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:40}
+#modal.show{display:flex}
+.box{background:#17212b;padding:20px;border-radius:12px;width:85%;max-width:360px}
+.box input,.box textarea{width:100%;background:#242f3d;border:0;outline:0;color:#fff;padding:12px;border-radius:8px;margin:10px 0;font-size:16px}
+.box button{background:#2AABEE;border:0;color:#fff;padding:12px;border-radius:8px;width:100%;font-size:16px;font-weight:700;margin-top:6px}
+.box .cancel{background:#242f3d}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="left">☰</div>
-  <div class="tabs"><span class="on">CHATS</span><span>CALLS</span></div>
-  <div class="search">🔍</div>
+<div id="overlay" onclick="closeAll()"></div>
+
+<!-- DRAWER / MENU - NOW WORKS -->
+<div id="drawer">
+  <div class="me"><div class="avatar a1">BU</div><div><b>Bouncy User</b><br><span style="color:#8a9aa8">@user_87ee1</span></div></div>
+  <div class="item" onclick="alert('New Group - coming next')">👥 New Group</div>
+  <div class="item" onclick="alert('New Channel - coming next')">📢 New Channel</div>
+  <div class="item" onclick="alert('Saved Messages')">🔖 Saved Messages</div>
+  <div class="item" onclick="alert('Calls')">📞 Calls</div>
+  <div class="item" onclick="alert('Settings')">⚙️ Settings</div>
+  <div class="item" onclick="closeAll()" style="color:#2AABEE">← Close Menu</div>
 </div>
 
+<div class="topbar">
+  <button class="iconBtn" onclick="openMenu()">☰</button>
+  <div class="tabs"><span id="tabChats" class="on" onclick="showChats()">CHATS</span><span id="tabCalls" onclick="showCalls()">CALLS</span></div>
+  <button class="iconBtn" onclick="openSearch()">
+    <!-- CLEAN WHITE SEARCH LIKE TELEGRAM, NOT EMOJI -->
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
+  </button>
+</div>
+
+<div id="searchBar"><span>🔍</span><input id="searchInput" placeholder="Search" oninput="doSearch()"><button onclick="closeSearch()">✕</button></div>
+
 <div class="list" id="list"></div>
-<button class="fab">✎</button>
+<div class="list" id="callsList" style="display:none"></div>
+
+<!-- PENCIL - NOW WORKS, SOLID LIKE TELEGRAM -->
+<button class="fab" onclick="openNewChat()">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+</button>
+
+<!-- CHAT WINDOW -->
+<div id="chatView">
+  <div class="cHead">
+    <button class="iconBtn" onclick="closeChat()">←</button>
+    <div class="avatar a1" id="hAv">J</div>
+    <div style="flex:1"><b id="hName" style="font-size:18px">Jane</b><br><small style="color:#8a9aa8">online</small></div>
+    <button class="iconBtn" onclick="alert('Call')">📞</button>
+    <button class="iconBtn" onclick="alert('Profile')">⋮</button>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div class="inp"><span style="font-size:22px">😊</span><input id="msgInp" placeholder="Message" onkeydown="if(event.key==='Enter')sendMsg()"><span>📎</span><button onclick="sendMsg()">➤</button></div>
+</div>
+
+<!-- NEW CHAT MODAL -->
+<div id="modal"><div class="box"><h3>New Chat</h3><input id="newName" placeholder="Name - e.g. Thabo"><textarea id="newMsg" placeholder="First message..."></textarea><button onclick="createChat()">START CHAT</button><button class="cancel" onclick="closeAll()">Cancel</button></div></div>
 
 <script>
 let chats=[
- {name:"Jane",last:"Well I do help animals.",time:"15:34",unread:5,badge:"blue",img:"https://i.pravatar.cc/100?img=47"},
- {name:"Tyrion Lannister",last:"Sometimes possession is an...",time:"18:12",unread:0,initial:"TL",color:"a2"},
- {name:"Alena Shy",last:"😍 Sticker",time:"19:30",unread:0,check:true,img:"https://i.pravatar.cc/100?img=32"},
- {name:"Heisenberg",last:"You have my financial support if...",time:"18:32",unread:0,lock:true,img:"https://i.pravatar.cc/100?img=12"},
- {name:"Bender",last:"I looove new Pixels! If fact, they...",time:"16:30",unread:0,img:"https://i.pravatar.cc/100?img=13"},
- {name:"World News Today",last:"Telegram just updated their...",time:"15:12",unread:2,badge:"grey",muted:true,initial:"WNT",color:"a5"},
- {name:"EVE",last:"LaserBlastSafetyGuide.pdf",time:"12:54",unread:0,img:"https://i.pravatar.cc/100?img=44"},
- {name:"Nick",last:"We're gonna win this...",time:"12:22",unread:0,img:"https://i.pravatar.cc/100?img=59"},
+ {name:"Jane",last:"Well I do help animals.",time:"15:34",unread:5,badge:"blue",img:"https://i.pravatar.cc/100?img=47",msgs:[{f:"Jane",t:"Well I do help animals.",time:"15:34"}]},
+ {name:"Tyrion Lannister",last:"Sometimes possession is an...",time:"18:12",unread:0,initial:"TL",color:"a2",msgs:[{f:"Tyrion",t:"Sometimes possession is an...",time:"18:12"}]},
+ {name:"Alena Shy",last:"😍 Sticker",time:"19:30",unread:0,check:true,img:"https://i.pravatar.cc/100?img=32",msgs:[{f:"Alena",t:"😍 Sticker",time:"19:30"}]},
+ {name:"Heisenberg",last:"You have my financial support if...",time:"18:32",unread:0,lock:true,img:"https://i.pravatar.cc/100?img=12",msgs:[{f:"Heisenberg",t:"You have my financial support if...",time:"18:32"}]},
+ {name:"Bender",last:"I looove new Pixels! If fact, they...",time:"16:30",unread:0,img:"https://i.pravatar.cc/100?img=13",msgs:[{f:"Bender",t:"I looove new Pixels!",time:"16:30"}]},
+ {name:"World News Today",last:"Telegram just updated their...",time:"15:12",unread:2,badge:"grey",muted:true,initial:"WNT",color:"a5",msgs:[{f:"WNT",t:"Telegram just updated their...",time:"15:12"}]},
+ {name:"EVE",last:"LaserBlastSafetyGuide.pdf",time:"12:54",unread:0,img:"https://i.pravatar.cc/100?img=44",msgs:[{f:"EVE",t:"LaserBlastSafetyGuide.pdf",time:"12:54"}]},
+ {name:"Nick",last:"We're gonna win this...",time:"12:22",unread:0,img:"https://i.pravatar.cc/100?img=59",msgs:[{f:"Nick",t:"We're gonna win this...",time:"12:22"}]},
 ];
-document.getElementById('list').innerHTML=chats.map(c=>`
-<div class="row">
-  ${c.img?`<img class="avatar" src="${c.img}">`:`<div class="avatar ${c.color}">${c.initial}</div>`}
-  <div class="mid">
-    <div class="top"><span class="name ${c.lock?'green':''}">${c.lock?'🔒 ':''}${c.name} ${c.muted?'🔕':''}</span>
-    <span class="time">${c.check?'<span class="check">✓✓</span> ':''}${c.time}</span></div>
-    <div class="sub"><span class="last">${c.last}</span>${c.unread?`<span class="badge ${c.badge}">${c.unread}</span>`:''}</div>
-  </div>
-</div>`).join('');
+let cur=0, filter="";
+function render(){
+ let list=chats.filter(c=>c.name.toLowerCase().includes(filter.toLowerCase()));
+ document.getElementById('list').innerHTML=list.map((c,idx)=>{
+  let realIdx=chats.indexOf(c);
+  return `<div class="row" onclick="openChat(${realIdx})">
+   ${c.img?`<img class="avatar" src="${c.img}">`:`<div class="avatar ${c.color}">${c.initial}</div>`}
+   <div class="mid"><div class="top"><span class="name ${c.lock?'green':''}">${c.lock?'🔒 ':''}${c.name} ${c.muted?'🔕':''}</span><span class="time">${c.check?'✓✓ ':''}${c.time}</span></div>
+   <div class="sub"><span class="last">${c.last}</span>${c.unread?`<span class="badge ${c.badge}">${c.unread}</span>`:''}</div></div></div>`
+ }).join('') || '<p style="padding:20px;color:#8a9aa8">No chats found</p>';
+}
+function openMenu(){document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeAll(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show');document.getElementById('modal').classList.remove('show')}
+function openSearch(){document.getElementById('searchBar').classList.add('show');document.getElementById('searchInput').focus()}
+function closeSearch(){document.getElementById('searchBar').classList.remove('show');filter="";document.getElementById('searchInput').value="";render()}
+function doSearch(){filter=document.getElementById('searchInput').value;render()}
+function showChats(){document.getElementById('tabChats').classList.add('on');document.getElementById('tabCalls').classList.remove('on');document.getElementById('list').style.display='block';document.getElementById('callsList').style.display='none'}
+function showCalls(){document.getElementById('tabChats').classList.remove('on');document.getElementById('tabCalls').classList.add('on');document.getElementById('list').style.display='none';let cl=document.getElementById('callsList');cl.style.display='block';cl.innerHTML=`<div class="row"><div class="avatar a2">J</div><div class="mid"><div class="top"><span class="name">Jane</span><span class="time">15:34</span></div><div class="sub"><span class="last">↙ Incoming • 2:34</span></div></div></div><div class="row"><div class="avatar a4">N</div><div class="mid"><div class="top"><span class="name">Nick</span><span class="time">12:22</span></div><div class="sub"><span class="last">↗ Outgoing • 0:45</span></div></div></div>`}
+function openNewChat(){document.getElementById('modal').classList.add('show')}
+function createChat(){let n=document.getElementById('newName').value.trim()||"New Friend";let m=document.getElementById('newMsg').value.trim()||"Hi!";chats.unshift({name:n,last:"You: "+m,time:"now",unread:0,initial:n[0].toUpperCase(),color:"a1",msgs:[{f:"You",t:m,time:"now"}]});closeAll();render();openChat(0)}
+function openChat(i){cur=i;let c=chats[i];c.unread=0;document.getElementById('hName').innerText=c.name;document.getElementById('hAv').innerText=c.initial||c.name[0];renderMsgs();document.getElementById('chatView').classList.add('open');render()}
+function renderMsgs(){document.getElementById('msgs').innerHTML=chats[cur].msgs.map(m=>m.f==="You"?`<div class="msg me">${m.t}<span class="t">${m.time} ✓✓</span></div>`:`<div class="msg"><b style="color:#2AABEE">${m.f}</b><br>${m.t}<span class="t">${m.time}</span></div>`).join('')}
+function sendMsg(){let v=document.getElementById('msgInp').value.trim();if(!v)return;let t=new Date().toTimeString().slice(0,5);chats[cur].msgs.push({f:"You",t:v,time:t});chats[cur].last="You: "+v;chats[cur].time=t;document.getElementById('msgInp').value="";renderMsgs();render();document.getElementById('msgs').scrollTop=9999}
+function closeChat(){document.getElementById('chatView').classList.remove('open')}
+render();
 </script>
 </body>
 </html>
