@@ -23,7 +23,6 @@
     --tier-new: #94a3b8;
     --offline-indicator: #ef4444;
     --danger: #dc2626;
-    --warning: #d97706;
 }
 
 * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -83,7 +82,6 @@ body.focus-mode .composer, body.focus-mode .bubble.out:last-child {
 .chat-row:hover { background: rgba(255,255,255,0.03); border-color: var(--glass-border); transform: translateX(4px); }
 .chat-row.active { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.3); }
 .chat-row.active::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--primary); border-radius:0 4px 4px 0; }
-.chat-row.archived { opacity: 0.5; }
 
 .avatar {
     width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg,#334155,#1e293b);
@@ -141,6 +139,15 @@ body.focus-mode .composer, body.focus-mode .bubble.out:last-child {
 .offline-banner.visible { transform: translateY(0); }
 .sync-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* BIG ERROR BOX (FOR LOGIN FAILURES) */
+#bigErrorBox {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #ef4444; color: white; padding: 16px 24px; border-radius: 12px;
+    font-weight: bold; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: 90%; text-align: center; display: none; border: 2px solid white;
+    font-size: 14px; line-height: 1.4;
+}
 
 /* SAFETY SHIELD PROMPT */
 .safety-prompt {
@@ -272,26 +279,35 @@ body.focus-mode .composer, body.focus-mode .bubble.out:last-child {
 .vault-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 20px; }
 .vault-item { aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.05); position: relative; }
 .vault-item img { width: 100%; height: 100%; object-fit: cover; }
-.vault-close, .studio-close { position: absolute; top: 20px; right: 20px; }
+.vault-close { position: absolute; top: 20px; right: 20px; }
 
 /* AUTH & MODALS */
-.auth-wrap { height:100dvh; display:grid; place-items:center; padding:20px; }
+.auth-wrap { 
+    height: 100dvh; display:grid; place-items:center; padding:20px; 
+    background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 70%);
+}
 .auth-card { width:100%; max-width:400px; padding:40px; border-radius:var(--radius-lg); text-align:center; }
-.field { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); padding:16px; border-radius:16px; color:white; margin-bottom:15px; }
-.primary-btn { width:100%; background:var(--primary); color:white; padding:16px; border-radius:16px; font-weight:600; margin-top:10px; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition: 0.3s; }
+.field { width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); padding:16px; border-radius:16px; color:white; margin-bottom:15px; font-size: 16px;}
+.field:focus { border-color: var(--primary); background: rgba(0,0,0,0.5); }
+.primary-btn { width:100%; background:var(--primary); color:white; padding:16px; border-radius:16px; font-weight:600; margin-top:10px; box-shadow:0 4px 20px rgba(99,102,241,0.3); transition: 0.3s; font-size: 16px;}
 .primary-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.5); }
 .hidden { display:none!important; }
 button { cursor:pointer; border:0; background:none; color:inherit; font-family:inherit; }
 .icon-btn { width:42px; height:42px; border-radius:12px; display:grid; place-items:center; color:var(--text-muted); font-size:20px; transition: 0.2s; }
 .icon-btn:hover { background:rgba(255,255,255,0.05); color:white; transform: scale(1.1); }
 
-@media(max-width:768px) {
+/* MOBILE KEYBOARD FIX */
+@media (max-width: 768px) {
     .app-container { grid-template-columns:1fr; }
     .chat-area { display:none; position:absolute; inset:0; z-index:10; background:#020617; }
     .app-container.chat-open .sidebar { display:none; }
     .app-container.chat-open .chat-area { display:flex; }
     .back-btn { display:block!important; margin-right:10px; }
     .back-btn { display:none; }
+    
+    /* Fix auth card for mobile keyboard */
+    .auth-wrap { height: auto; min-height: 100dvh; align-items: flex-start; padding-top: 10vh; }
+    .auth-card { margin-bottom: 20px; padding: 30px 20px; }
 }
 </style>
 </head>
@@ -299,6 +315,9 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
 
 <!-- PARALLAX LIQUID BACKGROUND -->
 <canvas id="liquidCanvas"></canvas>
+
+<!-- BIG ERROR BOX (Replaces subtle toast for critical errors) -->
+<div id="bigErrorBox"></div>
 
 <!-- OFFLINE BANNER -->
 <div id="offlineBanner" class="offline-banner">
@@ -322,9 +341,9 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
         <h1 style="font-family:'Space Grotesk'; margin:10px 0;">Welcome Back</h1>
         <p style="color:var(--text-muted); margin-bottom:30px;">End-to-end encrypted. Works offline. Safe by design.</p>
         <form id="authForm">
-            <input class="field" id="email" type="email" placeholder="Email Address" required>
-            <input class="field" id="password" type="password" placeholder="Password" required>
-            <button type="submit" class="primary-btn">Sign In</button>
+            <input class="field" id="email" type="email" placeholder="Email Address" required autocomplete="email">
+            <input class="field" id="password" type="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit" class="primary-btn" id="authSubmit">Sign In</button>
         </form>
         <div style="margin-top:20px; font-size:14px; color:var(--text-muted);">
             New here? <button class="link" style="color:var(--primary); font-weight:600;" id="switchMode">Create Account</button>
@@ -413,9 +432,22 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
 </div>
 
 <script>
+// --- BIG ERROR HANDLER ---
+function showBigError(msg) {
+    let el = document.getElementById('bigErrorBox');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'bigErrorBox';
+        document.body.appendChild(el);
+    }
+    el.textContent = "⚠️ " + msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 8000); 
+}
+
 // --- INDEXEDDB LOCAL CACHE ENGINE ---
 const DB_NAME = 'bouncy_timecapsule';
-const DB_VERSION = 2; // Incremented for new stores
+const DB_VERSION = 2;
 const LocalCache = {
     db: null,
     async init() {
@@ -426,7 +458,7 @@ const LocalCache = {
                 if (!db.objectStoreNames.contains('messages')) db.createObjectStore('messages', { keyPath: 'id' });
                 if (!db.objectStoreNames.contains('conversations')) db.createObjectStore('conversations', { keyPath: 'id' });
                 if (!db.objectStoreNames.contains('pending')) db.createObjectStore('pending', { keyPath: 'tempId' });
-                if (!db.objectStoreNames.contains('studio')) db.createObjectStore('studio', { keyPath: 'id' }); // NEW
+                if (!db.objectStoreNames.contains('studio')) db.createObjectStore('studio', { keyPath: 'id' });
             };
             request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
             request.onerror = (e) => reject(e.target.error);
@@ -481,16 +513,14 @@ const LocalCache = {
 
 // --- AUTONOMOUS SAFETY SHIELD ---
 const SafetyShield = {
-    toxicWords: ['hate', 'kill', 'die', 'stupid', 'idiot', 'trash', 'worthless'], // Expandable
+    toxicWords: ['hate', 'kill', 'die', 'stupid', 'idiot', 'trash', 'worthless'],
     piiPatterns: [/\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g, /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g],
-    
     analyze(text) {
         const lower = text.toLowerCase();
         const toxicityScore = this.toxicWords.filter(w => lower.includes(w)).length;
         const hasPII = this.piiPatterns.some(p => p.test(text));
         return { toxicityScore, hasPII, isToxic: toxicityScore >= 2 };
     },
-    
     redactPII(text) {
         let redacted = text;
         this.piiPatterns.forEach(p => { redacted = redacted.replace(p, '[REDACTED]'); });
@@ -678,7 +708,6 @@ function initStudio() {
     studioCtx = c.getContext('2d');
     studioCtx.lineCap = 'round'; studioCtx.lineJoin = 'round'; studioCtx.lineWidth = 3;
     
-    // Touch/Mouse handlers
     const startDraw = (e) => { isDrawing = true; const pos = getPos(e); studioCtx.beginPath(); studioCtx.moveTo(pos.x, pos.y); };
     const draw = (e) => { if (!isDrawing) return; const pos = getPos(e); studioCtx.lineTo(pos.x, pos.y); studioCtx.stroke(); };
     const endDraw = () => { isDrawing = false; };
@@ -688,7 +717,6 @@ function initStudio() {
     c.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e.touches[0]); });
     c.addEventListener('touchend', endDraw);
     
-    // Tool switching
     document.querySelectorAll('.studio-tool').forEach(t => {
         t.onclick = () => {
             document.querySelectorAll('.studio-tool').forEach(bt => bt.classList.remove('active'));
@@ -698,15 +726,13 @@ function initStudio() {
         };
     });
 }
-
 function getPos(e) { const r = $('studioCanvas').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 
 $('sendStudioCreation').onclick = async () => {
     const dataUrl = $('studioCanvas').toDataURL('image/png');
     await LocalCache.saveStudioCreation({ dataUrl, conversation_id: activeConversation });
     $('studioOverlay').classList.add('hidden');
-    toast('Creation saved! Sending as image...');
-    // In production: upload to storage and send as message
+    toast('Creation saved!');
 };
 
 $('openStudio').onclick = () => { $('studioOverlay').classList.remove('hidden'); setTimeout(initStudio, 100); };
@@ -725,7 +751,7 @@ let pendingSafetyMessage = null;
 
 function toast(m){
     const t=document.createElement('div'); t.textContent=m;
-    t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#ef4444;color:white;padding:12px 24px;border-radius:30px;font-weight:600;z-index:999;';
+    t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#334155;color:white;padding:12px 24px;border-radius:30px;font-weight:600;z-index:999;';
     document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 function initials(n){return(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();}
@@ -757,24 +783,65 @@ async function syncPendingMessages() {
     }
 }
 
-$('authForm').onsubmit=async e=>{
+// --- BULLETPROOF AUTH FORM ---
+$('authForm').onsubmit = async e => {
     e.preventDefault();
-    const email=$('email').value.trim(), password=$('password').value;
-    try{ const {data,error}=await sb.auth.signInWithPassword({email,password}); if(error) throw error; await boot(data.user, password); }
-    catch(err){toast(err.message)}
+    const btn = $('authSubmit');
+    const email = $('email').value.trim();
+    const password = $('password').value;
+
+    // Show loading state immediately
+    const originalText = btn.textContent;
+    btn.textContent = 'Connecting...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+        console.log("Attempting login for:", email);
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            console.error("Supabase Auth Error:", error);
+            throw error;
+        }
+        
+        console.log("Login successful, booting app...");
+        await boot(data.user, password);
+        
+    } catch (err) {
+        console.error("Login Catch Block:", err);
+        showBigError(err.message || "Login failed. Check console.");
+        
+        // Reset button
+        btn.textContent = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
 };
 
-async function boot(u, password){
-    user=u; window.userPassword = password;
-    await LocalCache.init();
-    const {data:p}=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
-    profile=p;
-    $('myName').textContent=profile?.display_name||'User';
-    $('myHandle').textContent='@'+(profile?.username||'');
-    $('myAvatar').innerHTML=profile?.avatar_url?`<img src="${esc(profile.avatar_url)}">`:initials(profile?.display_name);
-    showApp(); loadConversations();
-    setInterval(updatePresence, 30000);
-    if (isOnline) await syncPendingMessages();
+// --- SAFE BOOT FUNCTION ---
+async function boot(u, password) {
+    try {
+        user = u; 
+        window.userPassword = password;
+        await LocalCache.init();
+        
+        const { data: p, error: profileError } = await sb.from('profiles').select('*').eq('id', u.id).maybeSingle();
+        if (profileError) console.warn("Profile fetch warning:", profileError);
+        
+        profile = p;
+        $('myName').textContent = profile?.display_name || 'User';
+        $('myHandle').textContent = '@' + (profile?.username || '');
+        $('myAvatar').innerHTML = profile?.avatar_url ? `<img src="${esc(profile.avatar_url)}">` : initials(profile?.display_name);
+        
+        showApp(); 
+        loadConversations();
+        setInterval(updatePresence, 30000);
+        if (isOnline) await syncPendingMessages();
+    } catch (err) {
+        console.error("Boot failed:", err);
+        showBigError("App failed to load: " + err.message);
+    }
 }
 
 function updatePresence() {
@@ -883,7 +950,6 @@ function renderMessages(rows, queuedMessages = []){
         const mine=m.sender_id===user.id;
         const bubble = document.createElement('div'); bubble.className = `bubble ${mine?'out':'in'}`;
         
-        // Ghost mode decay for ephemeral messages
         if (m.ephemeral && !mine) bubble.classList.add('ghost-decay');
         
         if (m.message_type === 'voice') bubble.appendChild(createVoiceSculpture(m.media_url, m.duration || 15));
@@ -896,11 +962,9 @@ function renderMessages(rows, queuedMessages = []){
             const safety = SafetyShield.analyze(m.body);
             let displayBody = m.body;
             
-            // PII Redaction
             if (safety.hasPII && !mine) {
                 displayBody = SafetyShield.redactPII(m.body);
                 bubble.classList.add('pii-redacted');
-                // Make redacted parts clickable to reveal
                 displayBody = displayBody.replace(/\[REDACTED\]/g, '<span class="pii-blur" onclick="this.classList.toggle(\'revealed\')">[REDACTED]</span>');
             }
             
@@ -991,7 +1055,6 @@ $('composer').onsubmit=async e=>{
     else { await LocalCache.queueMessage(msgData); toast('Message queued. Will send when online.'); loadMessages(); }
 };
 
-// Safety Prompt Handlers
 $('safetyCancel').onclick = () => { $('safetyPrompt').classList.remove('visible'); pendingSafetyMessage = null; };
 $('safetyConfirm').onclick = async () => {
     $('safetyPrompt').classList.remove('visible');
@@ -1005,7 +1068,6 @@ $('safetyConfirm').onclick = async () => {
     pendingSafetyMessage = null;
 };
 
-// Typing Intent Prediction
 $('messageInput').addEventListener('input', (e) => {
     const intent = analyzeTypingIntent(e.data);
     const sendBtn = $('sendBtn');
@@ -1013,7 +1075,6 @@ $('messageInput').addEventListener('input', (e) => {
     else sendBtn.classList.remove('hesitant');
 });
 
-// Voice Recording Logic
 let isRecording = false;
 $('recordVoice').onclick = async () => {
     if (!isRecording) {
@@ -1041,7 +1102,6 @@ $('recordVoice').onclick = async () => {
     }
 };
 
-// Focus Mode
 $('messageInput').addEventListener('focus', () => document.body.classList.add('focus-mode'));
 $('messageInput').addEventListener('blur', () => document.body.classList.remove('focus-mode'));
 
