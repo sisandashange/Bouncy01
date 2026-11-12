@@ -685,31 +685,39 @@ $('authForm').onsubmit = async e => {
     const btn = $('authSubmit');
     const email = $('email').value.trim();
     const password = $('password').value;
-    const name = $('displayName')?.value.trim();
-    
-    btn.textContent = 'Connecting...';
+    const name = $('displayName')?.value.trim() || '';
+    if (!email || !password) { showBigError('Enter your email and password.'); return; }
+
     btn.disabled = true;
-    
+    btn.textContent = 'Signing in…';
+    $('bigErrorBox').style.display = 'none';
     try {
-        let data, error;
+        let result;
         if (mode === 'signup') {
-            const res = await sb.auth.signUp({ email, password, options: { data: { display_name: name || email.split('@')[0] } } });
-            data = res.data; error = res.error;
-            if (!error && data.user) {
-                await ensureProfile(data.user, name);
-                await boot(data.user);
+            result = await sb.auth.signUp({ email, password, options: { data: { display_name: name || email.split('@')[0] } } });
+            if (result.error) throw result.error;
+            if (result.data?.user && result.data?.session) {
+                await ensureProfile(result.data.user, name);
+                await boot(result.data.user);
+                return;
+            }
+            if (result.data?.user && !result.data?.session) {
+                showBigError('Account created. Confirm your email, then sign in.');
                 return;
             }
         } else {
-            const res = await sb.auth.signInWithPassword({ email, password });
-            data = res.data; error = res.error;
+            result = await sb.auth.signInWithPassword({ email, password });
+            if (result.error) throw result.error;
+            if (!result.data?.user) throw new Error('Login did not return an account. Please try again.');
+            await boot(result.data.user);
+            return;
         }
-        if (error) throw error;
-        if (data?.user) await boot(data.user);
     } catch (err) {
-        showBigError(err.message || 'Login failed');
-        btn.textContent = mode === 'signup' ? 'Sign Up' : 'Sign In';
+        console.error('BOUNCY authentication error:', err);
+        showBigError(err?.message || 'Sign in failed. Please try again.');
+    } finally {
         btn.disabled = false;
+        btn.textContent = mode === 'signup' ? 'Sign Up' : 'Sign In';
     }
 };
 
