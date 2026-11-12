@@ -2,99 +2,65 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BOUNCY.</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
-body{background:#0e1621;color:#fff;height:100vh;overflow:hidden}
-#app{display:flex;height:100vh}
-/* LEFT - CHAT LIST */
-#list{width:360px;background:#17212b;border-right:1px solid #000;overflow-y:auto;flex-shrink:0}
-.top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px}
-.logo{font-size:24px;font-weight:900} .logo span{color:#2AABEE}
-.tabs{display:flex;padding:0 10px}
-.tabs div{flex:1;text-align:center;padding:12px 0;font-weight:bold;color:#7f8c98;cursor:pointer}
-.tabs .on{color:#fff;border-bottom:3px solid #2AABEE}
-.search{margin:10px;background:#242f3d;border-radius:20px;padding:10px 14px;color:#7f8c98}
-.chat{display:flex;gap:12px;padding:12px 14px;cursor:pointer}
-.chat:hover,.chat.active{background:#2b5278}
-.avatar{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;flex-shrink:0}
-.c1{background:#2AABEE}.c2{background:#ff8a3d}.c3{background:#e17076}.c4{background:#3d9a50}.c5{background:#7a5af8}
-.info{flex:1;min-width:0}
-.row{display:flex;justify-content:space-between}
-.name{font-weight:bold} .time{color:#7f8c98;font-size:12px}
-.last{color:#7f8c98;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
-.badge{background:#2AABEE;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
-.fab{position:fixed;left:290px;bottom:20px;width:56px;height:56px;border-radius:50%;background:#2AABEE;border:0;color:#fff;font-size:26px;cursor:pointer}
-/* RIGHT - CHAT WINDOW */
-#chatView{flex:1;display:flex;flex-direction:column;background:#0e1621}
-.chatHeader{display:flex;align-items:center;gap:12px;padding:12px;background:#17212b}
-.chatHeader b{font-size:19px} .chatHeader small{color:#7f8c98}
-.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:70%;padding:10px 12px;border-radius:14px;background:#182533;align-self:flex-start}
-.msg.me{align-self:flex-end;background:#2b5278}
-.msg .sender{font-weight:bold;margin-bottom:4px;font-size:14px}
-.msg .t{font-size:11px;color:#7f8c98;float:right;margin:8px 0 0 10px}
-.system{color:#4CAF50;text-align:center;font-size:14px;margin:6px}
-.input{display:flex;gap:10px;padding:12px;background:#17212b;align-items:center}
-.input input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px}
-.input button{background:#2AABEE;border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer}
-@media(max-width:700px){#list{width:100%}#chatView{display:none}#chatView.open{display:flex;position:fixed;inset:0}}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Roboto,Arial}
+body{background:#17212b;color:#fff}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 0;background:#17212b;position:sticky;top:0}
+.topbar .left{font-size:22px}
+.tabs{display:flex;gap:36px;font-size:19px;font-weight:700;letter-spacing:.5px}
+.tabs span{padding-bottom:12px;color:#8a9aa8;cursor:pointer}
+.tabs span.on{color:#fff;border-bottom:3px solid #fff}
+.search{font-size:22px}
+.list{margin-top:4px}
+.row{display:flex;gap:12px;padding:12px 14px;cursor:pointer;align-items:center}
+.row:active{background:#2b5278}
+.avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;object-fit:cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}
+.a1{background:#2AABEE}.a2{background:#ff8a3d}.a3{background:#e17076}.a4{background:#3d9a50}.a5{background:#7a5af8}.a6{background:#a13d9a}
+.mid{flex:1;min-width:0;border-bottom:1px solid #232e3a;padding-bottom:12px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name.green{color:#4CAF50}
+.time{font-size:13px;color:#8a9aa8;white-space:nowrap;margin-left:8px}
+.sub{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.last{font-size:15px;color:#8a9aa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{min-width:22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;padding:0 6px;margin-left:8px}
+.badge.blue{background:#2AABEE;color:#fff}
+.badge.grey{background:#6b7a88;color:#fff}
+.check{color:#2AABEE}
+.fab{position:fixed;right:18px;bottom:22px;width:58px;height:58px;border-radius:50%;background:#2AABEE;border:0;color:#fff;font-size:26px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
-<div id="app">
-<div id="list">
-  <div class="top"><div class="logo">BOUNCY<span>.</span></div><button class="fab" onclick="newChat()">✎</button></div>
-  <div class="tabs"><div class="on">Active</div><div>Archived</div></div>
-  <div class="search">🔍 &nbsp;Search messages...</div>
-  <div id="chatList"></div>
+
+<div class="topbar">
+  <div class="left">☰</div>
+  <div class="tabs"><span class="on">CHATS</span><span>CALLS</span></div>
+  <div class="search">🔍</div>
 </div>
 
-<div id="chatView">
-  <div class="chatHeader">
-    <button onclick="back()" style="background:0;border:0;color:#fff;font-size:22px">←</button>
-    <div class="avatar c1" id="hAvatar">W</div>
-    <div><b id="hName">Weekend Plans</b><br><small id="hSub">8 members</small></div>
-  </div>
-  <div class="msgs" id="msgs"></div>
-  <div class="input">
-    <span style="font-size:24px">😊</span>
-    <input id="inp" placeholder="Message" onkeydown="if(event.key==='Enter')send()">
-    <span style="font-size:22px">📷</span><span style="font-size:22px">📎</span>
-    <button onclick="send()">➤</button>
-  </div>
-</div>
-</div>
+<div class="list" id="list"></div>
+<button class="fab">✎</button>
 
 <script>
 let chats=[
- {name:"Jane",last:"Well I do help animals.",time:"15:34",unread:5,color:"c1",initial:"J",msgs:[{from:"Jane",text:"Well I do help animals.",time:"15:34"}]},
- {name:"Weekend Plans",last:"Wait, we could have made so much money!",time:"16:30",unread:0,color:"c2",initial:"W",msgs:[{from:"Daenerys",text:"Are you sure it's safe here?",time:"16:26",color:"#b48bf2"},{from:"You",text:"Yes, sure, don't worry.",time:"16:27"},{from:"Angela Merkel",text:"Hallo alle zusammen! Is the NSA reading this? 😊",time:"16:27",color:"#ff7eb6"},{from:"Julian Assange",text:"Sorry, I'll have to publish this conversation on the web.",time:"16:29",color:"#7ed957"}]},
- {name:"Nomads 🐎",last:"Share your travel photos...",time:"18:32",unread:0,color:"c4",initial:"N",msgs:[{from:"Nomads",text:"Share your travel photos, locations with the best view!",time:"18:32"}]},
- {name:"Mfanarh",last:"You: HEY",time:"09:14",unread:0,color:"c1",initial:"M",msgs:[{from:"You",text:"HEY",time:"09:14"}]},
+ {name:"Jane",last:"Well I do help animals.",time:"15:34",unread:5,badge:"blue",img:"https://i.pravatar.cc/100?img=47"},
+ {name:"Tyrion Lannister",last:"Sometimes possession is an...",time:"18:12",unread:0,initial:"TL",color:"a2"},
+ {name:"Alena Shy",last:"😍 Sticker",time:"19:30",unread:0,check:true,img:"https://i.pravatar.cc/100?img=32"},
+ {name:"Heisenberg",last:"You have my financial support if...",time:"18:32",unread:0,lock:true,img:"https://i.pravatar.cc/100?img=12"},
+ {name:"Bender",last:"I looove new Pixels! If fact, they...",time:"16:30",unread:0,img:"https://i.pravatar.cc/100?img=13"},
+ {name:"World News Today",last:"Telegram just updated their...",time:"15:12",unread:2,badge:"grey",muted:true,initial:"WNT",color:"a5"},
+ {name:"EVE",last:"LaserBlastSafetyGuide.pdf",time:"12:54",unread:0,img:"https://i.pravatar.cc/100?img=44"},
+ {name:"Nick",last:"We're gonna win this...",time:"12:22",unread:0,img:"https://i.pravatar.cc/100?img=59"},
 ];
-let current=1;
-function renderList(){
-  document.getElementById('chatList').innerHTML=chats.map((c,i)=>`
-  <div class="chat ${i===current?'active':''}" onclick="openChat(${i})">
-    <div class="avatar ${c.color}">${c.initial}</div>
-    <div class="info"><div class="row"><span class="name">${c.name}</span><span class="time">${c.time}</span></div>
-    <div class="row"><span class="last">${c.last}</span>${c.unread?`<span class="badge">${c.unread}</span>`:''}</div></div>
-  </div>`).join('');
-}
-function openChat(i){current=i;renderList();renderMsgs();document.getElementById('chatView').classList.add('open');
-  let c=chats[i];document.getElementById('hName').innerText=c.name;document.getElementById('hAvatar').innerText=c.initial;document.getElementById('hAvatar').className='avatar '+c.color;document.getElementById('hSub').innerText=c.name.includes('Plans')?'8 members':c.name.includes('Nomads')?'4 members':'online';c.unread=0;renderList();
-}
-function renderMsgs(){let c=chats[current];
-  document.getElementById('msgs').innerHTML=c.msgs.map(m=>m.from==='You'?`<div class="msg me">${m.text}<span class="t">${m.time} ✓✓</span></div>`:`<div class="msg"><div class="sender" style="color:${m.color||'#fff'}">${m.from}</div>${m.text}<span class="t">${m.time}</span></div>`).join('');
-}
-function send(){let v=document.getElementById('inp').value.trim();if(!v)return;let t=new Date().toTimeString().slice(0,5);chats[current].msgs.push({from:"You",text:v,time:t});chats[current].last="You: "+v;chats[current].time=t;document.getElementById('inp').value='';renderMsgs();renderList();document.getElementById('msgs').scrollTop=99999;
- // fake reply - remove this when you add real backend
- setTimeout(()=>{chats[current].msgs.push({from:chats[current].name,text:"Got it bro 👍",time:t,color:"#2AABEE"});renderMsgs();},1000);
-}
-function back(){document.getElementById('chatView').classList.remove('open')}
-function newChat(){let n=prompt("New chat name?");if(n){chats.unshift({name:n,last:"Say hi!",time:"now",unread:0,color:"c3",initial:n[0].toUpperCase(),msgs:[]});openChat(0)}}
-renderList();openChat(1);
+document.getElementById('list').innerHTML=chats.map(c=>`
+<div class="row">
+  ${c.img?`<img class="avatar" src="${c.img}">`:`<div class="avatar ${c.color}">${c.initial}</div>`}
+  <div class="mid">
+    <div class="top"><span class="name ${c.lock?'green':''}">${c.lock?'🔒 ':''}${c.name} ${c.muted?'🔕':''}</span>
+    <span class="time">${c.check?'<span class="check">✓✓</span> ':''}${c.time}</span></div>
+    <div class="sub"><span class="last">${c.last}</span>${c.unread?`<span class="badge ${c.badge}">${c.unread}</span>`:''}</div>
+  </div>
+</div>`).join('');
 </script>
 </body>
 </html>
