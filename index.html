@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* --- EXPRESSIVE PHYSICS DESIGN SYSTEM --- */
+/* --- GRAND FINALE DESIGN SYSTEM --- */
 :root {
     --glass-bg: rgba(15, 23, 42, 0.6);
     --glass-border: rgba(255, 255, 255, 0.06);
@@ -18,6 +18,9 @@
     --text-muted: #94a3b8;
     --radius-lg: 28px;
     --radius-md: 22px;
+    --tier-warm: #f59e0b;
+    --tier-cool: #6366f1;
+    --tier-new: #94a3b8;
 }
 
 * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -32,7 +35,7 @@ body {
 
 /* PARALLAX CANVAS BACKGROUND */
 #liquidCanvas {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 120vh; /* Taller for parallax */
+    position: fixed; top: 0; left: 0; width: 100vw; height: 120vh;
     z-index: -1; pointer-events: none; transition: transform 0.1s linear;
 }
 
@@ -121,13 +124,45 @@ body {
 
 .msg-time { display:block; font-size:10px; margin-top:8px; opacity:0.7; text-align:right; }
 
+/* VOICE SCULPTURE STYLES */
+.voice-sculpture {
+    display: flex; align-items: center; gap: 10px; min-width: 180px;
+}
+.voice-waveform {
+    flex: 1; height: 32px; display: flex; align-items: center; gap: 2px;
+}
+.wave-bar {
+    width: 3px; background: currentColor; border-radius: 2px; opacity: 0.7;
+    transition: height 0.1s ease;
+}
+.voice-play-btn {
+    width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1);
+    display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+    transition: transform 0.2s;
+}
+.voice-play-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.2); }
+.voice-duration { font-size: 12px; opacity: 0.8; min-width: 40px; text-align: right; }
+
 /* COMPOSER */
 .composer { padding:20px 30px; border-top:1px solid var(--glass-border); display:flex; gap:12px; align-items:center; background:rgba(2,6,23,0.7); backdrop-filter:blur(20px); transition: 0.3s; }
 .composer:focus-within { background: rgba(2,6,23,0.9); padding: 25px 30px; }
 .msg-input { flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:30px; padding:14px 24px; color:white; font-size:15px; transition: 0.3s; }
 .msg-input:focus { background:rgba(255,255,255,0.1); border-color: var(--primary); }
-.send-btn { width:50px; height:50px; border-radius:50%; background:var(--primary); color:white; display:grid; place-items:center; font-size:20px; box-shadow:0 4px 15px rgba(99,102,241,0.4); transition: 0.3s; }
+.send-btn { 
+    width:50px; height:50px; border-radius:50%; background:var(--primary); color:white; 
+    display:grid; place-items:center; font-size:20px; box-shadow:0 4px 15px rgba(99,102,241,0.4); 
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+.send-btn:active { transform: scale(0.9); }
 .send-btn:hover { transform: scale(1.1) rotate(-10deg); }
+.voice-record-btn {
+    width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border); display: grid; place-items: center;
+    font-size: 20px; transition: 0.2s;
+}
+.voice-record-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.1); }
+.voice-record-btn.recording { background: #ef4444; border-color: #ef4444; animation: pulseRecord 1s infinite; }
+@keyframes pulseRecord { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); } 50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
 
 /* AUTH & MODALS */
 .auth-wrap { height:100dvh; display:grid; place-items:center; padding:20px; }
@@ -210,6 +245,7 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
             </header>
             <div id="messages" class="messages-container"></div>
             <form id="composer" class="composer">
+                <button type="button" class="voice-record-btn" id="recordVoice">🎙</button>
                 <input id="messageInput" class="msg-input" placeholder="Type a message..." autocomplete="off">
                 <button type="submit" class="send-btn">➤</button>
             </form>
@@ -223,10 +259,11 @@ const canvas = document.getElementById('liquidCanvas');
 const ctx = canvas.getContext('2d');
 let width, height, scrollY = 0;
 let particles = [];
+let pulseIntensity = 0;
 
 function resize() {
     width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight * 1.2; // Extra height for parallax
+    height = canvas.height = window.innerHeight * 1.2;
 }
 window.addEventListener('resize', resize);
 window.addEventListener('scroll', () => { scrollY = window.scrollY; }, {passive: true});
@@ -239,20 +276,27 @@ class Particle {
         this.vx = (Math.random() - 0.5) * 0.3;
         this.vy = (Math.random() - 0.5) * 0.3;
         this.radius = Math.random() * 250 + 150;
-        this.depth = Math.random() * 0.5 + 0.5; // Depth factor for parallax
+        this.depth = Math.random() * 0.5 + 0.5;
         const colors = ['rgba(99, 102, 241, 0.3)', 'rgba(139, 92, 246, 0.25)', 'rgba(59, 130, 246, 0.2)', 'rgba(15, 23, 42, 0.6)'];
         this.color = colors[Math.floor(Math.random() * colors.length)];
+        this.baseRadius = this.radius;
     }
     update() {
         this.x += this.vx;
         this.y += this.vy;
+        if (pulseIntensity > 0) {
+            this.radius = this.baseRadius + (pulseIntensity * 20 * this.depth);
+            pulseIntensity *= 0.95;
+        } else {
+            this.radius = this.baseRadius;
+        }
+        
         if(this.x < -this.radius) this.x = width + this.radius;
         if(this.x > width + this.radius) this.x = -this.radius;
         if(this.y < -this.radius) this.y = height + this.radius;
         if(this.y > height + this.radius) this.y = -this.radius;
     }
     draw() {
-        // Apply parallax offset based on scroll and depth
         const parallaxY = this.y - (scrollY * this.depth * 0.1);
         ctx.beginPath();
         ctx.arc(this.x, parallaxY, this.radius, 0, Math.PI * 2);
@@ -272,6 +316,89 @@ function animate() {
 }
 animate();
 
+function triggerPulse(intensity = 1.0) {
+    pulseIntensity = intensity;
+}
+
+// --- VOICE SCULPTURE GENERATOR ---
+function generateWaveform(container, duration = 30) {
+    container.innerHTML = '';
+    const barCount = Math.min(duration * 2, 60);
+    for (let i = 0; i < barCount; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'wave-bar';
+        // Simulate realistic waveform heights
+        const height = Math.random() * 20 + 8;
+        bar.style.height = `${height}px`;
+        container.appendChild(bar);
+    }
+}
+
+function createVoiceSculpture(audioUrl, duration) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'voice-sculpture';
+    
+    const playBtn = document.createElement('div');
+    playBtn.className = 'voice-play-btn';
+    playBtn.innerHTML = '▶';
+    
+    const waveform = document.createElement('div');
+    waveform.className = 'voice-waveform';
+    generateWaveform(waveform, duration);
+    
+    const durLabel = document.createElement('div');
+    durLabel.className = 'voice-duration';
+    durLabel.textContent = `0:${duration.toString().padStart(2, '0')}`;
+    
+    wrapper.append(playBtn, waveform, durLabel);
+    
+    let isPlaying = false;
+    let audio = null;
+    
+    playBtn.onclick = () => {
+        if (!audio && audioUrl) {
+            audio = new Audio(audioUrl);
+            audio.onended = () => {
+                isPlaying = false;
+                playBtn.innerHTML = '▶';
+                resetWaveform(waveform);
+            };
+        }
+        
+        if (isPlaying) {
+            audio?.pause();
+            isPlaying = false;
+            playBtn.innerHTML = '▶';
+            resetWaveform(waveform);
+        } else {
+            audio?.play();
+            isPlaying = true;
+            playBtn.innerHTML = '⏸';
+            animateWaveform(waveform);
+            triggerPulse(0.5); // Subtle pulse during playback
+        }
+    };
+    
+    return wrapper;
+}
+
+function animateWaveform(container) {
+    const bars = container.querySelectorAll('.wave-bar');
+    bars.forEach((bar, i) => {
+        setInterval(() => {
+            const h = Math.random() * 24 + 6;
+            bar.style.height = `${h}px`;
+        }, 100 + (i * 10));
+    });
+}
+
+function resetWaveform(container) {
+    const bars = container.querySelectorAll('.wave-bar');
+    bars.forEach(bar => {
+        bar.style.height = `${Math.random() * 20 + 8}px`;
+    });
+}
+
 // --- EXPRESSIVE MESSAGE LOGIC ---
 function getMessageIntensity(text) {
     if (!text) return 'normal';
@@ -284,13 +411,30 @@ function getMessageIntensity(text) {
     return 'normal';
 }
 
-// --- APP LOGIC (ENHANCED) ---
+// --- RELATIONSHIP TIER LOGIC ---
+function getRelationshipTier(peerId, messageCount) {
+    if (messageCount > 50) return 'warm';
+    if (messageCount > 10) return 'cool';
+    return 'new';
+}
+
+function applyTierTheme(tier) {
+    const root = document.documentElement;
+    switch(tier) {
+        case 'warm': root.style.setProperty('--primary', 'var(--tier-warm)'); break;
+        case 'cool': root.style.setProperty('--primary', 'var(--tier-cool)'); break;
+        default: root.style.setProperty('--primary', 'var(--tier-new)');
+    }
+}
+
+// --- APP LOGIC (FINAL VERSION) ---
 const SUPABASE_URL = 'https://lakupnehsetdazezlsrs.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_3ePLMRIKVNms7Qi461FQXw_x2TGc75s';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
 
 let user=null, profile=null, activeConversation=null, conversations=[], currentPeerColor='#6366f1';
+let mediaRecorder = null, audioChunks = [];
 
 function toast(m){const t=document.createElement('div');t.textContent=m;t.style.cssText='position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#ef4444;color:white;padding:12px 24px;border-radius:30px;font-weight:600;z-index:999;';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
 function initials(n){return(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase();}
@@ -334,7 +478,8 @@ async function loadConversations(){
         let peer=null;
         if(peerId){const {data:pd}=await sb.from('profiles').select('*').eq('id',peerId).single();peer=pd;}
         const {data:last}=await sb.from('messages').select('*').eq('conversation_id',c.id).order('created_at',{ascending:false}).limit(1);
-        enriched.push({...c,peer,last:last?.[0]});
+        const {count} = await sb.from('messages').select('*', {count:'exact', head:true}).eq('conversation_id',c.id);
+        enriched.push({...c,peer,last:last?.[0], msgCount: count || 0});
     }
     conversations=enriched;
     renderConversations(conversations);
@@ -355,9 +500,8 @@ async function openConversation(id){
     const convo=conversations.find(c=>c.id===id);
     activePeer=convo?.peer;
     
-    // Dynamic Theming based on peer
-    currentPeerColor = activePeer?.favorite_color || '#6366f1';
-    document.documentElement.style.setProperty('--primary', currentPeerColor);
+    const tier = getRelationshipTier(activePeer?.id, convo?.msgCount || 0);
+    applyTierTheme(tier);
     
     $('noChat').classList.add('hidden');
     $('chatPanel').classList.remove('hidden');
@@ -381,17 +525,49 @@ async function loadMessages(){
 
 function renderMessages(rows){
     const box=$('messages');
-    box.innerHTML=rows.map(m=>{
+    box.innerHTML='';
+    rows.forEach(m => {
         const mine=m.sender_id===user.id;
-        const intensity = getMessageIntensity(m.body);
-        return `<div class="bubble ${mine?'out':'in'} ${intensity}">${esc(m.body||'')}<span class="msg-time">${timeLabel(m.created_at)}</span></div>`;
-    }).join('');
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${mine?'out':'in'}`;
+        
+        if (m.message_type === 'voice') {
+            const sculpture = createVoiceSculpture(m.media_url, m.duration || 15);
+            bubble.appendChild(sculpture);
+        } else {
+            const intensity = getMessageIntensity(m.body);
+            if (intensity !== 'normal') bubble.classList.add(intensity);
+            bubble.innerHTML = `${esc(m.body||'')}<span class="msg-time">${timeLabel(m.created_at)}</span>`;
+        }
+        
+        box.appendChild(bubble);
+    });
     box.scrollTop=box.scrollHeight;
 }
 
 function subscribeMessages(id){
-    sb.channel('chat-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`conversation_id=eq.${id}`},()=>{loadMessages();loadConversations();}).subscribe();
+    sb.channel('chat-'+id)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`conversation_id=eq.${id}`}, payload => {
+          loadMessages();
+          loadConversations();
+          triggerPulse(payload.new.message_type === 'voice' ? 1.5 : 1.0);
+          const chatArea = document.querySelector('.chat-area');
+          chatArea.style.animation = 'none';
+          void chatArea.offsetWidth;
+          chatArea.style.animation = 'hapticShake 0.3s ease';
+      })
+      .subscribe();
 }
+
+// Add haptic shake keyframes dynamically
+const styleSheet = document.createElement("style");
+styleSheet.innerText = `
+@keyframes hapticShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}`;
+document.head.appendChild(styleSheet);
 
 $('composer').onsubmit=async e=>{
     e.preventDefault();
@@ -400,6 +576,49 @@ $('composer').onsubmit=async e=>{
     if(!body||!activeConversation)return;
     input.value='';
     await sb.from('messages').insert({conversation_id:activeConversation,sender_id:user.id,body,message_type:'text'});
+    triggerPulse(1.0);
+};
+
+// Voice Recording Logic
+let isRecording = false;
+$('recordVoice').onclick = async () => {
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const path = `${activeConversation}/${user.id}/${Date.now()}.webm`;
+                const { error: uploadErr } = await sb.storage.from('voice').upload(path, blob);
+                if (uploadErr) { toast('Upload failed'); return; }
+                
+                const duration = Math.floor(blob.size / 16000); // Approximate duration
+                await sb.from('messages').insert({
+                    conversation_id: activeConversation,
+                    sender_id: user.id,
+                    body: 'Voice message',
+                    message_type: 'voice',
+                    media_url: path,
+                    duration: duration
+                });
+                triggerPulse(1.5);
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            $('recordVoice').classList.add('recording');
+            $('recordVoice').textContent = '⏹';
+        } catch (err) {
+            toast('Microphone access denied');
+        }
+    } else {
+        mediaRecorder?.stop();
+        mediaRecorder?.stream?.getTracks().forEach(t => t.stop());
+        isRecording = false;
+        $('recordVoice').classList.remove('recording');
+        $('recordVoice').textContent = '🎙';
+    }
 };
 
 $('signOut').onclick=async()=>{await sb.auth.signOut();user=null;showAuth();};
