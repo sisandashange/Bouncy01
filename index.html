@@ -187,7 +187,7 @@ async function authSubmit(){
    const username=$("authUsername").value.trim().replace(/^@/,"").toLowerCase();
    const display=$("authDisplay").value.trim();
    if(!display||! /^[a-z0-9_]{3,24}$/.test(username)) throw new Error("Enter your name and a username (3–24 letters, numbers or _).");
-   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username}}});
+   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username},emailRedirectTo:window.location.href.split("?")[0]}});
    if(error)throw error;
    if(!data.session){$("authError").textContent="Check your email to confirm your account, then sign in.";return;}
    me=data.user;
