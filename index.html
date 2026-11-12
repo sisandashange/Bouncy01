@@ -309,6 +309,80 @@ button { cursor:pointer; border:0; background:none; color:inherit; font-family:i
     .auth-wrap { height: auto; min-height: 100dvh; align-items: flex-start; padding-top: 10vh; }
     .auth-card { margin-bottom: 20px; padding: 30px 20px; }
 }
+
+/* BOUNCY CLEAN TELEGRAM-INSPIRED REDESIGN */
+:root{--primary:#38a9e8;--text-main:#f4f7fb;--text-muted:#8d9eae;--glass-bg:#1d2b39;--glass-border:rgba(255,255,255,.055);--radius-lg:18px;--radius-md:14px}
+html,body{background:#17232f!important;color:#f5f7fa!important;font-family:Arial,Inter,sans-serif!important}
+body{filter:none!important}
+#liquidCanvas{display:none!important}
+.glass-panel{background:#1d2b39!important;backdrop-filter:none!important;border:1px solid rgba(255,255,255,.06)!important;box-shadow:0 18px 50px rgba(0,0,0,.25)!important}
+.app-container{max-width:100%!important;grid-template-columns: minmax(300px,390px) 1fr!important;background:#17232f!important}
+.sidebar{background:#17232f!important;border-right:1px solid rgba(255,255,255,.07)!important}
+.side-head{padding:22px 20px 16px!important;background:#1e2d3c!important}
+.brand{font-family:Arial,sans-serif!important;font-size:25px!important;letter-spacing:-.7px!important}
+.brand span{color:#43b5ef!important;text-shadow:none!important}
+.icon-btn{color:#dce6ef!important;border-radius:50%!important}
+.tab-nav{padding:0 16px 0!important;gap:0!important;background:#1e2d3c!important}
+.tab-btn{border-radius:0!important;padding:15px 8px!important;font-size:13px!important;letter-spacing:.5px!important;border:0!important;border-bottom:3px solid transparent!important;color:#8fa0b0!important;background:transparent!important}
+.tab-btn.active{color:#fff!important;border-bottom-color:#43b5ef!important;background:transparent!important}
+.search-wrap{padding:14px 16px 10px!important;background:#1e2d3c!important}
+.search-input{border:0!important;background:#263747!important;border-radius:24px!important;padding:13px 16px 13px 42px!important;color:#fff!important}
+.search-wrap:before{left:31px!important;top:27px!important}
+.chat-list{padding:0!important;background:#17232f!important}
+.chat-row{border:0!important;border-bottom:1px solid rgba(255,255,255,.055)!important;border-radius:0!important;margin:0!important;padding:14px 16px!important;gap:13px!important;background:transparent!important;transform:none!important}
+.chat-row:hover,.chat-row.active{background:#213243!important;border-color:rgba(255,255,255,.06)!important}
+.chat-row.active:before{display:none!important}
+.avatar{width:58px!important;height:58px!important;border-radius:50%!important;background:#3b9ed3!important;border:0!important;font-size:18px!important}
+.avatar img{border-radius:50%!important}
+.chat-name{font-size:16px!important;font-weight:700!important;margin-bottom:6px!important}
+.chat-preview{font-size:14px!important;color:#94a5b5!important}
+.chat-time{font-size:12px!important;color:#94a5b5!important}
+.side-footer{background:#1e2d3c!important;border-top:1px solid rgba(255,255,255,.06)!important;padding:13px 16px!important}
+.chat-area{background:#17232f!important}
+.empty-state{background:#17232f!important}
+.chat-header{background:#1e2d3c!important;border-bottom:1px solid rgba(255,255,255,.06)!important;padding:12px 16px!important;gap:12px!important}
+.header-name{font-family:Arial,sans-serif!important;font-size:18px!important}
+.header-status{color:#9eafbd!important}
+.messages-container{background:#17232f!important;padding:18px 14px!important;gap:12px!important}
+.bubble{font-size:15px!important;line-height:1.42!important;padding:11px 14px!important;border-radius:17px!important;box-shadow:none!important;animation:none!important;max-width:82%!important}
+.bubble.in{background:#243443!important;border:0!important;border-bottom-left-radius:5px!important}
+.bubble.out{background:#426f9d!important;border:0!important;border-bottom-right-radius:5px!important}
+.msg-time{font-size:10px!important;color:#c7d5e1!important}
+.composer{background:#1e2d3c!important;border-top:1px solid rgba(255,255,255,.06)!important;padding:10px 12px!important;gap:8px!important}
+.composer:focus-within{padding:10px 12px!important;box-shadow:none!important}
+.msg-input{background:#263747!important;border:0!important;border-radius:24px!important;padding:13px 16px!important;font-size:16px!important}
+.send-btn{width:44px!important;height:44px!important;background:#39a9e8!important;box-shadow:none!important}
+.voice-record-btn,.studio-btn{background:transparent!important;border:0!important}
+.media-vault-trigger,.studio-trigger{background:transparent!important;border:0!important;padding:8px!important}
+.auth-wrap{background:#17232f!important;align-items:center!important;padding:20px!important}
+.auth-card{background:#1e2d3c!important;border:1px solid rgba(255,255,255,.06)!important;border-radius:20px!important;padding:30px 22px!important}
+.field{background:#263747!important;border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important}
+.primary-btn{background:#39a9e8!important;border-radius:12px!important;box-shadow:none!important}
+#newChatBtn{background:#39a9e8!important;color:#fff!important;border-radius:50%!important;width:44px!important;height:44px!important;font-size:22px!important}
+.contact-overlay{position:fixed;inset:0;z-index:1000;background:rgba(8,15,22,.72);display:none;align-items:center;justify-content:center;padding:16px}
+.contact-overlay.open{display:flex}
+.contact-card{width:100%;max-width:440px;max-height:88dvh;overflow:auto;background:#1e2d3c;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.45)}
+.contact-card h2{margin:0 0 6px;font-size:21px}
+.contact-card p{color:#9aabba;font-size:13px;line-height:1.45}
+.contact-input{width:100%;padding:14px 15px;border:0;border-radius:12px;background:#263747;color:white;font-size:15px;margin:8px 0}
+.contact-action{background:#39a9e8;color:white;border:0;border-radius:12px;padding:13px 16px;font-weight:700}
+.contact-result{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+.contact-result .avatar{width:46px!important;height:46px!important}
+.contact-result button{margin-left:auto;background:#39a9e8;border-radius:20px;padding:9px 13px;font-weight:700;color:#fff}
+@media(max-width:768px){
+ .app-container{display:block!important}
+ .sidebar{width:100%;height:100dvh}
+ .chat-area{display:none;position:absolute;inset:0;z-index:10}
+ .app-container.chat-open .sidebar{display:none}
+ .app-container.chat-open .chat-area{display:flex}
+ .back-btn{display:grid!important}
+ .chat-header{min-height:72px}
+ .studio-trigger,.media-vault-trigger{display:none!important}
+ .messages-container{padding:14px 12px!important}
+ .bubble{max-width:88%!important}
+ .side-head{padding-top:20px!important}
+}
+
 </style>
 </head>
 <body>
@@ -1114,6 +1188,78 @@ $('signOut').onclick=async()=>{await sb.auth.signOut();user=null;showAuth();};
     const {data}=await sb.auth.getSession();
     if(data.session)await boot(data.session.user, '');else showAuth();
 })();
+
+
+// --- BOUNCY CONTACT FINDER ---
+const contactOverlay = $('contactOverlay');
+$('newChatBtn').onclick = () => { contactOverlay.classList.add('open'); $('contactSearch').focus(); };
+$('closeContacts').onclick = () => contactOverlay.classList.remove('open');
+contactOverlay.addEventListener('click', e => { if(e.target===contactOverlay) contactOverlay.classList.remove('open'); });
+
+async function findBouncyContacts(){
+ const q=$('contactSearch').value.trim();
+ const box=$('contactResults');
+ if(q.length<3){box.innerHTML='<p>Enter at least 3 characters.</p>';return;}
+ box.innerHTML='<p>Searching BOUNCY…</p>';
+ const {data,error}=await sb.rpc('find_bouncy_user',{p_query:q});
+ if(error){box.innerHTML='<p style="color:#ff9a9a">Search unavailable: '+esc(error.message)+'</p>';return;}
+ if(!data||!data.length){box.innerHTML='<p>No BOUNCY account found. Check the username or full phone number.</p>';return;}
+ box.innerHTML='';
+ data.forEach(person=>{
+  const row=document.createElement('div');row.className='contact-result';
+  const avatar=document.createElement('div');avatar.className='avatar';
+  avatar.innerHTML=person.avatar_url?'<img src="'+esc(person.avatar_url)+'">':esc(initials(person.display_name||person.username));
+  const info=document.createElement('div');info.style.flex='1';info.style.minWidth='0';
+  info.innerHTML='<div style="font-weight:700">'+esc(person.display_name||person.username)+'</div><div style="color:#9aabba;font-size:13px">@'+esc(person.username)+'</div>';
+  const start=document.createElement('button');start.textContent='Message';
+  start.onclick=()=>startBouncyChat(person);
+  row.append(avatar,info,start);box.appendChild(row);
+ });
+}
+$('searchContacts').onclick=findBouncyContacts;
+$('contactSearch').addEventListener('keydown',e=>{if(e.key==='Enter')findBouncyContacts();});
+$('saveMyPhone').onclick=async()=>{
+ const phone=$('myPhoneNumber').value.trim();
+ const {error}=await sb.rpc('set_bouncy_phone',{p_phone:phone});
+ if(error){toast(error.message);return;}
+ toast('Phone number saved. People can now find you.');
+ $('myPhoneNumber').value='';
+};
+async function startBouncyChat(person){
+ const existing=conversations.find(c=>c.peer?.id===person.id && c.conversation_type==='direct');
+ if(existing){contactOverlay.classList.remove('open');openConversation(existing.id);return;}
+ const {data:conv,error:convErr}=await sb.from('conversations').insert({conversation_type:'direct',created_by:user.id}).select().single();
+ if(convErr){toast('Could not create chat: '+convErr.message);return;}
+ const {error:memberErr}=await sb.from('conversation_members').insert([
+  {conversation_id:conv.id,user_id:user.id},
+  {conversation_id:conv.id,user_id:person.id}
+ ]);
+ if(memberErr){toast('Could not add chat members: '+memberErr.message);return;}
+ contactOverlay.classList.remove('open');
+ await loadConversations();
+ const found=conversations.find(c=>c.id===conv.id);
+ if(found)openConversation(found.id);else{toast('Chat created. Refreshing chats…');}
+}
+
 </script>
+
+<div id="contactOverlay" class="contact-overlay">
+ <section class="contact-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+   <h2>New message</h2><button id="closeContacts" class="icon-btn" aria-label="Close">✕</button>
+  </div>
+  <p>Find someone on BOUNCY using their exact username or phone number.</p>
+  <input id="contactSearch" class="contact-input" placeholder="@username or +27821234567" autocomplete="off">
+  <button id="searchContacts" class="contact-action" style="width:100%">Find person</button>
+  <div id="contactResults" style="margin-top:14px"></div>
+  <div style="border-top:1px solid rgba(255,255,255,.08);margin-top:18px;padding-top:16px">
+   <div style="font-weight:700;margin-bottom:5px">Your phone number</div>
+   <p>Save your number in international format so friends can find you. Example: +27821234567</p>
+   <input id="myPhoneNumber" class="contact-input" placeholder="+27..." inputmode="tel">
+   <button id="saveMyPhone" class="contact-action" style="width:100%">Save phone number</button>
+  </div>
+ </section>
+</div>
+
 </body>
 </html>
