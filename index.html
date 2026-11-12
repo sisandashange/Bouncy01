@@ -77,6 +77,13 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 #callLayer.show{display:flex}
 .callAvatar{width:104px;height:104px;font-size:36px;margin:20px auto}
 #callLayer video{width:100%;max-height:50vh;object-fit:cover;background:#000;border-radius:14px}
+#callLayer.video{padding:0;justify-content:flex-end}
+#callLayer.video #remoteVideo{position:absolute;inset:0;width:100%;height:100%;max-height:none;border-radius:0}
+#callLayer.video #callTitle,#callLayer.video #callStatus{position:absolute;left:0;right:0;z-index:2;text-shadow:0 1px 6px #000}
+#callLayer.video #callTitle{top:calc(env(safe-area-inset-top) + 18px)}
+#callLayer.video #callStatus{top:calc(env(safe-area-inset-top) + 52px)}
+#callLayer.video .callActions{position:relative;z-index:2;margin-bottom:calc(env(safe-area-inset-bottom) + 30px)}
+#callLayer.video #localVideo{top:calc(env(safe-area-inset-top) + 80px)}
 #localVideo{width:110px!important;position:absolute;right:16px;top:calc(env(safe-area-inset-top) + 16px)}
 .callActions{display:flex;gap:20px;margin-top:30px}
 .callActions button{border:0;border-radius:50%;width:62px;height:62px;font-size:22px;background:var(--panel2)}
@@ -167,7 +174,7 @@ const fmt=d=>d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit
 const errMsg=e=>e?.message||String(e||"Something went wrong");
 let me=null,profile=null,chats=[],cur=null,filter="",authMode="signin",onlineIds=new Set();
 let call=null,pc=null,localStream=null,callChannel=null,incomingChannel=null,msgChannel=null,presenceChannel=null;
-let ringPoll=null,seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
+let callTick=null,ringPoll=null,seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
 
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500);}
 function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url)}">`:`<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;}
@@ -330,7 +337,7 @@ function subscribeIncomingCalls(){
  clearInterval(ringPoll);ringPoll=setInterval(checkRinging,3000);
 }
 function showCallUI(incoming){
- const v=call.type==="video";$("callLayer").classList.add("show");$("callTitle").textContent=call.otherName||"BOUNCY call";
+ const v=call.type==="video";$("callLayer").classList.add("show");$("callLayer").classList.toggle("video",v);$("callAvatar").textContent=(call.otherName||"B").slice(0,2).toUpperCase();$("callTitle").textContent=call.otherName||"BOUNCY call";
  $("callStatus").textContent=incoming?`Incoming ${call.type} call`:"Calling…";
  $("callAvatar").classList.toggle("hidden",v);$("remoteVideo").classList.toggle("hidden",!v);$("localVideo").classList.toggle("hidden",!v);
  $("acceptBtn").classList.toggle("hidden",!incoming);
@@ -359,7 +366,7 @@ async function preparePeer(){
  $("localVideo").srcObject=localStream;
  pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
- pc.ontrack=e=>{(call.type==="video"?$("remoteVideo"):$("remoteAudio")).srcObject=e.streams[0];$("callStatus").textContent="Connected";clearTimeout(ringTimer);};
+ pc.ontrack=e=>{(call.type==="video"?$("remoteVideo"):$("remoteAudio")).srcObject=e.streams[0];if(!callTick){clearTimeout(ringTimer);const t0=Date.now();callTick=setInterval(()=>{const d=Math.floor((Date.now()-t0)/1000);$("callStatus").textContent=String(Math.floor(d/60)).padStart(2,"0")+":"+String(d%60).padStart(2,"0");},1000);$("callStatus").textContent="00:00";}};
  pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(()=>{});};
  pc.onconnectionstatechange=()=>{if(pc&&pc.connectionState==="failed"){toast("Connection lost.");endCall();}};
 }
@@ -401,7 +408,7 @@ async function endCall(){
  cleanupCall();
 }
 function cleanupCall(){
- clearTimeout(ringTimer);
+ clearTimeout(ringTimer);clearInterval(callTick);callTick=null;
  if(pc){pc.ontrack=pc.onicecandidate=pc.onconnectionstatechange=null;pc.close();pc=null;}
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
  for(const id of ["remoteVideo","remoteAudio","localVideo"])$(id).srcObject=null;
