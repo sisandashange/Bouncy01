@@ -295,6 +295,17 @@ select.f option{background:#1f262f;color:#f2f5f8}
 .feat{flex:1;background:rgba(23,28,35,.8);border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;font-size:12px;color:var(--mute)}
 .feat svg{display:block;margin:0 auto 5px;color:var(--pink2)}
 .fine{color:var(--mute);font-size:12px;text-align:center;margin-top:14px}
+/* ---- replies, forwarding, blocking ---- */
+.quote{border-left:3px solid var(--pink2);background:rgba(0,0,0,.22);border-radius:6px;padding:4px 8px;margin:0 0 6px;cursor:pointer;max-width:250px}
+.quote b{display:block;font-size:12px;color:var(--pink2)}.quote span{display:block;font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fwdtag{font-size:12px;opacity:.7;display:flex;align-items:center;gap:5px;margin-bottom:3px;font-style:italic}.fwdtag svg{width:13px;height:13px}
+.replyBar{display:flex;align-items:center;gap:10px;background:var(--panel);border-top:1px solid var(--line);padding:8px 14px}
+.replyBar .rq{flex:1;min-width:0;border-left:3px solid var(--pink);padding-left:10px}.replyBar .rq b{display:block;font-size:13px;color:var(--pink2)}
+.replyBar .rq span{display:block;color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.replyBar button{background:none;border:0;color:var(--mute);width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.msg.flash{animation:flash 1.2s}@keyframes flash{0%,60%{box-shadow:0 0 0 3px var(--pink)}100%{box-shadow:none}}
+.msg{transition:transform .12s}
+.rr{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer}.rr input{accent-color:var(--pink);width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -376,6 +387,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <button class="item" data-act="newChannel"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 10v4h4l8 4V6L7 10z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg> New channel</button>
  <button class="item" data-act="findChannels"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="M16 16l5 5"/></svg> Find channels</button>
  <button class="item" data-act="enablePush"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg> Notifications</button>
+ <button class="item" data-act="openBlocked"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg> Blocked users</button>
  <button class="item" data-act="settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> My profile</button>
  <button class="item" data-act="addStory"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg> Add story</button>
  <button class="item" data-act="newPost"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 20h4L19 9l-4-4L4 16z"/></svg> New post</button>
@@ -406,7 +418,9 @@ select.f option{background:#1f262f;color:#f2f5f8}
   <button class="iconBtn" data-act="video" aria-label="Video call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></button>
  </div>
  <div class="msgs" id="msgs"></div>
+ <div id="replyBar" class="replyBar hidden"></div>
  <div class="inp" id="inpBar"><button class="iconBtn" data-act="attach" aria-label="Attach"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg></button><input id="msgInp" placeholder="Message" maxlength="5000" autocomplete="off" aria-label="Message"><button class="send" id="sendBtn" data-act="recStart" aria-label="Record voice note"></button></div>
+ <div class="inp hidden" id="blkBar" style="justify-content:center;gap:12px"><span class="mute" id="blkTxt"></span><button class="btn" id="blkBtn" data-act="blockToggle" style="width:auto;padding:0 18px;height:40px;margin:0">Unblock</button></div>
  <div class="inp hidden" id="roBar" style="justify-content:center;color:var(--mute)">Only admins can post in this channel</div>
  <div class="inp hidden" id="recBar"><button class="iconBtn" data-act="recCancel" aria-label="Cancel recording"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><span class="recdot"></span><span id="recTime">0:00</span><div id="recWave"></div><button class="send" data-act="recSend" aria-label="Send voice note"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
 </div>
@@ -420,6 +434,9 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <textarea class="f hidden" id="newMsg" rows="2" maxlength="5000" placeholder="First message (optional)"></textarea>
  <button class="btn" id="startBtn" data-act="createChat">START CHAT</button></div></div>
 <input type="file" id="fileIn" class="hidden">
+<div id="fwdModal" class="modal2"><div class="box"><h3>Forward to</h3><input class="f" id="fwdQ" placeholder="Search chats" autocomplete="off"><div id="fwdList" style="max-height:42vh;overflow:auto"></div><button class="btn" id="fwdBtn" data-act="sendFwd" disabled>SEND</button></div></div>
+<div id="rptModal" class="modal2"><div class="box"><h3>Report</h3><p class="mute" style="margin-bottom:6px">Why are you reporting this?</p><label class="rr"><input type="radio" name="rptReason" value="spam"><span>Spam</span></label><label class="rr"><input type="radio" name="rptReason" value="harassment"><span>Harassment or bullying</span></label><label class="rr"><input type="radio" name="rptReason" value="sexual"><span>Nudity or sexual content</span></label><label class="rr"><input type="radio" name="rptReason" value="violence"><span>Violence or threats</span></label><label class="rr"><input type="radio" name="rptReason" value="scam"><span>Scam or fraud</span></label><label class="rr"><input type="radio" name="rptReason" value="other"><span>Something else</span></label><textarea class="f" id="rptDetails" rows="2" maxlength="500" placeholder="Add details (optional)"></textarea><label class="toggle" id="rptBlockWrap"><span><b>Also block this person</b><small>They won't be able to contact you</small></span><input type="checkbox" id="rptBlock"><i></i></label><button class="btn" data-act="submitReport">SUBMIT REPORT</button></div></div>
+<div id="blkModal" class="modal2"><div class="box"><h3>Blocked users</h3><div id="blkList" style="max-height:52vh;overflow:auto"></div></div></div>
 <div id="attModal" class="modal2"><div class="box"><h3>Send</h3>
  <button class="att" data-act="attMedia"><span class="atic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></span><div><b>Photo or video</b><span class="mute">Send normally or as view once</span></div></button>
  <button class="att" data-act="attDoc"><span class="atic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span><div><b>Document</b><span class="mute">PDF, Word, Excel, any file</span></div></button>
@@ -470,7 +487,7 @@ async function enterApp(){
  }
  profile=p;$("authGate").classList.add("hidden");document.querySelectorAll(".ob").forEach(x=>x.classList.remove("show"));sb.rpc("get_my_phone").then(({data})=>{if(data){const d=[...DIALS].sort((x,y)=>y[1].length-x[1].length).find(x=>data.startsWith(x[1]));if(d)localStorage.setItem("dial",d[1]);}});
  $("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;
- await loadChats();subscribeMessages();subscribeIncomingCalls();subscribePresence();pushInit();
+ await loadChats();subscribeMessages();subscribeIncomingCalls();subscribePresence();pushInit();loadBlocks();
 }
 async function logout(){
  if(!confirm("Log out of BOUNCY?"))return;
@@ -497,7 +514,7 @@ function render(){
  $("list").innerHTML=found.map(c=>`<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}"`:""}>${chatAvatar(c)}</span><div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
 }
 async function openChat(id){
- cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;
+ cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");applyChatMode();updatePresence();render();
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
@@ -525,11 +542,11 @@ function subscribeMessages(){
 }
 async function sendMsg(){
  const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";updateSendBtn();
- const tmp={id:"tmp"+Date.now(),body,sender_id:me.id,created_at:new Date().toISOString(),pending:true};
+ const rid=takeReply();const tmp={id:"tmp"+Date.now(),body,sender_id:me.id,created_at:new Date().toISOString(),pending:true,reply_to:rid};
  cur.msgs.push(tmp);renderMsgs();
- const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body}).select().single();
+ const {data,error}=await sb.from("messages").insert({conversation_id:cur.id,sender_id:me.id,body,reply_to:rid}).select().single();
  cur.msgs=cur.msgs.filter(m=>m!==tmp);
- if(error){toast("Message not sent: "+errMsg(error));input.value=body;renderMsgs();return;}
+ if(error){toast(/row-level security/i.test(errMsg(error))?"You can't send messages in this chat.":"Message not sent: "+errMsg(error));input.value=body;renderMsgs();return;}
  if(!cur.msgs.some(m=>m.id===data.id))cur.msgs.push(data);
  cur.last=body;cur.at=data.created_at;renderMsgs();render();
 }
@@ -602,7 +619,11 @@ async function showCalls(){
 
 /* ---------- CALLS ---------- */
 /* ---------- CALLS: 1-to-1 and group (up to 4 people, mesh) ---------- */
-const ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}];
+let ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}],iceAt=0;
+async function loadIce(){
+ if(Date.now()-iceAt<3300000)return;
+ try{const {data,error}=await sb.functions.invoke("turn-credentials");if(!error&&data?.iceServers?.length){ICE=data.iceServers;iceAt=Date.now();}}catch{}
+}
 const peers=new Map();let sigChan=null,partChan=null,partPoll=null,lastSig=0;
 const callOthers=()=>call?[...call.parts.entries()].filter(([u,p])=>u!==me.id&&(p.status==="joined"||p.status==="invited")):[];
 const activeCount=()=>call?[...call.parts.values()].filter(p=>p.status==="joined"||p.status==="invited").length:0;
@@ -745,7 +766,7 @@ async function startCall(type){
  if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
  call={type,incoming:false,incomingPending:false,otherName:cur.name,parts:new Map(),count:2};
  try{
-  await getMedia(type);
+  await Promise.all([getMedia(type),loadIce()]);
   const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select("id").single();
   if(error)throw error;
   call.id=data.id;showCallUI(false);await subscribeSignals();startPartWatch();await refreshParts();
@@ -755,7 +776,7 @@ async function acceptCall(){
  if(!call||!call.incomingPending)return;
  try{
   $("acceptBtn").classList.add("hidden");$("callStatus").textContent="Connecting…";
-  await getMedia(call.type);
+  await Promise.all([getMedia(call.type),loadIce()]);
   const {error}=await sb.rpc("join_call",{p_call:call.id});if(error)throw error;
   call.incomingPending=false;$("localVideo").classList.toggle("hidden",call.type!=="video");
   await subscribeSignals();await refreshParts();
@@ -852,7 +873,7 @@ async function recFinish(send){
   const path=`${me.id}/${crypto.randomUUID()}.${ext}`;
   const {error:ue}=await sb.storage.from("voice").upload(path,blob,{contentType:type});if(ue)throw ue;
   const url=sb.storage.from("voice").getPublicUrl(path).data.publicUrl;
-  const {data,error}=await sb.from("messages").insert({conversation_id:r.conv,sender_id:me.id,body:"Voice message",kind:"voice",audio_url:url,audio_ms:Math.min(ms,300000),peaks:bars(r.peaks)}).select().single();
+  const {data,error}=await sb.from("messages").insert({conversation_id:r.conv,sender_id:me.id,reply_to:(cur&&cur.id===r.conv?takeReply():null),body:"Voice message",kind:"voice",audio_url:url,audio_ms:Math.min(ms,300000),peaks:bars(r.peaks)}).select().single();
   if(error)throw error;
   if(cur&&cur.id===r.conv&&!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
   const c=chats.find(x=>x.id===r.conv);if(c){c.last="Voice message";c.at=data.created_at;render();}
@@ -895,7 +916,7 @@ async function loadFeed(){
 }
 function postHTML(p){
  const media=p.media_url?(p.media_type==="video"?`<video src="${esc(p.media_url)}" controls playsinline preload="metadata"></video>`:`<img src="${esc(p.media_url)}" loading="lazy" alt="">`):"";
- return `<article class="post" data-post="${esc(p.id)}"><div class="ph"><span class="pav" data-prof="${esc(p.author_id)}">${avatar(p)}</span><div style="flex:1;min-width:0"><b>${esc(p.display_name||p.username)}</b><div class="time">@${esc(p.username||"")} · ${ago(p.created_at)}</div></div>${p.author_id===me.id?`<button class="lnk" data-act="delPost" data-id="${esc(p.id)}">Delete</button>`:""}</div>${p.body?`<p class="pb">${esc(p.body)}</p>`:""}${media}<div class="pa"><button class="act likeBtn" data-act="like" data-id="${esc(p.id)}" aria-label="Like">${SVG.heart(p.liked)}<span>${p.like_count}</span></button><button class="act" data-act="cmt" data-id="${esc(p.id)}" aria-label="Comments">${SVG.cmt}<span class="cc">${p.comment_count}</span></button><button class="act" data-act="share" data-id="${esc(p.id)}" aria-label="Share">${IC.share}</button></div></article>`;
+ return `<article class="post" data-post="${esc(p.id)}"><div class="ph"><span class="pav" data-prof="${esc(p.author_id)}">${avatar(p)}</span><div style="flex:1;min-width:0"><b>${esc(p.display_name||p.username)}</b><div class="time">@${esc(p.username||"")} · ${ago(p.created_at)}</div></div>${p.author_id===me.id?`<button class="lnk" data-act="delPost" data-id="${esc(p.id)}">Delete</button>`:`<button class="lnk" data-act="reportPost" data-id="${esc(p.id)}">Report</button>`}</div>${p.body?`<p class="pb">${esc(p.body)}</p>`:""}${media}<div class="pa"><button class="act likeBtn" data-act="like" data-id="${esc(p.id)}" aria-label="Like">${SVG.heart(p.liked)}<span>${p.like_count}</span></button><button class="act" data-act="cmt" data-id="${esc(p.id)}" aria-label="Comments">${SVG.cmt}<span class="cc">${p.comment_count}</span></button><button class="act" data-act="share" data-id="${esc(p.id)}" aria-label="Share">${IC.share}</button></div></article>`;
 }
 function storiesHTML(){
  return `<div class="stories"><div class="st" data-act="addStory"><div class="ring add"><div class="avatar">+</div></div><span>Add story</span></div>${storyGroups.map((g,i)=>`<div class="st" data-act="openStory" data-i="${i}"><div class="ring">${avatar(g.author)}</div><span>${esc(g.author.id===me.id?"Your story":(g.author.display_name||g.author.username))}</span></div>`).join("")}</div>`;
@@ -981,8 +1002,10 @@ function senderTag(m){
 }
 function applyChatMode(){
  const dm=cur.kind==="dm",ro=cur.kind==="channel"&&!["owner","admin"].includes(cur.role);
- document.querySelectorAll('[data-act="voice"],[data-act="video"]').forEach(b=>b.classList.toggle("hidden",!dm));
- $("inpBar").classList.toggle("hidden",ro);$("roBar").classList.toggle("hidden",!ro);$("recBar").classList.add("hidden");
+ document.querySelectorAll('[data-act="voice"],[data-act="video"]').forEach(b=>b.classList.toggle("hidden",!dm||(dm&&blockedIds.has(cur.other_id))));
+ $("inpBar").classList.toggle("hidden",ro);$("roBar").classList.toggle("hidden",!ro);$("recBar").classList.add("hidden");$("replyBar").classList.add("hidden");
+ const blk=dm&&blockedIds.has(cur.other_id);$("blkBar").classList.toggle("hidden",!blk);
+ if(blk){$("inpBar").classList.add("hidden");$("blkBtn").dataset.id=cur.other_id;$("blkTxt").textContent="You blocked "+cur.name;}
 }
 function openGroup(kind){
  closeAll();grpKind=kind;grpMembers=new Map();
@@ -1120,7 +1143,7 @@ renderMsgs=function(){
  box.innerHTML=cur.msgs.map(m=>{
   const d=dayLabel(m.created_at),sep=d!==last?`<div class="day"><span>${esc(d)}</span></div>`:"";last=d;const mine=m.sender_id===me.id;
   const media=!m.view_once&&(m.kind==="image"||m.kind==="video");
-  return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}</span></div>${rxHTML(m)}</div>`;
+  return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${fwdTag(m)}${quoteHTML(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}</span></div>${rxHTML(m)}</div>`;
  }).join("");
  box.scrollTop=(near||!cur.seen)?box.scrollHeight:keep;if(cur.msgs.length)cur.seen=true;
  updateSendBtn();applyPlaying();if(vid&&va.ontimeupdate)va.ontimeupdate();
@@ -1139,14 +1162,7 @@ async function loadOpens(){
 /* long-press reaction menu */
 let lpTimer=null,lpX=0,lpY=0;
 function hideRx(){$("rxPop").classList.remove("show");$("rxBack").classList.remove("show");}
-function showRx(b){
- const m=cur?.msgs.find(x=>x.id===b.dataset.mid);if(!m||m.pending)return;if(navigator.vibrate)navigator.vibrate(15);
- const mine=m.sender_id===me.id,my=cur.rx.get(m.id)?.get(me.id),pop=$("rxPop");
- pop.innerHTML=`<div class="rxbar">${["👍","❤️","😂","😮","😢","🙏"].map(e=>`<button data-act="react" data-id="${esc(m.id)}" data-e="${e}" class="${my===e?"on":""}">${e}</button>`).join("")}</div><div class="rxmenu">${m.kind==="text"?`<button data-act="copyMsg" data-id="${esc(m.id)}">${IC.copy} Copy</button>`:""}${mine?`<button class="danger" data-act="delMsg" data-id="${esc(m.id)}">${IC.trash} Delete</button>`:""}</div>`;
- pop.classList.add("show");$("rxBack").classList.add("show");
- const rc=b.getBoundingClientRect();pop.style.top=Math.max(70,Math.min(rc.top-62,innerHeight-230))+"px";
- pop.style.left=mine?"auto":"12px";pop.style.right=mine?"12px":"auto";pop.style.alignItems=mine?"flex-end":"flex-start";
-}
+let showRx=function(){};
 $("msgs").addEventListener("pointerdown",e=>{
  const b=e.target.closest(".msg");if(!b||e.target.closest("[data-act],a"))return;
  lpX=e.clientX;lpY=e.clientY;clearTimeout(lpTimer);lpTimer=setTimeout(()=>showRx(b),420);
@@ -1195,7 +1211,7 @@ async function sendAttachment(f,kind,once){
   const {error:ue}=await sb.storage.from(bucket).upload(path,f,{contentType:f.type||"application/octet-stream"});if(ue)throw ue;
   const url=once?null:sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
   const label=once?(kind==="video"?"View once video":"View once photo"):kind==="image"?"Photo":kind==="video"?"Video":f.name;
-  const {data,error}=await sb.from("messages").insert({conversation_id:conv,sender_id:me.id,body:label.slice(0,200),kind,file_url:url,file_name:f.name.slice(0,200),file_size:f.size,mime:f.type||null,view_once:once,media_path:once?path:null}).select().single();
+  const {data,error}=await sb.from("messages").insert({conversation_id:conv,sender_id:me.id,reply_to:(cur&&cur.id===conv?takeReply():null),body:label.slice(0,200),kind,file_url:url,file_name:f.name.slice(0,200),file_size:f.size,mime:f.type||null,view_once:once,media_path:once?path:null}).select().single();
   if(error)throw error;
   if(cur&&cur.id===conv&&!cur.msgs.some(m=>m.id===data.id)){cur.msgs.push(data);renderMsgs();}
   const c=chats.find(x=>x.id===conv);if(c){c.last=label;c.at=data.created_at;render();}
@@ -1254,6 +1270,7 @@ async function openProfile(id){
  if(!p){$("profBody").innerHTML='<p class="mute">Profile not found.</p>';return;}
  const self=id===me.id;
  $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button></div>`}`;
+ if(!self)$("profBody").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin-top:10px"><button class="btn alt" style="width:auto;flex:1" data-act="blockToggle" data-id="${esc(id)}">${blockedIds.has(id)?"Unblock":"Block"}</button><button class="btn alt" style="width:auto;flex:1" data-act="reportUser" data-id="${esc(id)}">Report</button></div>`);
 }
 async function profMsg(a){const id=a.dataset.id;const {data:cid,error}=await sb.rpc("get_or_create_dm",{other:id});if(error)throw error;closeAll();await loadChats();showChats();await openChat(cid);}
 async function profCall(a){await profMsg(a);await startCall(a.dataset.t);}
@@ -1392,6 +1409,105 @@ document.addEventListener("keydown",e=>{
 });
 
 Object.assign(IC,{mic:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`,micOff:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path d="M3 3l18 18"/></svg>`,cam:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`,camOff:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/><path d="M3 3l18 18"/></svg>`});
+/* ---------- REPLIES, FORWARDING, BLOCKING, REPORTS ---------- */
+const blockedIds=new Set();
+Object.assign(IC,{reply:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>`,fwd:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0-6 6v3"/></svg>`,flag:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>`,ban:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>`});
+async function loadBlocks(){const {data}=await sb.from("blocks").select("blocked_id").eq("blocker_id",me.id);blockedIds.clear();for(const r of data||[])blockedIds.add(r.blocked_id);if(cur)applyChatMode();}
+const snip=m=>!m?"Original message":m.view_once?("View once "+(m.kind==="video"?"video":"photo")):m.kind==="voice"?"Voice message":m.kind==="image"?"Photo":m.kind==="video"?"Video":m.kind==="audio"?("Audio: "+(m.file_name||"")):m.kind==="file"?(m.file_name||"Document"):m.body;
+const nameOfMsg=m=>m.sender_id===me.id?"You":(cur.kind==="dm"?cur.name:(names.get(m.sender_id)||"Member"));
+function quoteHTML(m){
+ if(!m.reply_to)return"";const o=cur.msgs.find(x=>x.id===m.reply_to);
+ return `<div class="quote" data-act="jumpMsg" data-id="${esc(m.reply_to)}"><b>${esc(o?nameOfMsg(o):"Message")}</b><span>${esc(snip(o).slice(0,90))}</span></div>`;
+}
+const fwdTag=m=>m.forwarded?`<div class="fwdtag">${IC.fwd} Forwarded</div>`:"";
+function setReply(mid){
+ const m=cur?.msgs.find(x=>x.id===mid);if(!m||m.pending)return;cur.replyTo={id:m.id};
+ $("replyBar").innerHTML=`<div class="rq"><b>${esc(nameOfMsg(m))}</b><span>${esc(snip(m).slice(0,80))}</span></div><button data-act="cancelReplyMsg" aria-label="Cancel reply">${IC.x}</button>`;
+ $("replyBar").classList.remove("hidden");$("msgInp").focus();
+}
+function clearReply(){if(cur)cur.replyTo=null;$("replyBar").classList.add("hidden");}
+function takeReply(){const id=cur?.replyTo?.id||null;clearReply();return id;}
+function jumpMsg(a){
+ const el=document.querySelector(`.msg[data-mid="${a.dataset.id}"]`);
+ if(!el){toast("That message is further up in the chat.");return;}
+ el.scrollIntoView({block:"center",behavior:"smooth"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1300);
+}
+showRx=function(b){
+ const m=cur?.msgs.find(x=>x.id===b.dataset.mid);if(!m||m.pending)return;if(navigator.vibrate)navigator.vibrate(15);
+ const mine=m.sender_id===me.id,my=cur.rx.get(m.id)?.get(me.id),pop=$("rxPop");
+ const item=(act,icon,label,cls="")=>`<button class="${cls}" data-act="${act}" data-id="${esc(m.id)}">${icon} ${label}</button>`;
+ pop.innerHTML=`<div class="rxbar">${["👍","❤️","😂","😮","😢","🙏"].map(e=>`<button data-act="react" data-id="${esc(m.id)}" data-e="${e}" class="${my===e?"on":""}">${e}</button>`).join("")}</div><div class="rxmenu">${item("replyMsg",IC.reply,"Reply")}${m.view_once?"":item("fwdMsg",IC.fwd,"Forward")}${m.kind==="text"?item("copyMsg",IC.copy,"Copy"):""}${mine?"":item("reportMsg",IC.flag,"Report")}${mine?item("delMsg",IC.trash,"Delete","danger"):""}</div>`;
+ pop.classList.add("show");$("rxBack").classList.add("show");
+ const rc=b.getBoundingClientRect();pop.style.top=Math.max(70,Math.min(rc.top-62,innerHeight-300))+"px";
+ pop.style.left=mine?"auto":"12px";pop.style.right=mine?"12px":"auto";pop.style.alignItems=mine?"flex-end":"flex-start";
+};
+/* swipe a message to reply */
+let sw=null;
+$("msgs").addEventListener("touchstart",e=>{const b=e.target.closest(".msg");if(!b||e.target.closest("[data-act],a")){sw=null;return;}const t=e.touches[0];sw={b,x:t.clientX,y:t.clientY,dx:0,on:false};},{passive:true});
+$("msgs").addEventListener("touchmove",e=>{
+ if(!sw)return;const t=e.touches[0],dx=t.clientX-sw.x,dy=t.clientY-sw.y;
+ if(!sw.on){if(Math.abs(dy)>14){sw=null;return;}if(dx>18&&Math.abs(dy)<12){sw.on=true;clearTimeout(lpTimer);}}
+ if(sw&&sw.on){sw.dx=Math.min(80,Math.max(0,dx));sw.b.style.transform=`translateX(${sw.dx}px)`;}
+},{passive:true});
+$("msgs").addEventListener("touchend",()=>{if(!sw)return;sw.b.style.transform="";if(sw.on&&sw.dx>=60)setReply(sw.b.dataset.mid);sw=null;});
+$("msgs").addEventListener("touchcancel",()=>{if(sw)sw.b.style.transform="";sw=null;});
+/* forwarding */
+let fwdMsg=null,fwdSel=new Set();
+const fwdChats=()=>{const q=$("fwdQ").value.trim().toLowerCase();return chats.filter(c=>(c.kind!=="channel"||["owner","admin"].includes(c.role))&&!(c.kind==="dm"&&blockedIds.has(c.other_id))&&c.name.toLowerCase().includes(q));};
+function renderFwd(){
+ $("fwdList").innerHTML=fwdChats().map(c=>`<div class="hit${fwdSel.has(c.id)?" sel":""}" data-act="fwdPick" data-id="${esc(c.id)}"><span class="pav">${chatAvatar(c)}</span><div><b>${esc(c.name)}</b><small>${c.kind==="dm"?"Chat":c.kind==="group"?"Group":"Channel"}</small></div></div>`).join("")||'<p class="mute">No chats to forward to.</p>';
+ $("fwdBtn").disabled=!fwdSel.size;$("fwdBtn").textContent=fwdSel.size?"SEND TO "+fwdSel.size:"SEND";
+}
+function openFwd(id){fwdMsg=cur.msgs.find(x=>x.id===id);if(!fwdMsg)return;fwdSel=new Set();$("fwdQ").value="";renderFwd();$("fwdModal").classList.add("show");}
+function fwdPick(a){const id=a.dataset.id;if(fwdSel.has(id))fwdSel.delete(id);else{if(fwdSel.size>=5){toast("You can forward to up to 5 chats.");return;}fwdSel.add(id);}renderFwd();}
+$("fwdQ").addEventListener("input",renderFwd);
+async function sendFwd(){
+ const m=fwdMsg;if(!m||!fwdSel.size)return;const b=$("fwdBtn");b.disabled=true;
+ try{
+  const base={sender_id:me.id,body:m.body,kind:m.kind,forwarded:true};
+  if(m.file_url){base.file_url=m.file_url;base.file_name=m.file_name;base.file_size=m.file_size;base.mime=m.mime;}
+  if(m.kind==="voice"){base.audio_url=m.audio_url;base.audio_ms=m.audio_ms;base.peaks=m.peaks;}
+  const {data,error}=await sb.from("messages").insert([...fwdSel].map(cid=>({...base,conversation_id:cid}))).select();
+  if(error)throw error;
+  for(const d of data||[]){const c=chats.find(x=>x.id===d.conversation_id);if(c){c.last=d.body;c.at=d.created_at;}}
+  chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();closeAll();toast("Forwarded.");
+ }catch(e){toast(/row-level security/i.test(errMsg(e))?"You can't send messages to one of those chats.":"Could not forward: "+errMsg(e));}finally{b.disabled=false;}
+}
+/* blocking */
+async function blockToggle(a){
+ const id=a.dataset.id;if(!id)return;
+ if(blockedIds.has(id)){
+  const {error}=await sb.from("blocks").delete().eq("blocker_id",me.id).eq("blocked_id",id);if(error)throw error;blockedIds.delete(id);toast("Unblocked.");
+ }else{
+  const nm=cur&&cur.other_id===id?cur.name:"this person";
+  if(!confirm("Block "+nm+"? They won't be able to message or call you, and you won't see their posts."))return;
+  const {error}=await sb.from("blocks").insert({blocker_id:me.id,blocked_id:id});if(error)throw error;blockedIds.add(id);toast("Blocked.");
+ }
+ if(cur&&cur.kind==="dm")applyChatMode();
+ if($("profModal").classList.contains("show"))openProfile(id);
+ if($("blkModal").classList.contains("show"))openBlocked(true);
+ if(tab==="feed")showFeed();
+}
+async function openBlocked(keep){
+ if(!keep)closeAll();$("blkModal").classList.add("show");$("blkList").innerHTML='<p class="mute">Loading…</p>';
+ const {data,error}=await sb.from("blocks").select("blocked_id,profiles!blocks_blocked_id_fkey(display_name,username,avatar_url)").eq("blocker_id",me.id).order("created_at",{ascending:false});
+ if(error){toast(errMsg(error));return;}
+ $("blkList").innerHTML=(data||[]).map(r=>`<div class="hit"><span class="pav" data-prof="${esc(r.blocked_id)}">${avatar(r.profiles)}</span><div style="flex:1;min-width:0"><b>${esc(r.profiles?.display_name||r.profiles?.username||"Member")}</b><small>@${esc(r.profiles?.username||"")}</small></div><button class="btn alt" style="width:auto;height:36px;padding:0 14px;margin:0" data-act="unblock" data-id="${esc(r.blocked_id)}">Unblock</button></div>`).join("")||'<p class="mute">You haven\'t blocked anyone.</p>';
+}
+/* reports */
+let rpt=null;
+function openReport(r){
+ closeAll();rpt=r;$("rptDetails").value="";document.querySelectorAll('input[name="rptReason"]').forEach(x=>{x.checked=false;});$("rptBlock").checked=false;
+ $("rptBlockWrap").classList.toggle("hidden",!r.user||r.user===me.id||blockedIds.has(r.user));$("rptModal").classList.add("show");
+}
+async function submitReport(){
+ const reason=document.querySelector('input[name="rptReason"]:checked')?.value;if(!reason){toast("Choose a reason.");return;}
+ const {error}=await sb.from("reports").insert({reporter_id:me.id,reported_user:rpt.user||null,message_id:rpt.message_id||null,post_id:rpt.post_id||null,reason,details:$("rptDetails").value.trim().slice(0,500),evidence:rpt.evidence||null});
+ if(error)throw error;
+ if($("rptBlock").checked&&rpt.user&&!blockedIds.has(rpt.user)){await sb.from("blocks").insert({blocker_id:me.id,blocked_id:rpt.user});blockedIds.add(rpt.user);if(cur&&cur.kind==="dm")applyChatMode();}
+ closeAll();toast("Thanks. We'll review this report.");
+}
+
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
@@ -1403,6 +1519,9 @@ const actions={
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
  segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
  rmThumb,attach,attMedia,attDoc,attAudio,sendMedia,react,copyMsg,delMsg,openOnce,viewMedia,mvClose,share,replyCmt,cancelReply:()=>{replyTo=null;$("cmtReply").classList.add("hidden");},likeCmt,enablePush:()=>enablePush(false),pushLater:()=>{localStorage.setItem("pushAsked","1");$("pushBar").classList.add("hidden");},profMsg,profCall,
+ replyMsg:a=>{hideRx();setReply(a.dataset.id);},cancelReplyMsg:clearReply,jumpMsg,fwdMsg:a=>{hideRx();openFwd(a.dataset.id);},fwdPick,sendFwd,
+ blockToggle,openBlocked:()=>openBlocked(),unblock:blockToggle,reportUser:a=>openReport({user:a.dataset.id}),reportMsg:a=>{hideRx();const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openReport({user:m.sender_id,message_id:m.id,evidence:{body:m.body,kind:m.kind,file_url:m.file_url||null,conversation_id:cur.id}});},
+ reportPost:a=>{const p=feed.find(x=>x.id===a.dataset.id);if(p)openReport({user:p.author_id,post_id:p.id,evidence:{body:p.body,media_url:p.media_url}});},submitReport,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
  recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
  vplay:a=>vplay(a.dataset.id),like:a=>like(a.dataset.id),cmt:a=>cmt(a.dataset.id),delPost:a=>delPost(a.dataset.id),
