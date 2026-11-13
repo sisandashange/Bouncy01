@@ -260,6 +260,41 @@ select.f{appearance:none;-webkit-appearance:none;background-image:linear-gradien
 .obAv.has{border:2px solid var(--pink)}.obAv.has svg,.obAv.has span{display:none}
 .seg{display:flex;background:var(--panel2);border-radius:12px;padding:4px;margin-bottom:10px}.seg button{flex:1;border:0;background:none;padding:10px;border-radius:9px;color:var(--mute);font-weight:600}.seg button.on{background:var(--pink);color:#fff}
 .hint{color:var(--mute);font-size:13px;margin:0 0 8px}
+/* ---- group call layout ---- */
+#callLayer{padding:0!important;justify-content:flex-end!important;background:#000}
+#callGrid{position:absolute;inset:0;display:grid;gap:3px;background:#000;grid-template-columns:1fr}
+#callGrid[data-n="2"]{grid-template-rows:1fr 1fr}
+#callGrid[data-n="3"],#callGrid[data-n="4"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.tile{position:relative;background:#11161c;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
+.tile video{width:100%;height:100%;object-fit:cover}
+.tile.novid video{position:absolute;width:1px;height:1px;opacity:0}
+.tile .tav{display:none}.tile.novid .tav{display:block}
+.tile .tav .avatar{width:96px;height:96px;font-size:32px}
+#callGrid:not([data-n="1"]):not([data-n="2"]) .tile .tav .avatar{width:64px;height:64px;font-size:22px}
+.tile .tn{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:10px;font-size:13px}
+#callTitle,#callStatus{position:absolute!important;left:0;right:0;z-index:3;text-align:center;text-shadow:0 1px 8px #000;margin:0!important}
+#callTitle{top:calc(env(safe-area-inset-top) + 18px);font-size:22px;font-weight:700}
+#callStatus{top:calc(env(safe-area-inset-top) + 50px);color:#e6ebf0!important;font-weight:600}
+#localVideo{z-index:4;top:calc(env(safe-area-inset-top) + 84px)!important;border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.6)}
+#localVideo.camoff{opacity:.25}
+.callActions{position:relative;z-index:5;margin-bottom:calc(env(safe-area-inset-bottom) + 28px)!important;margin-top:0!important;gap:14px!important}
+.callActions button{background:rgba(15,19,24,.7)!important;backdrop-filter:blur(6px);width:58px!important;height:58px!important}
+.callActions button.off{background:#fff!important;color:#111}
+.callActions .acc{background:var(--ok)!important}.callActions .end{background:var(--bad)!important}
+#addCallModal{z-index:130}
+/* ---- welcome polish ---- */
+select.f{width:100%;background-color:var(--panel2);color:var(--text);border:1px solid transparent;border-radius:10px;padding:13px 32px 13px 13px;font-size:16px;margin:8px 0;color-scheme:dark}
+select.f option{background:#1f262f;color:#f2f5f8}
+.phoneRow select.f{width:118px}
+#authGate{background:radial-gradient(700px 420px at 50% -5%,rgba(255,45,135,.22),transparent),radial-gradient(600px 400px at 100% 100%,rgba(122,90,248,.18),transparent),var(--bg)!important}
+.bub{position:fixed;border-radius:50%;background:linear-gradient(135deg,var(--pink),#7a5af8);opacity:.16;animation:float 9s ease-in-out infinite;pointer-events:none}
+.bub.b1{width:90px;height:90px;left:-24px;top:18%}.bub.b2{width:54px;height:54px;right:8%;top:10%;animation-delay:-3s}.bub.b3{width:120px;height:120px;right:-40px;bottom:12%;animation-delay:-5s}.bub.b4{width:36px;height:36px;left:12%;bottom:8%;animation-delay:-1.5s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-26px)}}
+.wel{position:relative;z-index:1}
+.feats{display:flex;gap:10px;margin:0 0 16px}
+.feat{flex:1;background:rgba(23,28,35,.8);border:1px solid var(--line);border-radius:14px;padding:11px 6px;text-align:center;font-size:12px;color:var(--mute)}
+.feat svg{display:block;margin:0 auto 5px;color:var(--pink2)}
+.fine{color:var(--mute);font-size:12px;text-align:center;margin-top:14px}
 </style>
 </head>
 <body>
@@ -267,10 +302,12 @@ select.f{appearance:none;-webkit-appearance:none;background-image:linear-gradien
 <div id="splash"><div class="spBall"></div><div class="spWord"><span style="--i:0">B</span><span style="--i:1">O</span><span style="--i:2">U</span><span style="--i:3">N</span><span style="--i:4">C</span><span style="--i:5">Y</span></div><div class="spTag">CHAT. CALL. SHARE.</div></div>
 <div id="authGate" class="hidden">
  <div class="wel">
+  <div class="bub b1"></div><div class="bub b2"></div><div class="bub b3"></div><div class="bub b4"></div>
   <div class="wLogo"><div class="wBall"></div><div class="logo">BOUNCY</div></div>
   <div class="dots"><i class="on"></i><i></i><i></i></div>
   <h1 data-t="welcome">Welcome to BOUNCY</h1>
   <p class="wsub" data-t="welcomeSub">Chat, call and share moments with the people you love.</p>
+  <div class="feats"><div class="feat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span data-t="f1">Chats</span></div><div class="feat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span data-t="f2">Group calls</span></div><div class="feat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span data-t="f3">Stories</span></div></div>
   <label class="lbl" for="obLang" data-t="language">Language</label>
   <select class="f" id="obLang"></select>
   <label class="lbl" for="obPhone" data-t="phone">Phone number</label>
@@ -278,6 +315,7 @@ select.f{appearance:none;-webkit-appearance:none;background-image:linear-gradien
   <div class="err" id="obErr1" role="alert"></div>
   <button class="btn" id="obNext1" data-act="obNext1" data-t="next">NEXT</button>
   <button class="btn alt" data-act="obToLogin" data-t="haveAcct">I already have an account</button>
+  <p class="fine" data-t="privacy">Your number helps friends find you. It is never shown to anyone.</p>
  </div>
 </div>
 <div id="obStep2" class="ob"><div class="obBox">
@@ -318,18 +356,18 @@ select.f{appearance:none;-webkit-appearance:none;background-image:linear-gradien
  <button class="btn alt" data-act="obCloseLogin" data-t="back">Back</button>
 </div></div>
 <div id="callLayer">
- <div id="callTitle" style="font-size:24px;font-weight:700">Calling…</div>
- <div id="callStatus" style="color:var(--mute);margin-top:6px">Connecting</div>
- <div id="callAvatar" class="avatar callAvatar">B</div>
- <video id="remoteVideo" autoplay playsinline></video><audio id="remoteAudio" autoplay></audio>
+ <div id="callGrid" data-n="1"></div>
+ <div id="callTitle"></div><div id="callStatus"></div>
  <video id="localVideo" autoplay muted playsinline></video>
  <div class="callActions">
-  <button id="acceptBtn" class="acc hidden" aria-label="Answer" data-act="accept"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12l5 5 9-10"/></svg></button>
-  <button data-act="mute" aria-label="Mute"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
-  <button data-act="cam" aria-label="Camera"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
-  <button class="end" data-act="end" aria-label="End call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button id="acceptBtn" class="acc hidden" aria-label="Answer" data-act="accept"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button>
+  <button id="muteBtn" class="hidden" aria-label="Mute" data-act="mute"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+  <button id="camBtn" class="hidden" aria-label="Camera" data-act="cam"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
+  <button id="addBtn" class="hidden" aria-label="Add person" data-act="addToCall"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/></svg></button>
+  <button class="end" aria-label="End call" data-act="end"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
  </div>
 </div>
+<div id="addCallModal" class="modal2"><div class="box"><h3 id="addCallTitle">Add to call</h3><div id="addCallList" style="max-height:50vh;overflow:auto"></div></div></div>
 
 <div id="overlay" class="overlay"></div>
 <div id="drawer">
@@ -563,107 +601,201 @@ async function showCalls(){
 }
 
 /* ---------- CALLS ---------- */
-async function onRinging(row){
- if(!row||row.status!=="ringing"||row.callee_id!==me.id)return;
- if(Date.now()-new Date(row.created_at).getTime()>45000)return;
- if(call){if(call.id!==row.id)await sb.from("call_sessions").update({status:"rejected"}).eq("id",row.id);return;}
- const {data:pr}=await sb.from("profiles").select("display_name").eq("id",row.caller_id).maybeSingle();
- if(call)return;
- call={id:row.id,caller_id:row.caller_id,callee_id:me.id,type:row.call_type,incoming:true,otherName:pr?.display_name||"Incoming caller"};
- showCallUI(true);watchCallStatus();
+/* ---------- CALLS: 1-to-1 and group (up to 4 people, mesh) ---------- */
+const ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}];
+const peers=new Map();let sigChan=null,partChan=null,partPoll=null,lastSig=0;
+const callOthers=()=>call?[...call.parts.entries()].filter(([u,p])=>u!==me.id&&(p.status==="joined"||p.status==="invited")):[];
+const activeCount=()=>call?[...call.parts.values()].filter(p=>p.status==="joined"||p.status==="invited").length:0;
+function syncCallBtns(){
+ if(!call)return;
+ const a=localStream?.getAudioTracks()[0],v=localStream?.getVideoTracks()[0],mb=$("muteBtn"),cb=$("camBtn");
+ mb.classList.toggle("hidden",!localStream);mb.classList.toggle("off",!!a&&!a.enabled);mb.innerHTML=(a&&!a.enabled)?IC.micOff:IC.mic;
+ cb.classList.toggle("hidden",!v);cb.classList.toggle("off",!!v&&!v.enabled);cb.innerHTML=(v&&!v.enabled)?IC.camOff:IC.cam;
+ $("localVideo").classList.toggle("camoff",!!v&&!v.enabled);
+ $("addBtn").classList.toggle("hidden",!localStream||call.incomingPending||activeCount()>=4);
+}
+function toggle(kind){
+ const t=kind==="a"?localStream?.getAudioTracks():localStream?.getVideoTracks();
+ if(!t||!t.length)return;t.forEach(x=>{x.enabled=!x.enabled;});syncCallBtns();
+}
+function renderTiles(){
+ if(!call)return;
+ const others=callOthers(),g=$("callGrid");g.dataset.n=Math.min(4,Math.max(1,others.length));
+ for(const [u,p] of others){
+  let t=g.querySelector(`[data-u="${u}"]`);
+  if(!t){t=document.createElement("div");t.className="tile";t.dataset.u=u;t.innerHTML='<video autoplay playsinline></video><div class="tav"></div><div class="tn"></div>';g.appendChild(t);}
+  const peer=peers.get(u),v=t.querySelector("video");
+  if(peer?.stream&&v.srcObject!==peer.stream)v.srcObject=peer.stream;
+  t.classList.toggle("novid",!(call.type==="video"&&peer?.stream));
+  t.querySelector(".tav").innerHTML=avatar(p.profile||{display_name:p.name});
+  t.querySelector(".tn").textContent=(p.name||"Member")+(p.status==="invited"?" · calling…":(peer&&peer.connected)?"":" · connecting…");
+ }
+ for(const t of [...g.children])if(!others.some(([u])=>u===t.dataset.u))t.remove();
+ $("callTitle").textContent=call.incomingPending?(call.otherName||"Incoming call"):(others.length>1?"Group call · "+(others.length+1)+" people":(others[0]?.[1].name||call.otherName||"BOUNCY call"));
+ syncCallBtns();
+}
+async function refreshParts(){
+ if(!call||!call.id)return;
+ const id=call.id;
+ const {data,error}=await sb.from("call_participants").select("user_id,status,joined_at,profiles!call_participants_user_id_fkey(display_name,username,avatar_url)").eq("call_id",id);
+ if(error||!call||call.id!==id)return;
+ const m=new Map();
+ for(const r of data||[])m.set(r.user_id,{status:r.status,joined_at:r.joined_at,name:r.profiles?.display_name||r.profiles?.username,profile:r.profiles});
+ call.parts=m;
+ for(const [u,p] of m)if(u!==me.id&&p.status!=="joined")removePeer(u);
+ const mine=m.get(me.id);
+ if(call.incomingPending){if(mine&&mine.status!=="invited"){cleanupCall();return;}}
+ else{
+  if(mine&&mine.status!=="joined"){cleanupCall();return;}
+  if(callOthers().length===0&&m.size>1){toast("Call ended.");await endCall();return;}
+ }
+ renderTiles();
+}
+function startPartWatch(){
+ const id=call.id;if(partChan)sb.removeChannel(partChan);
+ partChan=sb.channel("call-parts-"+id).on("postgres_changes",{event:"*",schema:"public",table:"call_participants",filter:"call_id=eq."+id},()=>refreshParts()).subscribe();
+ clearInterval(partPoll);partPoll=setInterval(()=>{refreshParts();pollSignals();},3000);
+}
+async function getMedia(type){
+ localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:type==="video"});
+ $("localVideo").srcObject=localStream;
+}
+async function sendSignal(to,signal){
+ if(!call)return;const {error}=await sb.from("call_signals").insert({call_id:call.id,sender_id:me.id,recipient_id:to,signal});if(error)throw error;
+}
+function startTimer(){
+ if(callTick)return;clearTimeout(ringTimer);const t0=Date.now();
+ const tick=()=>{const d=Math.floor((Date.now()-t0)/1000);$("callStatus").textContent=String(Math.floor(d/60)).padStart(2,"0")+":"+String(d%60).padStart(2,"0");};
+ tick();callTick=setInterval(tick,1000);
+}
+function getPeer(uid){
+ let p=peers.get(uid);if(p)return p;
+ const pc=new RTCPeerConnection({iceServers:ICE});
+ localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+ p={pc,pend:[],stream:null,connected:false};peers.set(uid,p);
+ pc.ontrack=e=>{p.stream=e.streams[0];p.connected=true;startTimer();renderTiles();};
+ pc.onicecandidate=e=>{if(e.candidate)sendSignal(uid,{type:"ice",candidate:e.candidate.toJSON()}).catch(()=>{});};
+ pc.onconnectionstatechange=()=>{
+  if(pc.connectionState==="connected"){p.connected=true;startTimer();renderTiles();}
+  if(pc.connectionState==="failed"){toast("A connection failed.");removePeer(uid);}
+ };
+ return p;
+}
+function removePeer(uid){
+ const p=peers.get(uid);if(!p)return;
+ try{p.pc.ontrack=p.pc.onicecandidate=p.pc.onconnectionstatechange=null;p.pc.close();}catch{}
+ peers.delete(uid);if(call)renderTiles();
+}
+async function offerTo(uid){
+ const p=getPeer(uid),o=await p.pc.createOffer();await p.pc.setLocalDescription(o);await sendSignal(uid,{type:"offer",sdp:o});
+}
+async function handleSignal(row){
+ if(!call||!localStream||row.recipient_id!==me.id||seen.has(row.id))return;
+ seen.add(row.id);if(row.id>lastSig)lastSig=row.id;
+ const from=row.sender_id,s=row.signal;
+ try{
+  if(s.type==="hangup"){removePeer(from);return;}
+  const p=getPeer(from),flush=async()=>{for(const c of p.pend.splice(0))await p.pc.addIceCandidate(new RTCIceCandidate(c));};
+  if(s.type==="offer"){
+   if(p.pc.signalingState!=="stable")await p.pc.setLocalDescription({type:"rollback"}).catch(()=>{});
+   await p.pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();
+   const a=await p.pc.createAnswer();await p.pc.setLocalDescription(a);await sendSignal(from,{type:"answer",sdp:a});
+  }else if(s.type==="answer"){await p.pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();}
+  else if(s.type==="ice"&&s.candidate){if(p.pc.remoteDescription)await p.pc.addIceCandidate(new RTCIceCandidate(s.candidate));else p.pend.push(s.candidate);}
+ }catch(e){console.error("signal",e);}
+}
+async function pollSignals(){
+ if(!call||!localStream)return;
+ const {data}=await sb.from("call_signals").select("*").eq("call_id",call.id).eq("recipient_id",me.id).gt("id",lastSig).order("id");
+ for(const r of data||[])await handleSignal(r);
+}
+async function subscribeSignals(){
+ const id=call.id;if(sigChan)sb.removeChannel(sigChan);lastSig=0;
+ sigChan=sb.channel("call-signals-"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"call_id=eq."+id},p=>handleSignal(p.new)).subscribe();
+ await pollSignals();
+}
+function showCallUI(incoming){
+ const v=call.type==="video";
+ $("callLayer").classList.add("show");$("callLayer").classList.toggle("video",v);
+ $("callStatus").textContent=incoming?`Incoming ${call.type} call`+(call.count>2?` · ${call.count} people`:""):"Calling…";
+ $("acceptBtn").classList.toggle("hidden",!incoming);
+ $("localVideo").classList.toggle("hidden",!v||incoming);
+ clearTimeout(ringTimer);
+ ringTimer=setTimeout(()=>{if(call&&!callTick){if(!call.incomingPending)toast("No answer.");endCall();}},45000);
+ renderTiles();
+}
+async function onRinging(r){
+ if(!me)return;
+ if(call){if(call.id!==r.call_id)await sb.rpc("decline_call",{p_call:r.call_id});return;}
+ call={id:r.call_id,type:r.call_type,incoming:true,incomingPending:true,otherName:r.inviter_name||"Incoming call",parts:new Map(),count:Number(r.party_count)||2};
+ showCallUI(true);startPartWatch();await refreshParts();
 }
 async function checkRinging(){
  if(!me||call)return;
- const since=new Date(Date.now()-40000).toISOString();
- const {data}=await sb.from("call_sessions").select("*").eq("callee_id",me.id).eq("status","ringing").gt("created_at",since).order("created_at",{ascending:false}).limit(1);
+ const {data}=await sb.rpc("get_incoming_call");
  if(data&&data[0])await onRinging(data[0]);
 }
 function subscribeIncomingCalls(){
  if(incomingChannel)sb.removeChannel(incomingChannel);
- incomingChannel=sb.channel("incoming-"+me.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_sessions",filter:"callee_id=eq."+me.id},p=>onRinging(p.new)).subscribe();
+ incomingChannel=sb.channel("incoming-"+me.id).on("postgres_changes",{event:"*",schema:"public",table:"call_participants",filter:"user_id=eq."+me.id},()=>checkRinging()).subscribe();
  clearInterval(ringPoll);ringPoll=setInterval(checkRinging,3000);
 }
-function showCallUI(incoming){
- const v=call.type==="video";$("callLayer").classList.add("show");$("callLayer").classList.toggle("video",v);$("callAvatar").textContent=(call.otherName||"B").slice(0,2).toUpperCase();$("callTitle").textContent=call.otherName||"BOUNCY call";
- $("callStatus").textContent=incoming?`Incoming ${call.type} call`:"Calling…";
- $("callAvatar").classList.toggle("hidden",v);$("remoteVideo").classList.toggle("hidden",!v);$("localVideo").classList.toggle("hidden",!v);
- $("acceptBtn").classList.toggle("hidden",!incoming);
- clearTimeout(ringTimer);if(!incoming)ringTimer=setTimeout(()=>{if(call&&$("callStatus").textContent==="Calling…"){toast("No answer.");sb.from("call_sessions").update({status:"missed"}).eq("id",call.id).then(()=>{});endCall();}},45000);
-}
-function watchCallStatus(){
- if(callChannel)sb.removeChannel(callChannel);const id=call.id;
- callChannel=sb.channel("call-status-"+id).on("postgres_changes",{event:"UPDATE",schema:"public",table:"call_sessions",filter:"id=eq."+id},p=>{
-  if(!call||call.id!==id)return;
-  if(["ended","rejected","missed"].includes(p.new.status)){if(p.new.status==="rejected")toast("Call declined.");cleanupCall();}
- }).subscribe();
-}
 async function startCall(type){
- if(!cur){toast("Open a conversation first.");return;}
  if(call)return;
- call={caller_id:me.id,callee_id:cur.other_id,type,incoming:false,otherName:cur.name};
+ if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
+ call={type,incoming:false,incomingPending:false,otherName:cur.name,parts:new Map(),count:2};
  try{
-  const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select().single();
-  if(error)throw error;call.id=data.id;showCallUI(false);
-  await preparePeer();await subscribeCallSignals();watchCallStatus();
-  const offer=await pc.createOffer();await pc.setLocalDescription(offer);await sendSignal({type:"offer",sdp:offer});
+  await getMedia(type);
+  const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select("id").single();
+  if(error)throw error;
+  call.id=data.id;showCallUI(false);await subscribeSignals();startPartWatch();await refreshParts();
  }catch(e){toast("Could not start call: "+errMsg(e));await endCall();}
 }
-async function preparePeer(){
- localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:call.type==="video"});
- $("localVideo").srcObject=localStream;
- pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
- localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
- pc.ontrack=e=>{(call.type==="video"?$("remoteVideo"):$("remoteAudio")).srcObject=e.streams[0];if(!callTick){clearTimeout(ringTimer);const t0=Date.now();callTick=setInterval(()=>{const d=Math.floor((Date.now()-t0)/1000);$("callStatus").textContent=String(Math.floor(d/60)).padStart(2,"0")+":"+String(d%60).padStart(2,"0");},1000);$("callStatus").textContent="00:00";}};
- pc.onicecandidate=e=>{if(e.candidate)sendSignal({type:"ice",candidate:e.candidate.toJSON()}).catch(()=>{});};
- pc.onconnectionstatechange=()=>{if(pc&&pc.connectionState==="failed"){toast("Connection lost.");endCall();}};
-}
-async function subscribeCallSignals(){
- const id=call.id;
- const ch=sb.channel("call-signals-"+id).on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"call_id=eq."+id},p=>handleSignal(p.new)).subscribe();
- callSignalChannel=ch;
- const {data}=await sb.from("call_signals").select("*").eq("call_id",id).order("id");
- for(const s of data||[])await handleSignal(s);
-}
-let callSignalChannel=null;
-async function sendSignal(signal){
- if(!call)return;const to=me.id===call.caller_id?call.callee_id:call.caller_id;
- const {error}=await sb.from("call_signals").insert({call_id:call.id,sender_id:me.id,recipient_id:to,signal});if(error)throw error;
-}
-async function handleSignal(row){
- if(!call||!pc||row.recipient_id!==me.id||seen.has(row.id))return;seen.add(row.id);const s=row.signal;
- const flush=async()=>{for(const c of pendingIce.splice(0))await pc.addIceCandidate(new RTCIceCandidate(c));};
- try{
-  if(s.type==="offer"&&call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();const a=await pc.createAnswer();await pc.setLocalDescription(a);await sendSignal({type:"answer",sdp:a});}
-  else if(s.type==="answer"&&!call.incoming){await pc.setRemoteDescription(new RTCSessionDescription(s.sdp));await flush();}
-  else if(s.type==="ice"&&s.candidate){if(pc.remoteDescription)await pc.addIceCandidate(new RTCIceCandidate(s.candidate));else pendingIce.push(s.candidate);}
-  else if(s.type==="hangup")cleanupCall();
- }catch(e){console.error("signal",e);}
-}
 async function acceptCall(){
+ if(!call||!call.incomingPending)return;
  try{
   $("acceptBtn").classList.add("hidden");$("callStatus").textContent="Connecting…";
-  await sb.from("call_sessions").update({status:"accepted",answered_at:new Date().toISOString()}).eq("id",call.id);
-  await preparePeer();await subscribeCallSignals();
+  await getMedia(call.type);
+  const {error}=await sb.rpc("join_call",{p_call:call.id});if(error)throw error;
+  call.incomingPending=false;$("localVideo").classList.toggle("hidden",call.type!=="video");
+  await subscribeSignals();await refreshParts();
+  const mj=Date.parse(call.parts.get(me.id)?.joined_at||0);
+  for(const [u,p] of call.parts){
+   if(u===me.id||p.status!=="joined")continue;
+   const t=Date.parse(p.joined_at||0);
+   if(t<mj||(t===mj&&u<me.id))await offerTo(u);
+  }
+  syncCallBtns();
  }catch(e){toast("Could not answer: "+errMsg(e));await endCall();}
 }
+function addToCall(){
+ if(!call||call.incomingPending)return;
+ const inCall=new Set(callOthers().map(([u])=>u));inCall.add(me.id);
+ const list=chats.filter(c=>c.kind==="dm"&&!inCall.has(c.other_id));
+ $("addCallTitle").textContent=`Add to call (${inCall.size} of 4)`;
+ $("addCallList").innerHTML=list.map(c=>`<div class="hit" data-act="inviteCall" data-id="${esc(c.other_id)}">${avatar(c.person)}<div><b>${esc(c.name)}</b><small>${onlineIds.has(c.other_id)?"Online":"Tap to call"}</small></div></div>`).join("")||'<p class="mute">Start a chat with someone first, then you can add them here.</p>';
+ $("addCallModal").classList.add("show");
+}
+async function inviteCall(a){
+ const {error}=await sb.rpc("add_call_participant",{p_call:call.id,p_user:a.dataset.id});if(error)throw error;
+ closeAll();toast("Calling…");refreshParts();
+}
 async function endCall(){
- if(call){
-  const wasRinging=call.incoming&&!$("acceptBtn").classList.contains("hidden");
-  try{await sendSignal({type:"hangup"});}catch{}
-  try{await sb.from("call_sessions").update({status:wasRinging?"rejected":"ended",ended_at:new Date().toISOString()}).eq("id",call.id);}catch{}
+ if(call&&call.id){
+  const id=call.id,pending=call.incomingPending;
+  if(!pending)for(const u of peers.keys())sendSignal(u,{type:"hangup"}).catch(()=>{});
+  try{await sb.rpc(pending?"decline_call":"leave_call",{p_call:id});}catch{}
  }
  cleanupCall();
 }
 function cleanupCall(){
- clearTimeout(ringTimer);clearInterval(callTick);callTick=null;
- if(pc){pc.ontrack=pc.onicecandidate=pc.onconnectionstatechange=null;pc.close();pc=null;}
+ clearTimeout(ringTimer);clearInterval(callTick);callTick=null;clearInterval(partPoll);partPoll=null;
+ for(const u of [...peers.keys()])removePeer(u);
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
- for(const id of ["remoteVideo","remoteAudio","localVideo"])$(id).srcObject=null;
- $("callLayer").classList.remove("show");
- for(const c of [callChannel,callSignalChannel])if(c)sb.removeChannel(c);
- callChannel=callSignalChannel=null;call=null;seen.clear();pendingIce=[];
+ $("localVideo").srcObject=null;$("callGrid").innerHTML="";$("callLayer").classList.remove("show","video");
+ for(const c of [sigChan,partChan])if(c)sb.removeChannel(c);
+ sigChan=partChan=null;call=null;seen.clear();closeAll();
 }
-const toggle=kind=>localStream?.[kind==="a"?"getAudioTracks":"getVideoTracks"]().forEach(t=>t.enabled=!t.enabled);
 
 /* ---------- VOICE NOTES / FEED / STORIES ---------- */
 let tab="chats",feed=[],feedEnd=false,feedBusy=false,storyGroups=[],sv=null,svTimer=null,openPost=null,postFile=null,rec=null,vid=null;
@@ -1161,11 +1293,11 @@ const PCOLS="id,display_name,username,avatar_url,bio,created_at,language";
 const LANGS=[["en","English"],["zu","isiZulu"],["af","Afrikaans"],["fr","Français"],["pt","Português"]];
 const DIALS=[["ZA","+27"],["ZW","+263"],["MZ","+258"],["BW","+267"],["NA","+264"],["LS","+266"],["SZ","+268"],["MW","+265"],["ZM","+260"],["AO","+244"],["TZ","+255"],["KE","+254"],["UG","+256"],["RW","+250"],["NG","+234"],["GH","+233"],["CM","+237"],["CD","+243"],["US","+1"],["GB","+44"],["FR","+33"],["PT","+351"],["DE","+49"],["BR","+55"],["IN","+91"]];
 const T={
- en:{welcome:"Welcome to BOUNCY",welcomeSub:"Chat, call and share moments with the people you love.",language:"Language",phone:"Phone number",phonePh:"82 123 4567",next:"NEXT",haveAcct:"I already have an account",createTitle:"Create your account",createSub:"Use an email and a strong password.",email:"Email address",confirmEmail:"Confirm email address",password:"Password",passHint:"At least 8 characters with upper and lower case letters and a number.",profileTitle:"Set up your profile",profileSub:"This is how friends will see you.",name:"Your name",username:"Username",bio:"Bio (optional)",done:"DONE",back:"Back",login:"LOG IN",loginTitle:"Welcome back",forgot:"Forgot password?",addPhoto:"Add photo"},
- zu:{welcome:"Siyakwamukela ku-BOUNCY",welcomeSub:"Xoxa, shaya ucingo futhi wabelane ngezikhathi ezimnandi nabantu obathandayo.",language:"Ulimi",phone:"Inombolo yocingo",phonePh:"82 123 4567",next:"OKULANDELAYO",haveAcct:"Sengivele nginayo i-akhawunti",createTitle:"Dala i-akhawunti yakho",createSub:"Sebenzisa i-imeyili nephasiwedi eqinile.",email:"Ikheli le-imeyili",confirmEmail:"Qinisekisa ikheli le-imeyili",password:"Iphasiwedi",passHint:"Okungenani izinhlamvu eziyi-8 ezinezinhlamvu ezinkulu nezincane nenombolo.",profileTitle:"Misa iphrofayili yakho",profileSub:"Yile ndlela abangane abazokubona ngayo.",name:"Igama lakho",username:"Igama lomsebenzisi",bio:"Mayelana nawe (akunyanzelekile)",done:"KUPHELILE",back:"Emuva",login:"NGENA",loginTitle:"Siyakwamukela futhi",forgot:"Ukhohlwe iphasiwedi?",addPhoto:"Faka isithombe"},
- af:{welcome:"Welkom by BOUNCY",welcomeSub:"Gesels, bel en deel oomblikke met die mense vir wie jy lief is.",language:"Taal",phone:"Foonnommer",phonePh:"82 123 4567",next:"VOLGENDE",haveAcct:"Ek het reeds 'n rekening",createTitle:"Skep jou rekening",createSub:"Gebruik 'n e-posadres en 'n sterk wagwoord.",email:"E-posadres",confirmEmail:"Bevestig e-posadres",password:"Wagwoord",passHint:"Minstens 8 karakters met hoof- en kleinletters en 'n syfer.",profileTitle:"Stel jou profiel op",profileSub:"So sal jou vriende jou sien.",name:"Jou naam",username:"Gebruikersnaam",bio:"Oor jou (opsioneel)",done:"KLAAR",back:"Terug",login:"MELD AAN",loginTitle:"Welkom terug",forgot:"Wagwoord vergeet?",addPhoto:"Voeg foto by"},
- fr:{welcome:"Bienvenue sur BOUNCY",welcomeSub:"Discutez, appelez et partagez des moments avec ceux que vous aimez.",language:"Langue",phone:"Numéro de téléphone",phonePh:"82 123 4567",next:"SUIVANT",haveAcct:"J'ai déjà un compte",createTitle:"Créez votre compte",createSub:"Utilisez un e-mail et un mot de passe solide.",email:"Adresse e-mail",confirmEmail:"Confirmez l'adresse e-mail",password:"Mot de passe",passHint:"Au moins 8 caractères avec majuscules, minuscules et un chiffre.",profileTitle:"Configurez votre profil",profileSub:"C'est ainsi que vos amis vous verront.",name:"Votre nom",username:"Nom d'utilisateur",bio:"À propos de vous (facultatif)",done:"TERMINER",back:"Retour",login:"SE CONNECTER",loginTitle:"Content de vous revoir",forgot:"Mot de passe oublié ?",addPhoto:"Ajouter une photo"},
- pt:{welcome:"Bem-vindo ao BOUNCY",welcomeSub:"Converse, ligue e partilhe momentos com quem ama.",language:"Idioma",phone:"Número de telefone",phonePh:"82 123 4567",next:"SEGUINTE",haveAcct:"Já tenho uma conta",createTitle:"Crie a sua conta",createSub:"Use um e-mail e uma palavra-passe forte.",email:"Endereço de e-mail",confirmEmail:"Confirme o e-mail",password:"Palavra-passe",passHint:"Pelo menos 8 caracteres com maiúsculas, minúsculas e um número.",profileTitle:"Configure o seu perfil",profileSub:"É assim que os seus amigos o vão ver.",name:"O seu nome",username:"Nome de utilizador",bio:"Sobre si (opcional)",done:"CONCLUIR",back:"Voltar",login:"ENTRAR",loginTitle:"Bem-vindo de volta",forgot:"Esqueceu a palavra-passe?",addPhoto:"Adicionar foto"}
+ en:{f1:"Chats",f2:"Group calls",f3:"Stories",privacy:"Your number helps friends find you. It is never shown to anyone.",welcome:"Welcome to BOUNCY",welcomeSub:"Chat, call and share moments with the people you love.",language:"Language",phone:"Phone number",phonePh:"82 123 4567",next:"NEXT",haveAcct:"I already have an account",createTitle:"Create your account",createSub:"Use an email and a strong password.",email:"Email address",confirmEmail:"Confirm email address",password:"Password",passHint:"At least 8 characters with upper and lower case letters and a number.",profileTitle:"Set up your profile",profileSub:"This is how friends will see you.",name:"Your name",username:"Username",bio:"Bio (optional)",done:"DONE",back:"Back",login:"LOG IN",loginTitle:"Welcome back",forgot:"Forgot password?",addPhoto:"Add photo"},
+ zu:{f1:"Izingxoxo",f2:"Amakholi eqembu",f3:"Izindaba",privacy:"Inombolo yakho isiza abangane ukukuthola. Ayiboniswa muntu.",welcome:"Siyakwamukela ku-BOUNCY",welcomeSub:"Xoxa, shaya ucingo futhi wabelane ngezikhathi ezimnandi nabantu obathandayo.",language:"Ulimi",phone:"Inombolo yocingo",phonePh:"82 123 4567",next:"OKULANDELAYO",haveAcct:"Sengivele nginayo i-akhawunti",createTitle:"Dala i-akhawunti yakho",createSub:"Sebenzisa i-imeyili nephasiwedi eqinile.",email:"Ikheli le-imeyili",confirmEmail:"Qinisekisa ikheli le-imeyili",password:"Iphasiwedi",passHint:"Okungenani izinhlamvu eziyi-8 ezinezinhlamvu ezinkulu nezincane nenombolo.",profileTitle:"Misa iphrofayili yakho",profileSub:"Yile ndlela abangane abazokubona ngayo.",name:"Igama lakho",username:"Igama lomsebenzisi",bio:"Mayelana nawe (akunyanzelekile)",done:"KUPHELILE",back:"Emuva",login:"NGENA",loginTitle:"Siyakwamukela futhi",forgot:"Ukhohlwe iphasiwedi?",addPhoto:"Faka isithombe"},
+ af:{f1:"Gesprekke",f2:"Groepoproepe",f3:"Stories",privacy:"Jou nommer help vriende om jou te vind. Dit word nooit aan enigiemand gewys nie.",welcome:"Welkom by BOUNCY",welcomeSub:"Gesels, bel en deel oomblikke met die mense vir wie jy lief is.",language:"Taal",phone:"Foonnommer",phonePh:"82 123 4567",next:"VOLGENDE",haveAcct:"Ek het reeds 'n rekening",createTitle:"Skep jou rekening",createSub:"Gebruik 'n e-posadres en 'n sterk wagwoord.",email:"E-posadres",confirmEmail:"Bevestig e-posadres",password:"Wagwoord",passHint:"Minstens 8 karakters met hoof- en kleinletters en 'n syfer.",profileTitle:"Stel jou profiel op",profileSub:"So sal jou vriende jou sien.",name:"Jou naam",username:"Gebruikersnaam",bio:"Oor jou (opsioneel)",done:"KLAAR",back:"Terug",login:"MELD AAN",loginTitle:"Welkom terug",forgot:"Wagwoord vergeet?",addPhoto:"Voeg foto by"},
+ fr:{f1:"Discussions",f2:"Appels de groupe",f3:"Stories",privacy:"Votre numéro aide vos amis à vous trouver. Il n'est jamais affiché.",welcome:"Bienvenue sur BOUNCY",welcomeSub:"Discutez, appelez et partagez des moments avec ceux que vous aimez.",language:"Langue",phone:"Numéro de téléphone",phonePh:"82 123 4567",next:"SUIVANT",haveAcct:"J'ai déjà un compte",createTitle:"Créez votre compte",createSub:"Utilisez un e-mail et un mot de passe solide.",email:"Adresse e-mail",confirmEmail:"Confirmez l'adresse e-mail",password:"Mot de passe",passHint:"Au moins 8 caractères avec majuscules, minuscules et un chiffre.",profileTitle:"Configurez votre profil",profileSub:"C'est ainsi que vos amis vous verront.",name:"Votre nom",username:"Nom d'utilisateur",bio:"À propos de vous (facultatif)",done:"TERMINER",back:"Retour",login:"SE CONNECTER",loginTitle:"Content de vous revoir",forgot:"Mot de passe oublié ?",addPhoto:"Ajouter une photo"},
+ pt:{f1:"Conversas",f2:"Chamadas em grupo",f3:"Stories",privacy:"O seu número ajuda os amigos a encontrá-lo. Nunca é mostrado a ninguém.",welcome:"Bem-vindo ao BOUNCY",welcomeSub:"Converse, ligue e partilhe momentos com quem ama.",language:"Idioma",phone:"Número de telefone",phonePh:"82 123 4567",next:"SEGUINTE",haveAcct:"Já tenho uma conta",createTitle:"Crie a sua conta",createSub:"Use um e-mail e uma palavra-passe forte.",email:"Endereço de e-mail",confirmEmail:"Confirme o e-mail",password:"Palavra-passe",passHint:"Pelo menos 8 caracteres com maiúsculas, minúsculas e um número.",profileTitle:"Configure o seu perfil",profileSub:"É assim que os seus amigos o vão ver.",name:"O seu nome",username:"Nome de utilizador",bio:"Sobre si (opcional)",done:"CONCLUIR",back:"Voltar",login:"ENTRAR",loginTitle:"Bem-vindo de volta",forgot:"Esqueceu a palavra-passe?",addPhoto:"Adicionar foto"}
 };
 const guess=()=>{const l=(navigator.language||"en").slice(0,2);return T[l]?l:"en";};
 const ob={lang:localStorage.getItem("lang")||guess(),dial:"+27",phone:"",email:"",pass:"",photo:null,unOk:false};
@@ -1259,13 +1391,14 @@ document.addEventListener("keydown",e=>{
  const btn=box.querySelector(".btn:not(.alt)");if(btn){e.preventDefault();btn.click();}
 });
 
+Object.assign(IC,{mic:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`,micOff:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/><path d="M3 3l18 18"/></svg>`,cam:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`,camOff:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/><path d="M3 3l18 18"/></svg>`});
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
- voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
+ voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),addToCall,inviteCall,cam:()=>toggle("v"),
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
  segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
