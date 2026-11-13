@@ -227,26 +227,96 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
 .thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;display:flex;align-items:center;justify-content:center}
 .thumb button svg{width:14px;height:14px}
+/* ---- splash + onboarding ---- */
+#splash{position:fixed;inset:0;background:radial-gradient(800px 520px at 50% 38%,#33112a,var(--bg));z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .45s}
+#splash.out{opacity:0;pointer-events:none}
+.spBall{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#7a5af8);animation:drop 1.15s cubic-bezier(.35,0,.45,1) both;box-shadow:0 10px 40px rgba(255,45,135,.5)}
+@keyframes drop{0%{transform:translateY(-260px) scale(1,1);opacity:0}12%{opacity:1}50%{transform:translateY(0) scale(1.4,.6)}68%{transform:translateY(-80px) scale(.9,1.12)}84%{transform:translateY(0) scale(1.22,.78)}100%{transform:translateY(0) scale(1,1)}}
+.spWord{display:flex;gap:3px;margin-top:18px}
+.spWord span{display:inline-block;font-size:48px;font-weight:900;letter-spacing:.05em;background:linear-gradient(135deg,var(--pink),#7a5af8);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;animation:hop .75s cubic-bezier(.3,1.6,.5,1) forwards;animation-delay:calc(.95s + var(--i)*.09s)}
+@keyframes hop{0%{opacity:0;transform:translateY(46px) scaleY(.55)}60%{opacity:1;transform:translateY(-16px) scaleY(1.1)}100%{opacity:1;transform:none}}
+.spTag{margin-top:12px;color:var(--mute);letter-spacing:.2em;font-size:13px;opacity:0;animation:fadeIn .6s 1.8s forwards}
+@keyframes fadeIn{to{opacity:1}}
+#authGate{align-items:flex-start!important}
+.wel{width:100%;max-width:420px;margin:auto}
+.wLogo{display:flex;flex-direction:column;align-items:center;margin-bottom:10px}
+.wBall{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--pink),#7a5af8);animation:bob 1.3s ease-in-out infinite;margin-bottom:4px}
+@keyframes bob{0%,100%{transform:translateY(0) scale(1.15,.85)}50%{transform:translateY(-22px) scale(.95,1.05)}}
+.wel h1{font-size:26px;text-align:center;margin:8px 0 6px}.wsub{color:var(--mute);text-align:center;margin-bottom:18px}
+.lbl{display:block;font-size:13px;color:var(--mute);margin:10px 0 0}
+.phoneRow{display:flex;gap:8px}.phoneRow select{width:118px;flex-shrink:0}.phoneRow input{flex:1;min-width:0}
+select.f{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#8b97a5 50%),linear-gradient(135deg,#8b97a5 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 12px) 55%;background-size:6px 6px;background-repeat:no-repeat;padding-right:32px;color:var(--text)}
+.err{color:#ff8b8b;font-size:14px;min-height:20px;margin:6px 0}
+.dots{display:flex;gap:6px;justify-content:center;margin:2px 0 12px}.dots i{width:24px;height:4px;border-radius:2px;background:#374151}.dots i.on{background:var(--pink)}
+.ob{position:fixed;inset:0;z-index:105;display:none;align-items:flex-end;justify-content:center;background:rgba(5,8,12,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}.ob.show{display:flex}
+.obBox{background:var(--panel);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:10px 20px calc(env(safe-area-inset-bottom) + 20px);max-height:94dvh;overflow:auto;animation:sheet .26s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px rgba(0,0,0,.45)}
+.obBox::before{content:"";display:block;width:42px;height:4px;border-radius:2px;background:#374151;margin:2px auto 12px}
+.obBox h2{font-size:22px;margin-bottom:4px}.obBox p.sub{color:var(--mute);margin-bottom:10px}
+.pwwrap{position:relative}.pwwrap .f{padding-right:50px}.pwwrap button{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--mute);width:40px;height:40px;display:flex;align-items:center;justify-content:center}
+#meter{display:flex;gap:4px;margin:2px 0 6px}#meter i{flex:1;height:4px;border-radius:2px;background:#374151}
+#meter[data-l="1"] i:nth-child(1){background:#ef4444}#meter[data-l="2"] i:nth-child(-n+2){background:#f59e0b}#meter[data-l="3"] i:nth-child(-n+3){background:#84cc16}#meter[data-l="4"] i{background:var(--ok)}
+.ust{font-size:13px;margin:-2px 0 6px;min-height:16px;color:var(--mute)}.ust.ok{color:var(--ok)}.ust.bad{color:#ff8b8b}
+.obAv{width:104px;height:104px;border-radius:50%;margin:2px auto 12px;background:var(--panel2) center/cover no-repeat;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--mute);cursor:pointer;border:2px dashed #3a4452;font-size:12px}
+.obAv.has{border:2px solid var(--pink)}.obAv.has svg,.obAv.has span{display:none}
+.seg{display:flex;background:var(--panel2);border-radius:12px;padding:4px;margin-bottom:10px}.seg button{flex:1;border:0;background:none;padding:10px;border-radius:9px;color:var(--mute);font-weight:600}.seg button.on{background:var(--pink);color:#fff}
+.hint{color:var(--mute);font-size:13px;margin:0 0 8px}
 </style>
 </head>
 <body>
 
-<div id="authGate">
- <form class="authBox" id="authForm" novalidate>
-  <div class="logo">BOUNCY</div>
-  <p id="authSub">Sign in to message and call people.</p>
-  <div id="signupFields" class="hidden">
-   <input class="f" id="authDisplay" placeholder="Your name" autocomplete="name" maxlength="40">
-   <input class="f" id="authUsername" placeholder="Username (e.g. sisanda)" autocomplete="username" maxlength="24" autocapitalize="none">
-  </div>
-  <input class="f" id="authEmail" type="email" placeholder="Email address" autocomplete="email">
-  <input class="f" id="authPassword" type="password" placeholder="Password (8+ characters)" autocomplete="current-password" minlength="8">
-  <button class="btn" id="authSubmit" type="submit">SIGN IN</button>
-  <button class="btn alt" id="authSwitch" type="button">CREATE ACCOUNT</button>
-  <div id="authError" role="alert"></div>
- </form>
+<div id="splash"><div class="spBall"></div><div class="spWord"><span style="--i:0">B</span><span style="--i:1">O</span><span style="--i:2">U</span><span style="--i:3">N</span><span style="--i:4">C</span><span style="--i:5">Y</span></div><div class="spTag">CHAT. CALL. SHARE.</div></div>
+<div id="authGate" class="hidden">
+ <div class="wel">
+  <div class="wLogo"><div class="wBall"></div><div class="logo">BOUNCY</div></div>
+  <div class="dots"><i class="on"></i><i></i><i></i></div>
+  <h1 data-t="welcome">Welcome to BOUNCY</h1>
+  <p class="wsub" data-t="welcomeSub">Chat, call and share moments with the people you love.</p>
+  <label class="lbl" for="obLang" data-t="language">Language</label>
+  <select class="f" id="obLang"></select>
+  <label class="lbl" for="obPhone" data-t="phone">Phone number</label>
+  <div class="phoneRow"><select class="f" id="obDial" aria-label="Country code"></select><input class="f" id="obPhone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="82 123 4567" data-tp="phonePh"></div>
+  <div class="err" id="obErr1" role="alert"></div>
+  <button class="btn" id="obNext1" data-act="obNext1" data-t="next">NEXT</button>
+  <button class="btn alt" data-act="obToLogin" data-t="haveAcct">I already have an account</button>
+ </div>
 </div>
-
+<div id="obStep2" class="ob"><div class="obBox">
+ <div class="dots"><i class="on"></i><i class="on"></i><i></i></div>
+ <h2 data-t="createTitle">Create your account</h2><p class="sub" data-t="createSub">Use an email and a strong password.</p>
+ <input class="f" id="obEmail" type="email" autocomplete="email" data-tp="email" placeholder="Email address">
+ <input class="f" id="obEmail2" type="email" autocomplete="off" data-tp="confirmEmail" placeholder="Confirm email address">
+ <div class="pwwrap"><input class="f" id="obPass" type="password" autocomplete="new-password" data-tp="password" placeholder="Password"><button type="button" data-act="pwToggle" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+ <div id="meter" data-l="0"><i></i><i></i><i></i><i></i></div>
+ <div class="mute" style="display:flex;justify-content:space-between;gap:10px"><span data-t="passHint">At least 8 characters with upper and lower case letters and a number.</span><b id="meterTxt"></b></div>
+ <div class="err" id="obErr2" role="alert"></div>
+ <button class="btn" data-act="obNext2" data-t="next">NEXT</button>
+ <button class="btn alt" data-act="obBack2" data-t="back">Back</button>
+</div></div>
+<div id="obStep3" class="ob"><div class="obBox">
+ <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+ <h2 data-t="profileTitle">Set up your profile</h2><p class="sub" data-t="profileSub">This is how friends will see you.</p>
+ <div class="obAv" id="obAvatar" data-act="obPickPhoto" role="button" aria-label="Add photo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-t="addPhoto">Add photo</span></div>
+ <input class="f" id="obName" maxlength="40" autocomplete="name" data-tp="name" placeholder="Your name">
+ <input class="f" id="obUsername" maxlength="24" autocapitalize="none" autocomplete="off" spellcheck="false" data-tp="username" placeholder="Username">
+ <div class="ust" id="unState"></div>
+ <textarea class="f" id="obBio" rows="2" maxlength="160" data-tp="bio" placeholder="Bio (optional)"></textarea>
+ <div class="err" id="obErr3" role="alert"></div>
+ <button class="btn" id="obDone" data-act="obDone" data-t="done">DONE</button>
+ <button class="btn alt" data-act="obBack3" data-t="back">Back</button>
+</div></div>
+<div id="obCheck" class="ob"><div class="obBox">
+ <h2>Check your email</h2><p class="sub">We sent a confirmation link to your email address. Open it, then come back and log in.</p>
+ <button class="btn" data-act="obToLogin">LOG IN</button>
+</div></div>
+<div id="loginSheet" class="ob"><div class="obBox">
+ <h2 data-t="loginTitle">Welcome back</h2><p class="sub">&nbsp;</p>
+ <input class="f" id="lgEmail" type="email" autocomplete="email" data-tp="email" placeholder="Email address">
+ <div class="pwwrap"><input class="f" id="lgPass" type="password" autocomplete="current-password" data-tp="password" placeholder="Password"><button type="button" data-act="pwToggle" aria-label="Show password"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+ <div class="err" id="lgErr" role="alert"></div>
+ <button class="btn" id="lgBtn" data-act="doLogin" data-t="login">LOG IN</button>
+ <button class="btn alt" data-act="forgotPw" data-t="forgot">Forgot password?</button>
+ <button class="btn alt" data-act="obCloseLogin" data-t="back">Back</button>
+</div></div>
 <div id="callLayer">
  <div id="callTitle" style="font-size:24px;font-weight:700">Calling…</div>
  <div id="callStatus" style="color:var(--mute);margin-top:6px">Connecting</div>
@@ -303,14 +373,14 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
  <div class="inp hidden" id="recBar"><button class="iconBtn" data-act="recCancel" aria-label="Cancel recording"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><span class="recdot"></span><span id="recTime">0:00</span><div id="recWave"></div><button class="send" data-act="recSend" aria-label="Send voice note"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button></div>
 </div>
 
-<div id="modal"><div class="box">
- <h3>New chat</h3>
- <input class="f" id="newName" placeholder="Search username" autocapitalize="none" autocomplete="off">
+<div id="modal"><div class="box"><h3>New chat</h3>
+ <div class="seg"><button id="segPhone" class="on" data-act="segPhone">Phone number</button><button id="segUser" data-act="segUser">Username or name</button></div>
+ <p class="hint" id="modeHint"></p>
+ <input class="f" id="newName" placeholder="Phone number" autocapitalize="none" autocomplete="off">
+ <button class="btn alt" id="contactsBtn" data-act="scanContacts">Find friends in my contacts</button>
  <div id="peopleResults"></div>
  <textarea class="f hidden" id="newMsg" rows="2" maxlength="5000" placeholder="First message (optional)"></textarea>
- <button class="btn" id="startBtn" data-act="createChat">START CHAT</button>
- <button class="btn alt" data-act="closeAll">Cancel</button>
-</div></div>
+ <button class="btn" id="startBtn" data-act="createChat">START CHAT</button></div></div>
 <input type="file" id="fileIn" class="hidden">
 <div id="attModal" class="modal2"><div class="box"><h3>Send</h3>
  <button class="att" data-act="attMedia"><span class="atic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></span><div><b>Photo or video</b><span class="mute">Send normally or as view once</span></div></button>
@@ -331,7 +401,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 <div id="vwModal" class="modal2"><div class="box"><h3 id="vwTitle">Viewed by</h3><div id="vwList" style="max-height:50vh;overflow:auto;margin:10px 0"></div><button class="btn alt" data-act="closeAll">Close</button></div></div>
 <div id="postModal" class="modal2"><div class="box"><h3>New post</h3><div class="who" id="postWho"></div><textarea class="f" id="postText" rows="4" maxlength="3000" placeholder="What's happening?"></textarea><div class="count"><span id="postCount">0</span>/3000</div><button class="btn alt" data-act="pickPostFile"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg> Add photo or video</span></button><p class="hidden" id="postFileName"></p><div id="postPrev" class="prev hidden"></div><button class="btn" id="postBtn" data-act="submitPost">POST</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="cmtModal" class="modal2"><div class="box"><h3>Comments</h3><div id="cmtList"></div><div id="cmtReply" class="replybar hidden"></div><input class="f" id="cmtInp" maxlength="1000" placeholder="Add a comment" autocomplete="off"><button class="btn" data-act="sendCmt">SEND</button><button class="btn alt" data-act="closeAll">Close</button></div></div>
-<div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><div class="who" id="setWho"></div><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
+<div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><div class="who" id="setWho"></div><input class="f" id="setName" maxlength="40" placeholder="Name"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><input class="f" id="setPhone" type="tel" placeholder="Phone number, so friends can find you"><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><div id="stMedia"></div><div id="stCap"></div><div id="stFoot"></div>
 <div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
 <div id="toast" role="status"></div>
@@ -351,37 +421,16 @@ function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";cle
 function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url)}">`:`<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;}
 
 /* ---------- AUTH ---------- */
-function setAuthMode(m){authMode=m;const s=m==="signup";$("signupFields").classList.toggle("hidden",!s);$("authSubmit").textContent=s?"CREATE ACCOUNT":"SIGN IN";$("authSwitch").textContent=s?"BACK TO SIGN IN":"CREATE ACCOUNT";$("authPassword").autocomplete=s?"new-password":"current-password";$("authError").textContent="";}
-async function authSubmit(e){
- e.preventDefault();
- const email=$("authEmail").value.trim(),password=$("authPassword").value,out=$("authError");out.textContent="";
- if(!email||password.length<8){out.textContent="Enter your email and a password of 8+ characters.";return;}
- $("authSubmit").disabled=true;
- try{
-  if(authMode==="signup"){
-   const username=$("authUsername").value.trim().replace(/^@/,"").toLowerCase(),display=$("authDisplay").value.trim();
-   if(display.length<2||!/^[a-z0-9_]{3,24}$/.test(username))throw new Error("Enter your name and a username (3–24 letters, numbers or _).");
-   const {data:taken}=await sb.from("profiles").select("id").eq("username",username).maybeSingle();
-   if(taken)throw new Error("That username is taken.");
-   const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:display,username},emailRedirectTo:location.href.split("?")[0]}});
-   if(error)throw error;
-   if(!data.session){out.textContent="Check your email to confirm your account, then sign in.";return;}
-  }else{
-   const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;
-  }
-  await enterApp();
- }catch(x){out.textContent=errMsg(x);}finally{$("authSubmit").disabled=false;}
-}
 async function enterApp(){
  const {data:{user}}=await sb.auth.getUser();me=user;if(!me)return;
- let {data:p,error}=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();
+ let {data:p,error}=await sb.from("profiles").select(PCOLS).eq("id",me.id).maybeSingle();
  if(error)throw error;
  if(!p){
   const md=me.user_metadata||{};
-  const r=await sb.from("profiles").upsert({id:me.id,display_name:md.display_name||"New member",username:(md.username||("user_"+me.id.slice(0,8))).toLowerCase()},{onConflict:"id"}).select().single();
+  const r=await sb.from("profiles").upsert({id:me.id,display_name:md.display_name||"New member",username:(md.username||("user_"+me.id.slice(0,8))).toLowerCase()},{onConflict:"id"}).select(PCOLS).single();
   if(r.error)throw r.error;p=r.data;
  }
- profile=p;$("authGate").classList.add("hidden");
+ profile=p;$("authGate").classList.add("hidden");document.querySelectorAll(".ob").forEach(x=>x.classList.remove("show"));sb.rpc("get_my_phone").then(({data})=>{if(data){const d=[...DIALS].sort((x,y)=>y[1].length-x[1].length).find(x=>data.startsWith(x[1]));if(d)localStorage.setItem("dial",d[1]);}});
  $("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;
  await loadChats();subscribeMessages();subscribeIncomingCalls();subscribePresence();pushInit();
 }
@@ -393,7 +442,7 @@ async function logout(){
   presenceChannel=incomingChannel=msgChannel=null;clearInterval(ringPoll);
   await sb.auth.signOut();
   me=profile=cur=null;chats=[];onlineIds.clear();closeAll();closeChat();
-  $("list").innerHTML="";$("callsList").innerHTML="";$("authPassword").value="";$("authGate").classList.remove("hidden");
+  $("list").innerHTML="";$("callsList").innerHTML="";showAuth();
  }catch(e){toast("Could not log out: "+errMsg(e));}
 }
 
@@ -449,15 +498,40 @@ async function sendMsg(){
 
 /* ---------- NEW CHAT ---------- */
 let picked=null;
-function openNewChat(){picked=null;$("newMsg").classList.add("hidden");$("startBtn").disabled=true;$("modal").classList.add("show");$("newName").value="";$("newMsg").value="";$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';$("newName").focus();}
+let newMode="phone";
+function setNewMode(m){
+ newMode=m;$("segPhone").classList.toggle("on",m==="phone");$("segUser").classList.toggle("on",m==="user");
+ $("newName").placeholder=m==="phone"?"Phone number, e.g. 082 123 4567":"Name or @username";$("newName").type=m==="phone"?"tel":"text";
+ $("contactsBtn").classList.toggle("hidden",m!=="phone");
+ $("modeHint").textContent=m==="phone"?"Looking up people by phone number. Only people using BOUNCY with that number will show up.":"Searching BOUNCY members by name or username.";
+ $("newName").value="";searchPeople();
+}
+function openNewChat(){picked=null;$("newMsg").classList.add("hidden");$("newMsg").value="";$("startBtn").disabled=true;$("modal").classList.add("show");setNewMode("phone");}
+function personRow(p,sub){return `<div class="hit" data-pick="${esc(p.id)}">${avatar(p)}<div><b>${esc(p.display_name||p.username)}</b><small>${esc(sub||("@"+(p.username||"")))}</small></div></div>`;}
 function searchPeople(){
- picked=null;$("startBtn").disabled=true;$("newMsg").classList.add("hidden");const term=$("newName").value.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9_]/g,"");clearTimeout(searchTimer);
- if(term.length<2){$("peopleResults").innerHTML='<p style="color:var(--mute);font-size:13px">Type at least 2 characters of a username.</p>';return;}
+ picked=null;$("startBtn").disabled=true;$("newMsg").classList.add("hidden");
+ const raw=$("newName").value.trim();clearTimeout(searchTimer);
+ if(raw.length<2){$("peopleResults").innerHTML=`<p class="mute">${newMode==="phone"?"Type a phone number, or tap Find friends in my contacts.":"Type at least 2 letters of a name or username."}</p>`;return;}
  searchTimer=setTimeout(async()=>{
-  const {data,error}=await sb.from("profiles").select("id,display_name,username,avatar_url").neq("id",me.id).ilike("username",term+"%").order("username").limit(20);
-  if(error){$("peopleResults").innerHTML=`<p style="color:#ff8b8b">${esc(errMsg(error))}</p>`;return;}
-  $("peopleResults").innerHTML=(data||[]).map(p=>`<div class="hit" data-pick="${esc(p.id)}" data-un="${esc(p.username)}">${avatar(p)}<div><b>${esc(p.display_name||p.username)}</b><small>@${esc(p.username)}</small></div></div>`).join("")||'<p style="color:var(--mute);font-size:13px">No members found.</p>';
- },250);
+  let r;
+  if(newMode==="phone"){
+   const e=toE164(raw);if(!e){$("peopleResults").innerHTML='<p class="mute">Keep typing the full phone number…</p>';return;}
+   r=await sb.rpc("find_by_phone",{p:e});
+  }else r=await sb.rpc("search_people",{q:raw.replace(/^@/,"")});
+  if(r.error){$("peopleResults").innerHTML=`<p style="color:#ff8b8b">${esc(errMsg(r.error))}</p>`;return;}
+  $("peopleResults").innerHTML=(r.data||[]).map(p=>personRow(p,newMode==="phone"?"On BOUNCY · @"+(p.username||""):null)).join("")||`<p class="mute">${newMode==="phone"?"Nobody on BOUNCY uses this number yet.":"No members found."}</p>`;
+ },300);
+}
+async function scanContacts(){
+ if(!("contacts" in navigator&&"ContactsManager" in window)){toast("Your browser can't open your contact list. Type a phone number instead.");return;}
+ let list;try{list=await navigator.contacts.select(["name","tel"],{multiple:true});}catch{return;}
+ const map=new Map();for(const c of list)for(const t of c.tel||[]){const e=toE164(t);if(e&&!map.has(e))map.set(e,(c.name&&c.name[0])||"");}
+ if(!map.size){$("peopleResults").innerHTML='<p class="mute">No phone numbers in the contacts you picked.</p>';return;}
+ $("peopleResults").innerHTML='<p class="mute">Checking your contacts…</p>';
+ const {data,error}=await sb.rpc("find_by_phones",{p:[...map.keys()].slice(0,500)});
+ if(error){$("peopleResults").innerHTML=`<p style="color:#ff8b8b">${esc(errMsg(error))}</p>`;return;}
+ picked=null;$("startBtn").disabled=true;$("newMsg").classList.add("hidden");
+ $("peopleResults").innerHTML=(data||[]).map(p=>personRow(p,"In your contacts as "+(map.get(p.phone)||"a contact"))).join("")||'<p class="mute">None of those contacts are on BOUNCY yet. Invite them!</p>';
 }
 async function createChat(){
  const btn=$("startBtn"),first=$("newMsg").value.trim();
@@ -747,18 +821,19 @@ async function stDel(){
 
 /* profile / settings */
 function refreshMe(){const w=$("setWho");if(w)w.innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><div class="mute">@${esc(profile.username||"")}</div></div>`;$("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;}
-function settings(){closeAll();refreshMe();$("setName").value=profile.display_name||"";$("setBio").value=profile.bio||"";$("setModal").classList.add("show");}
+function settings(){closeAll();refreshMe();$("setName").value=profile.display_name||"";$("setBio").value=profile.bio||"";$("setPhone").value="";sb.rpc("get_my_phone").then(({data})=>{if(data)$("setPhone").value=data;});$("setModal").classList.add("show");}
 async function saveSettings(){
  const display_name=$("setName").value.trim(),bio=$("setBio").value.trim();
  if(display_name.length<2){toast("Name must be at least 2 characters.");return;}
- const {data,error}=await sb.from("profiles").update({display_name,bio,updated_at:new Date().toISOString()}).eq("id",me.id).select().single();
- if(error)throw error;profile=data;refreshMe();closeAll();toast("Profile saved.");
+ const ph=$("setPhone").value.trim();let phone=null;if(ph){phone=toE164(ph);if(!phone){toast("Enter a valid phone number.");return;}}
+ const {data,error}=await sb.from("profiles").update({display_name,bio,...(phone?{phone}:{}),updated_at:new Date().toISOString()}).eq("id",me.id).select(PCOLS).single();
+ if(error){toast(error.code==="23505"?"That phone number is already used by another account.":errMsg(error));return;}profile=data;refreshMe();closeAll();toast("Profile saved.");
 }
 async function changePhoto(){
  const f=await pickFile("image/jpeg,image/png,image/webp");if(!f)return;
  if(f.size>5*1048576){toast("Photo must be under 5 MB.");return;}
  const url=await upload("posts",f);
- const {data,error}=await sb.from("profiles").update({avatar_url:url}).eq("id",me.id).select().single();if(error)throw error;
+ const {data,error}=await sb.from("profiles").update({avatar_url:url}).eq("id",me.id).select(PCOLS).single();if(error)throw error;
  profile=data;refreshMe();toast("Photo updated.");
 }
 
@@ -1081,6 +1156,109 @@ navigator.serviceWorker?.addEventListener("message",e=>{
  else if(d.conversation_id){const c=chats.find(x=>x.id===d.conversation_id);if(c)openChat(c.id);else loadChats().then(()=>openChat(d.conversation_id));}
 });
 
+/* ---------- SPLASH + ONBOARDING ---------- */
+const PCOLS="id,display_name,username,avatar_url,bio,created_at,language";
+const LANGS=[["en","English"],["zu","isiZulu"],["af","Afrikaans"],["fr","Français"],["pt","Português"]];
+const DIALS=[["ZA","+27"],["ZW","+263"],["MZ","+258"],["BW","+267"],["NA","+264"],["LS","+266"],["SZ","+268"],["MW","+265"],["ZM","+260"],["AO","+244"],["TZ","+255"],["KE","+254"],["UG","+256"],["RW","+250"],["NG","+234"],["GH","+233"],["CM","+237"],["CD","+243"],["US","+1"],["GB","+44"],["FR","+33"],["PT","+351"],["DE","+49"],["BR","+55"],["IN","+91"]];
+const T={
+ en:{welcome:"Welcome to BOUNCY",welcomeSub:"Chat, call and share moments with the people you love.",language:"Language",phone:"Phone number",phonePh:"82 123 4567",next:"NEXT",haveAcct:"I already have an account",createTitle:"Create your account",createSub:"Use an email and a strong password.",email:"Email address",confirmEmail:"Confirm email address",password:"Password",passHint:"At least 8 characters with upper and lower case letters and a number.",profileTitle:"Set up your profile",profileSub:"This is how friends will see you.",name:"Your name",username:"Username",bio:"Bio (optional)",done:"DONE",back:"Back",login:"LOG IN",loginTitle:"Welcome back",forgot:"Forgot password?",addPhoto:"Add photo"},
+ zu:{welcome:"Siyakwamukela ku-BOUNCY",welcomeSub:"Xoxa, shaya ucingo futhi wabelane ngezikhathi ezimnandi nabantu obathandayo.",language:"Ulimi",phone:"Inombolo yocingo",phonePh:"82 123 4567",next:"OKULANDELAYO",haveAcct:"Sengivele nginayo i-akhawunti",createTitle:"Dala i-akhawunti yakho",createSub:"Sebenzisa i-imeyili nephasiwedi eqinile.",email:"Ikheli le-imeyili",confirmEmail:"Qinisekisa ikheli le-imeyili",password:"Iphasiwedi",passHint:"Okungenani izinhlamvu eziyi-8 ezinezinhlamvu ezinkulu nezincane nenombolo.",profileTitle:"Misa iphrofayili yakho",profileSub:"Yile ndlela abangane abazokubona ngayo.",name:"Igama lakho",username:"Igama lomsebenzisi",bio:"Mayelana nawe (akunyanzelekile)",done:"KUPHELILE",back:"Emuva",login:"NGENA",loginTitle:"Siyakwamukela futhi",forgot:"Ukhohlwe iphasiwedi?",addPhoto:"Faka isithombe"},
+ af:{welcome:"Welkom by BOUNCY",welcomeSub:"Gesels, bel en deel oomblikke met die mense vir wie jy lief is.",language:"Taal",phone:"Foonnommer",phonePh:"82 123 4567",next:"VOLGENDE",haveAcct:"Ek het reeds 'n rekening",createTitle:"Skep jou rekening",createSub:"Gebruik 'n e-posadres en 'n sterk wagwoord.",email:"E-posadres",confirmEmail:"Bevestig e-posadres",password:"Wagwoord",passHint:"Minstens 8 karakters met hoof- en kleinletters en 'n syfer.",profileTitle:"Stel jou profiel op",profileSub:"So sal jou vriende jou sien.",name:"Jou naam",username:"Gebruikersnaam",bio:"Oor jou (opsioneel)",done:"KLAAR",back:"Terug",login:"MELD AAN",loginTitle:"Welkom terug",forgot:"Wagwoord vergeet?",addPhoto:"Voeg foto by"},
+ fr:{welcome:"Bienvenue sur BOUNCY",welcomeSub:"Discutez, appelez et partagez des moments avec ceux que vous aimez.",language:"Langue",phone:"Numéro de téléphone",phonePh:"82 123 4567",next:"SUIVANT",haveAcct:"J'ai déjà un compte",createTitle:"Créez votre compte",createSub:"Utilisez un e-mail et un mot de passe solide.",email:"Adresse e-mail",confirmEmail:"Confirmez l'adresse e-mail",password:"Mot de passe",passHint:"Au moins 8 caractères avec majuscules, minuscules et un chiffre.",profileTitle:"Configurez votre profil",profileSub:"C'est ainsi que vos amis vous verront.",name:"Votre nom",username:"Nom d'utilisateur",bio:"À propos de vous (facultatif)",done:"TERMINER",back:"Retour",login:"SE CONNECTER",loginTitle:"Content de vous revoir",forgot:"Mot de passe oublié ?",addPhoto:"Ajouter une photo"},
+ pt:{welcome:"Bem-vindo ao BOUNCY",welcomeSub:"Converse, ligue e partilhe momentos com quem ama.",language:"Idioma",phone:"Número de telefone",phonePh:"82 123 4567",next:"SEGUINTE",haveAcct:"Já tenho uma conta",createTitle:"Crie a sua conta",createSub:"Use um e-mail e uma palavra-passe forte.",email:"Endereço de e-mail",confirmEmail:"Confirme o e-mail",password:"Palavra-passe",passHint:"Pelo menos 8 caracteres com maiúsculas, minúsculas e um número.",profileTitle:"Configure o seu perfil",profileSub:"É assim que os seus amigos o vão ver.",name:"O seu nome",username:"Nome de utilizador",bio:"Sobre si (opcional)",done:"CONCLUIR",back:"Voltar",login:"ENTRAR",loginTitle:"Bem-vindo de volta",forgot:"Esqueceu a palavra-passe?",addPhoto:"Adicionar foto"}
+};
+const guess=()=>{const l=(navigator.language||"en").slice(0,2);return T[l]?l:"en";};
+const ob={lang:localStorage.getItem("lang")||guess(),dial:"+27",phone:"",email:"",pass:"",photo:null,unOk:false};
+const tr=k=>(T[ob.lang]||T.en)[k]||T.en[k];
+function applyLang(){
+ document.documentElement.lang=ob.lang;
+ document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=tr(el.dataset.t);});
+ document.querySelectorAll("[data-tp]").forEach(el=>{el.placeholder=tr(el.dataset.tp);});
+ $("obLang").value=ob.lang;
+}
+$("obLang").innerHTML=LANGS.map(([c,n])=>`<option value="${c}">${n}</option>`).join("");
+$("obDial").innerHTML=DIALS.map(([c,d])=>`<option value="${d}">${c} ${d}</option>`).join("");
+$("obDial").value=localStorage.getItem("dial")||"+27";
+$("obLang").addEventListener("change",e=>{ob.lang=e.target.value;localStorage.setItem("lang",ob.lang);applyLang();});
+function myDial(){return localStorage.getItem("dial")||"+27";}
+function toE164(raw,dial){
+ let d=String(raw||"").trim().replace(/[^\d+]/g,"");
+ if(d.startsWith("00"))d="+"+d.slice(2);
+ if(d.startsWith("+")){const n=d.slice(1);return /^\d{8,15}$/.test(n)?"+"+n:null;}
+ d=d.replace(/^0+/,"");const full=(dial||myDial()).replace("+","")+d;
+ return d.length>=6&&/^\d{8,15}$/.test(full)?"+"+full:null;
+}
+function showAuth(){$("authGate").classList.remove("hidden");document.querySelectorAll(".ob").forEach(x=>x.classList.remove("show"));applyLang();}
+function showOb(id){document.querySelectorAll(".ob").forEach(x=>x.classList.toggle("show",x.id===id));}
+function hideSplash(){const sp=$("splash");if(!sp)return;sp.classList.add("out");setTimeout(()=>sp.remove(),520);}
+const setErr=(id,m)=>{$(id).textContent=m||"";};
+async function obNext1(){
+ setErr("obErr1","");const dial=$("obDial").value,e164=toE164($("obPhone").value,dial);
+ if(!e164){setErr("obErr1","Enter your full phone number.");return;}
+ const b=$("obNext1");b.disabled=true;
+ try{
+  const {data,error}=await sb.rpc("phone_available",{p:e164});if(error)throw error;
+  if(!data){setErr("obErr1","This phone number is already registered. Please log in.");return;}
+  ob.phone=e164;ob.dial=dial;showOb("obStep2");$("obEmail").focus();
+ }catch(e){setErr("obErr1",errMsg(e));}finally{b.disabled=false;}
+}
+const passOK=p=>p.length>=8&&/[a-z]/.test(p)&&/[A-Z]/.test(p)&&/\d/.test(p);
+function passScore(p){let n=0;if(p.length>=8)n++;if(p.length>=12)n++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))n++;if(/\d/.test(p))n++;if(/[^A-Za-z0-9]/.test(p))n++;return n;}
+$("obPass").addEventListener("input",()=>{const p=$("obPass").value,n=passScore(p),lv=!p?0:n<=2?1:n===3?2:n===4?3:4;$("meter").dataset.l=lv;$("meterTxt").textContent=["","Weak","Fair","Good","Strong"][lv];});
+function obNext2(){
+ setErr("obErr2","");const em=$("obEmail").value.trim().toLowerCase(),em2=$("obEmail2").value.trim().toLowerCase(),pw=$("obPass").value;
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){setErr("obErr2","Enter a valid email address.");return;}
+ if(em!==em2){setErr("obErr2","The two email addresses don't match.");return;}
+ if(!passOK(pw)){setErr("obErr2","Password needs 8+ characters with upper and lower case letters and a number.");return;}
+ ob.email=em;ob.pass=pw;showOb("obStep3");
+}
+let unTimer=null;
+$("obUsername").addEventListener("input",()=>{
+ ob.unOk=false;const el=$("obUsername"),u=el.value.trim().replace(/^@/,"").toLowerCase();if(el.value!==u)el.value=u;
+ const out=$("unState");clearTimeout(unTimer);
+ if(!u){out.textContent="";return;}
+ if(!/^[a-z0-9_]{3,24}$/.test(u)){out.textContent="3 to 24 letters, numbers or underscores.";out.className="ust bad";return;}
+ out.textContent="Checking…";out.className="ust";
+ unTimer=setTimeout(async()=>{const {data}=await sb.rpc("username_available",{p:u});if($("obUsername").value!==u)return;ob.unOk=!!data;out.textContent=data?"Username is available":"That username is taken";out.className="ust "+(data?"ok":"bad");},350);
+});
+async function obPickPhoto(){
+ const f=await pickFile("image/jpeg,image/png,image/webp");if(!f)return;
+ if(f.size>5*1048576){setErr("obErr3","Photo must be under 5 MB.");return;}
+ ob.photo=f;const av=$("obAvatar");av.style.backgroundImage=`url("${URL.createObjectURL(f)}")`;av.classList.add("has");setErr("obErr3","");
+}
+async function obDone(){
+ setErr("obErr3","");const name=$("obName").value.trim(),un=$("obUsername").value.trim(),bio=$("obBio").value.trim();
+ if(name.length<2){setErr("obErr3","Enter your name.");return;}
+ if(!ob.unOk){setErr("obErr3","Choose an available username.");return;}
+ const b=$("obDone");b.disabled=true;
+ try{
+  const {data,error}=await sb.auth.signUp({email:ob.email,password:ob.pass,options:{data:{display_name:name,username:un,phone:ob.phone,bio,language:ob.lang},emailRedirectTo:location.href.split("?")[0].split("#")[0]}});
+  if(error)throw error;
+  if(data.user&&data.user.identities&&data.user.identities.length===0)throw new Error("This email is already registered. Please log in.");
+  localStorage.setItem("dial",ob.dial);localStorage.setItem("lang",ob.lang);
+  if(!data.session){$("lgEmail").value=ob.email;showOb("obCheck");return;}
+  if(ob.photo){try{me=data.user;const url=await upload("posts",ob.photo);await sb.from("profiles").update({avatar_url:url}).eq("id",data.user.id);}catch(e){}}
+  await enterApp();toast("Welcome to BOUNCY!");
+ }catch(e){setErr("obErr3",errMsg(e));}finally{b.disabled=false;}
+}
+async function doLogin(){
+ const em=$("lgEmail").value.trim(),pw=$("lgPass").value;setErr("lgErr","");
+ if(!em||!pw){setErr("lgErr","Enter your email and password.");return;}
+ const b=$("lgBtn");b.disabled=true;
+ try{const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)throw error;await enterApp();}
+ catch(e){setErr("lgErr",errMsg(e));}finally{b.disabled=false;}
+}
+async function forgotPw(){
+ const em=$("lgEmail").value.trim();if(!em){setErr("lgErr","Type your email first.");return;}
+ const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.href.split("?")[0].split("#")[0]});
+ setErr("lgErr",error?errMsg(error):"We sent a password reset link to your email.");
+}
+document.addEventListener("keydown",e=>{
+ if(e.key!=="Enter"||e.target.tagName==="TEXTAREA")return;
+ const box=e.target.closest(".ob,.wel");if(!box)return;
+ const btn=box.querySelector(".btn:not(.alt)");if(btn){e.preventDefault();btn.click();}
+});
+
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
@@ -1090,6 +1268,7 @@ const actions={
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),cam:()=>toggle("v"),
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
+ segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
  rmThumb,attach,attMedia,attDoc,attAudio,sendMedia,react,copyMsg,delMsg,openOnce,viewMedia,mvClose,share,replyCmt,cancelReply:()=>{replyTo=null;$("cmtReply").classList.add("hidden");},likeCmt,enablePush:()=>enablePush(false),pushLater:()=>{localStorage.setItem("pushAsked","1");$("pushBar").classList.add("hidden");},profMsg,profCall,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
  recStart,recCancel:()=>recFinish(false),recSend:()=>recFinish(true),
@@ -1100,12 +1279,10 @@ document.addEventListener("click",e=>{
  const pf=e.target.closest("[data-prof]");if(pf){openProfile(pf.dataset.prof);return;}if(e.target.id==="rxBack"){hideRx();return;}
  const a=e.target.closest("[data-act]");if(a){Promise.resolve(actions[a.dataset.act]?.(a)).catch(x=>toast(errMsg(x)));return;}
  const r=e.target.closest("[data-chat]");if(r){openChat(r.dataset.chat);return;}
- const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;$("newName").value=h.dataset.un;document.querySelectorAll("#peopleResults .hit").forEach(x=>x.classList.toggle("sel",x===h));$("newMsg").classList.remove("hidden");$("startBtn").disabled=false;$("newMsg").focus();}
+ const h=e.target.closest("[data-pick]");if(h){picked=h.dataset.pick;document.querySelectorAll("#peopleResults .hit").forEach(x=>x.classList.toggle("sel",x===h));$("newMsg").classList.remove("hidden");$("startBtn").disabled=false;$("newMsg").focus();}
 });
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset?.chat!==undefined)openChat(e.target.dataset.chat);if(e.key==="Escape")closeAll();});
 $("overlay").onclick=closeAll;
-$("authForm").addEventListener("submit",authSubmit);
-$("authSwitch").onclick=()=>setAuthMode(authMode==="signin"?"signup":"signin");
 $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
@@ -1113,8 +1290,10 @@ history.scrollRestoration="manual";
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me)loadChats();if(me&&!msgChannel)subscribeMessages();}});
 window.addEventListener("online",()=>{if(me){subscribeMessages();subscribeIncomingCalls();loadChats();}});
 
+const t0=Date.now();
 const {data:{session}}=await sb.auth.getSession();
-if(session){try{await enterApp();}catch(e){$("authError").textContent=errMsg(e);}}
+if(session){try{await enterApp();}catch(e){showAuth();toast(errMsg(e));}}else showAuth();
+setTimeout(hideSplash,Math.max(0,2300-(Date.now()-t0)));
 </script>
 </body>
 </html>
