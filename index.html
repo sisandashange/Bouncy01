@@ -779,7 +779,7 @@ async function logout(){
 }
 
 /* ---------- CHATS ---------- */
-let lastChatsLoad=0,viewingArchived=false,viewingRequests=false;
+let lastChatsLoad=0;
 async function loadChats(){
  lastChatsLoad=Date.now();
  const {data,error}=await sb.rpc("get_my_chats");
