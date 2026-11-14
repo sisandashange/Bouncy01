@@ -53,7 +53,8 @@ button{cursor:pointer;font:inherit;color:inherit}
 .cHead .avatar{width:40px;height:40px;font-size:14px}
 .cHead small{color:var(--mute)}
 .msgs{flex:1;overflow-y:auto;overflow-anchor:none;padding:14px;display:flex;flex-direction:column;gap:6px}
-.msg{max-width:78%;padding:8px 12px;border-radius:16px 16px 16px 4px;background:var(--panel2);align-self:flex-start;word-break:break-word;white-space:pre-wrap}
+.msg{max-width:78%;padding:8px 12px;border-radius:16px 16px 16px 4px;background:var(--panel2);align-self:flex-start;word-break:break-word;white-space:pre-wrap;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.msg .body-text{user-select:text;-webkit-user-select:text}
 .msg.me{align-self:flex-end;background:var(--mine);border-radius:16px 16px 4px 16px}
 .msg .t{font-size:11px;color:#c2c9d2;opacity:.7;margin-left:10px;float:right;margin-top:6px}
 .msg.pending{opacity:.55}
@@ -323,7 +324,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
 .vp video{width:100%;display:block;max-height:75vh;object-fit:cover;background:#000}
 #mvBody .vp{width:100%;height:100%;display:flex;align-items:center}#mvBody .vp video{max-height:100%;height:100%;object-fit:contain}
 .vpPlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;pointer-events:none;transition:opacity .15s}
-.vpPlay svg{width:64px;height:64px;padding:18px;background:rgba(0,0,0,.5);border-radius:50%}
+.vpPlay svg{width:48px;height:48px;padding:12px;background:rgba(0,0,0,.55);border-radius:50%}
 .vp.playing .vpPlay{opacity:0}
 .vpBar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:22px 12px calc(env(safe-area-inset-bottom) + 10px);background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font-size:12px;font-variant-numeric:tabular-nums}
 .vpR{flex:1;accent-color:var(--pink);height:4px}
@@ -617,6 +618,12 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <div class="err" id="pinErr"></div>
  <button class="btn" id="pinSaveBtn" data-act="savePin">SAVE PIN</button>
  <button class="btn alt" data-act="closeAll">Cancel</button>
+</div></div>
+<div id="chatOptionsModal" class="modal2"><div class="box">
+ <h3>Chat Options</h3>
+ <button class="att" data-act="chatOptPin"><span class="atic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-3 3-2-2-5 5v3l-2 2-3-3 2-2h3l5-5-2-2z"/></svg></span><div><b id="chatOptPinText">Pin</b><span class="mute">Keep this chat at the top</span></div></button>
+ <button class="att" data-act="chatOptArchive"><span class="atic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></span><div><b id="chatOptArchiveText">Archive</b><span class="mute">Hide from your main list</span></div></button>
+ <button class="btn alt" data-act="closeAll" style="margin-top:10px">CANCEL</button>
 </div></div>
 <div id="appConfirm" class="modal2"><div class="box" style="text-align:center"><h3 id="confirmTitle" style="margin-bottom:12px"></h3><p class="mute" id="confirmMsg" style="margin-bottom:20px;font-size:15px"></p><div style="display:flex;gap:10px"><button class="btn alt" data-act="cancelConfirm">CANCEL</button><button class="btn" style="background:var(--bad)" data-act="acceptConfirm">OK</button></div></div></div>
 <div id="toast" role="status"></div>
@@ -1364,7 +1371,7 @@ async function applyVmSpeaker(){
  }catch{}
 }
 applyVmSpeaker();
-function voiceHTML(m){const pk=Array.isArray(m.peaks)&&m.peaks.length?m.peaks:Array(40).fill(20);return `<div class="voice" data-voice="${esc(m.id)}"><button class="vplay" data-act="vplay" data-id="${esc(m.id)}" aria-label="Play voice note"${m.uploading?" disabled":""}>${SVG.play}</button><div class="wave"><i class="ph"></i>${pk.map((h,i)=>`<i style="height:${Math.max(12,Math.min(100,h))}%;--i:${i}"></i>`).join("")}</div><button data-act="vaSpeed" style="background:none;border:0;color:inherit;font-size:11px;opacity:.7;padding:4px 2px;min-width:28px">${vaRate}×</button><span class="vdur${m.uploading?" up":""}">${m.uploading?(m.progress||0)+"%":dur(m.audio_ms)}</span></div>`;}
+function voiceHTML(m){const pk=Array.isArray(m.peaks)&&m.peaks.length?m.peaks:Array(40).fill(25);return `<div class="voice" data-voice="${esc(m.id)}"><button class="vplay" data-act="vplay" data-id="${esc(m.id)}" aria-label="Play voice note"${m.uploading?" disabled":""}>${SVG.play}</button><div class="wave"><i class="ph"></i>${pk.map((h,i)=>`<i style="height:${Math.max(12,Math.min(100,h))}%;--i:${i}"></i>`).join("")}</div><button data-act="vaSpeed" style="background:none;border:0;color:inherit;font-size:11px;opacity:.7;padding:4px 2px;min-width:28px">${vaRate}×</button><span class="vdur${m.uploading?" up":""}">${m.uploading?(m.progress||0)+"%":dur(m.audio_ms)}</span></div>`;}
 function applyPlaying(){document.querySelectorAll(".voice").forEach(el=>{const on=el.dataset.voice===vid&&!va.paused;el.classList.toggle("playing",on);el.querySelector(".vplay").innerHTML=on?SVG.pause:SVG.play;});}
 function resetBars(){document.querySelectorAll(".voice").forEach(el=>{el.querySelectorAll("i.on").forEach(i=>i.classList.remove("on"));const m=cur?.msgs.find(x=>x.id===el.dataset.voice);if(el.classList.contains("song")){el.querySelector(".sbar i").style.width="0";el.querySelector(".vdur").textContent=fsize(m?.file_size||0);}else el.querySelector(".vdur").textContent=dur(m?.audio_ms);});}
 function stopVoice(){va.pause();vid=null;resetBars();applyPlaying();}
@@ -1788,7 +1795,8 @@ function msgInner(m){
  if(m.kind==="file")return fileHTML(m);
  if(m.kind==="image")return `<img class="mimg" src="${esc(m.file_url)}" loading="lazy" alt="" data-act="viewMedia" data-id="${esc(m.id)}">`;
  if(m.kind==="video")return `<div class="mvid" data-act="viewMedia" data-id="${esc(m.id)}"><video src="${esc(m.file_url)}#t=0.1" preload="metadata" muted playsinline></video><span class="mplay">${SVG.play}</span></div>`;
- return cur?.kind==="group"&&m.body?esc(m.body).replace(/@([a-z0-9_]{2,24})/gi,'<span style="color:var(--pink2);font-weight:600">@$1</span>'):esc(m.body);
+ const body=cur?.kind==="group"&&m.body?esc(m.body).replace(/@([a-z0-9_]{2,24})/gi,'<span style="color:var(--pink2);font-weight:600">@$1</span>'):esc(m.body);
+ return `<span class="body-text">${body}</span>`;
 }
 function rxHTML(m){
  const r=cur.rx.get(m.id);if(!r||!r.size)return"";
@@ -1830,7 +1838,7 @@ let lpTimer=null,lpX=0,lpY=0;
 function hideRx(){$("rxPop").classList.remove("show");$("rxBack").classList.remove("show");}
 let showRx=function(){};
 $("msgs").addEventListener("pointerdown",e=>{
- const b=e.target.closest(".msg");if(!b||e.target.closest("[data-act],a"))return;
+ const b=e.target.closest(".msg");if(!b||e.target.closest("button,a,input,textarea,[contenteditable=true]"))return;
  lpX=e.clientX;lpY=e.clientY;clearTimeout(lpTimer);lpTimer=setTimeout(()=>showRx(b),420);
 });
 $("msgs").addEventListener("pointermove",e=>{if(Math.abs(e.clientX-lpX)+Math.abs(e.clientY-lpY)>12)clearTimeout(lpTimer);});
@@ -2501,7 +2509,7 @@ setTimeout(()=>document.querySelectorAll(".modal2,.ob,#modal").forEach(el=>focus
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},themeSet:a=>applyTheme(a.dataset.v),showQR,editMsg,openMediaUrl:a=>openMedia(a.dataset.url,a.dataset.kind==="video",""),
  
- closeAll,cancelConfirm:()=>{$("appConfirm").classList.remove("show");confirmCb=null;},acceptConfirm:()=>{$("appConfirm").classList.remove("show");const cb=confirmCb;confirmCb=null;if(cb)return cb();},chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
+ closeAll,cancelConfirm:()=>{$("appConfirm").classList.remove("show");confirmCb=null;},acceptConfirm:()=>{$("appConfirm").classList.remove("show");const cb=confirmCb;confirmCb=null;if(cb)return cb();},chatOptPin:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.pinned,upd={pinned_at:next?new Date().toISOString():null};const {error}=await sb.from("conversation_members").update(upd).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));Object.assign(chatOptTarget,upd,{pinned:next});closeAll();render();},chatOptArchive:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.archived;const {error}=await sb.from("conversation_members").update({archived:next}).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));chatOptTarget.archived=next;closeAll();render();},chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),toggleSpeaker,setVmSpeaker:a=>{localStorage.setItem("vmSpeaker",a.dataset.v);applyVmSpeaker();renderSettings();toast("Voice messages will play on "+(a.dataset.v==="speaker"?"speaker":"earpiece"));},addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
@@ -2529,7 +2537,19 @@ document.addEventListener("click",e=>{
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset?.chat!==undefined)openChat(e.target.dataset.chat);if(e.key==="Escape")closeAll();});
 $("overlay").onclick=closeAll;
 $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
-let listLp=null;$("list").addEventListener("pointerdown",e=>{const row=e.target.closest("[data-chat]");if(!row)return;clearTimeout(listLp);listLp=setTimeout(async()=>{const c=chats.find(x=>x.id===row.dataset.chat);if(!c)return;const v=(prompt("Type p=pin, u=unpin, a=archive, r=restore",c.pinned?"u":"p")||"").toLowerCase();const upd=v==="p"?{pinned_at:new Date().toISOString()}:v==="u"?{pinned_at:null}:v==="a"?{archived:true}:v==="r"?{archived:false}:null;if(!upd)return;const {error}=await sb.from("conversation_members").update(upd).eq("conversation_id",c.id).eq("user_id",me.id);if(error)return toast(errMsg(error));Object.assign(c,upd,{pinned:!!upd.pinned_at});render();},500);});["pointerup","pointercancel","pointerleave"].forEach(ev=>$("list").addEventListener(ev,()=>clearTimeout(listLp)));
+let listLp=null,chatOptTarget=null;
+$("list").addEventListener("pointerdown",e=>{
+ const row=e.target.closest("[data-chat]");if(!row)return;
+ clearTimeout(listLp);
+ listLp=setTimeout(()=>{
+  const c=chats.find(x=>x.id===row.dataset.chat);if(!c)return;
+  chatOptTarget=c;
+  $("chatOptPinText").textContent=c.pinned?"Unpin":"Pin";
+  $("chatOptArchiveText").textContent=c.archived?"Unarchive":"Archive";
+  $("chatOptionsModal").classList.add("show");
+ },500);
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>$("list").addEventListener(ev,()=>clearTimeout(listLp)));
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 $("msgInp").addEventListener("input",()=>{updateSendBtn();broadcastTyping();});
