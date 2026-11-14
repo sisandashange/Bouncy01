@@ -509,8 +509,15 @@ select.f option{background:#1f262f;color:#f2f5f8}
   <button class="iconBtn" data-act="closeChat" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
   <span class="pav" data-act="info"><div class="avatar" id="hAv">J</div></span>
   <div style="flex:1;min-width:0;cursor:pointer" data-act="info"><b id="hName"></b><br><small id="hStatus" aria-live="polite">last seen recently</small></div>
+  <button class="iconBtn" data-act="openChatSearch" aria-label="Search this chat"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg></button>
   <button class="iconBtn" data-act="voice" aria-label="Voice call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
   <button class="iconBtn" data-act="video" aria-label="Video call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></button>
+ </div>
+ <div id="chatSearchBar" class="hidden" style="display:flex;gap:8px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);align-items:center">
+  <input id="chatSearchInp" placeholder="Search this chat" autocomplete="off" style="flex:1;min-width:0;background:var(--panel2);border:0;outline:0;color:var(--text);padding:10px 14px;border-radius:20px;font-size:15px">
+  <button class="iconBtn" data-act="prevSearchHit" aria-label="Previous match">↑</button>
+  <button class="iconBtn" data-act="nextSearchHit" aria-label="Next match">↓</button>
+  <button class="iconBtn" data-act="closeChatSearch" aria-label="Close search">×</button>
  </div>
  <div class="msgs" id="msgs"></div>
  <div id="replyBar" class="replyBar hidden"></div>
@@ -955,6 +962,19 @@ async function startCall(type){
   call.id=data.id;showCallUI(false);await subscribeSignals();startPartWatch();await refreshParts();
  }catch(e){toast("Could not start call: "+errMsg(e));await endCall();}
 }
+async function startGroupCall(type){
+ if(call)return;
+ if(!cur||cur.kind!=="group"){toast("Open a group to start a group call.");return;}
+ if(cur.members>4){toast("Group calls support up to 4 people.");return;}
+ const chat=cur;
+ call={type,incoming:false,incomingPending:false,otherName:chat.name,parts:new Map(),count:chat.members};
+ try{
+  await Promise.all([getMedia(type),loadIce()]);
+  const {data:id,error}=await sb.rpc("create_group_call",{p_conv:chat.id,p_type:type});
+  if(error)throw error;
+  call.id=id;showCallUI(false);await subscribeSignals();startPartWatch();await refreshParts();
+ }catch(e){toast("Could not start group call: "+errMsg(e));await endCall();}
+}
 async function acceptCall(){
  if(!call||!call.incomingPending)return;
  try{
@@ -1316,6 +1336,54 @@ function applyChatMode(){
  const blk=dm&&blockedIds.has(cur.other_id);$("blkBar").classList.toggle("hidden",!blk);
  if(blk){$("inpBar").classList.add("hidden");$("blkBtn").dataset.id=cur.other_id;$("blkTxt").textContent="You blocked "+cur.name;}
 }
+function openChatSearch(){
+ $("chatSearchBar").classList.remove("hidden");
+ $("chatSearchInp").value="";chatSearchTerm="";chatSearchResults=[];chatSearchIdx=0;
+ $("chatSearchInp").focus();
+}
+function closeChatSearch(){
+ $("chatSearchBar").classList.add("hidden");
+ $("chatSearchInp").value="";chatSearchTerm="";chatSearchResults=[];
+}
+async function runChatSearch(){
+ const q=$("chatSearchInp").value.trim();chatSearchTerm=q;
+ if(q.length<2){chatSearchResults=[];return;}
+ if(!cur)return;
+ const escaped=q.replace(/[%_]/g,ch=>String.fromCharCode(92)+ch);
+ const {data,error}=await sb.from("messages").select("id,body,created_at,kind").eq("conversation_id",cur.id).ilike("body","%"+escaped+"%").order("created_at",{ascending:false}).limit(100);
+ if(error){toast(errMsg(error));return;}
+ chatSearchResults=data||[];chatSearchIdx=0;
+ if(!chatSearchResults.length){toast("No matches in this chat.");return;}
+ jumpToSearchHit();
+}
+function jumpToSearchHit(){
+ if(!chatSearchResults.length)return;
+ const hit=chatSearchResults[chatSearchIdx];
+ const el=document.querySelector('.msg[data-mid="'+hit.id+'"]');
+ if(el){el.scrollIntoView({block:"center",behavior:"smooth"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1400);}
+ else toast("Match is beyond the loaded messages. Scroll up to load more.");
+}
+function nextSearchHit(){if(!chatSearchResults.length)return;chatSearchIdx=(chatSearchIdx+1)%chatSearchResults.length;jumpToSearchHit();}
+function prevSearchHit(){if(!chatSearchResults.length)return;chatSearchIdx=(chatSearchIdx-1+chatSearchResults.length)%chatSearchResults.length;jumpToSearchHit();}
+function subscribeTyping(){
+ if(typingChannel){sb.removeChannel(typingChannel);typingChannel=null;}
+ if(!cur||!me)return;
+ const cid=cur.id;
+ typingChannel=sb.channel("typing:"+cid,{config:{broadcast:{self:false}}});
+ typingChannel.on("broadcast",{event:"typing"},({payload})=>{
+  if(!cur||cur.id!==cid||!payload||payload.user_id===me.id)return;
+  if($("msgInp").value.length>0)return;
+  $("hStatus").textContent=(payload.name||"Someone")+" is typing…";
+  clearTimeout(typingHideTimer);
+  typingHideTimer=setTimeout(()=>{if(cur&&cur.id===cid)updatePresence();},3000);
+ }).subscribe();
+}
+function broadcastTyping(){
+ if(!cur||!typingChannel)return;
+ const now=Date.now();if(now-typingLastSent<2000)return;typingLastSent=now;
+ typingChannel.send({type:"broadcast",event:"typing",payload:{user_id:me.id,name:profile?.display_name||me.email||"Someone",at:now}}).catch(()=>{});
+}
+function stopTyping(){clearTimeout(typingHideTimer);if(cur)updatePresence();}
 function openGroup(kind){
  closeAll();grpKind=kind;grpMembers=new Map();
  $("grpHead").textContent=kind==="channel"?"New channel":"New group";
@@ -1356,6 +1424,7 @@ async function info(){
  $("infoList").innerHTML='<p class="mute">Loading…</p>';$("infoModal").classList.add("show");
  const {data}=await sb.from("conversation_members").select("user_id,role,profiles(display_name,username,avatar_url)").eq("conversation_id",cur.id).limit(200);
  $("infoList").innerHTML=(data||[]).map(m=>`<div class="hit"><span class="pav" data-prof="${esc(m.user_id)}">${avatar(m.profiles)}</span><div><b>${esc(m.profiles?.display_name||m.profiles?.username||"Member")}</b><small>@${esc(m.profiles?.username||"")}${m.role!=="member"?" · "+esc(m.role):""}</small></div></div>`).join("");
+ if(cur.kind==="group")$("infoList").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin:10px 0"><button class="btn" data-act="grpCallVoice" style="width:auto;flex:1">${IC.phone} Voice call</button><button class="btn alt" data-act="grpCallVideo" style="width:auto;flex:1">${IC.video} Video call</button></div>`);
 }
 async function addMember(){
  const u=$("infoUser").value.trim();if(!u||!cur)return;
@@ -1625,6 +1694,15 @@ async function share(a){
 }
 
 /* ---------- PROFILES ---------- */
+async function toggleMute(a){
+ const c=chats.find(x=>x.id===a.dataset.id);if(!c)return;
+ const next=!c.muted;
+ const {error}=await sb.rpc("set_chat_muted",{p_conv:c.id,p_muted:next});
+ if(error)throw error;
+ c.muted=next;if(next)c.unread=0;if(cur&&cur.id===c.id)cur.muted=next;
+ render();a.innerHTML='<div class="sx1"><b>'+(next?"Unmute":"Mute")+' notifications</b><small>'+(next?"You will get alerts again":"No alerts, no badge")+'</small></div>';
+ toast(next?"Chat muted":"Chat unmuted");
+}
 async function openProfile(id){
  if(!id)return;closeAll();$("profBody").innerHTML='<p class="mute">Loading…</p>';$("profModal").classList.add("show");
  const [{data:p},{count}]=await Promise.all([sb.from("profiles").select("id,display_name,username,avatar_url,bio,created_at").eq("id",id).maybeSingle(),sb.from("posts").select("id",{count:"exact",head:true}).eq("author_id",id)]);
@@ -1632,6 +1710,16 @@ async function openProfile(id){
  const self=id===me.id;
  $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button></div>`}`;
  if(!self)$("profBody").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin-top:10px"><button class="btn alt" style="width:auto;flex:1" data-act="blockToggle" data-id="${esc(id)}">${blockedIds.has(id)?"Unblock":"Block"}</button><button class="btn alt" style="width:auto;flex:1" data-act="reportUser" data-id="${esc(id)}">Report</button></div>`);
+ $("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="shareProfile" data-id="${esc(id)}" style="margin-top:10px;width:100%">Share profile</button>`);
+ if(cur&&cur.kind==="dm"&&cur.other_id===id)$("profBody").insertAdjacentHTML("beforeend",`<button class="srow" data-act="toggleMute" data-id="${esc(cur.id)}" style="border:0;border-radius:12px;margin-top:8px"><div class="sx1"><b>${cur.muted?"Unmute":"Mute"} notifications</b><small>${cur.muted?"You will get alerts again":"No alerts, no badge"}</small></div></button>`);
+}
+async function shareProfile(a){
+ const id=a.dataset.id;
+ const {data}=await sb.from("profiles").select("username,display_name").eq("id",id).maybeSingle();
+ if(!data||!data.username){toast("Can't share this profile.");return;}
+ const url=location.origin+location.pathname+"?u="+encodeURIComponent(data.username);
+ if(navigator.share){try{await navigator.share({title:"BOUNCY",text:"Chat with @"+data.username+" on BOUNCY",url});}catch{}}
+ else{try{await navigator.clipboard.writeText(url);toast("Profile link copied.");}catch{toast("Could not copy.");}}
 }
 async function profMsg(a){const id=a.dataset.id;const {data:cid,error}=await sb.rpc("get_or_create_dm",{other:id});if(error)throw error;closeAll();await loadChats();showChats();await openChat(cid);}
 async function profCall(a){await profMsg(a);await startCall(a.dataset.t);}
@@ -2067,7 +2155,7 @@ const actions={
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
- findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,submitStory,stSend,stViews,
+ findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,toggleMute,shareProfile,openChatSearch,closeChatSearch,nextSearchHit,prevSearchHit,grpCallVoice:async()=>{closeAll();await startGroupCall("voice");},grpCallVideo:async()=>{closeAll();await startGroupCall("video");},submitStory,stSend,stViews,
  segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
  rmThumb,attach,attMedia,attDoc,attAudio,sendMedia,react,copyMsg,delMsg,openOnce,viewMedia,mvClose,share,replyCmt,cancelReply:()=>{replyTo=null;$("cmtReply").classList.add("hidden");},likeCmt,enablePush:()=>enablePush(false),pushLater:()=>{localStorage.setItem("pushAsked","1");$("pushBar").classList.add("hidden");},profMsg,profCall,
  replyMsg:a=>{hideRx();setReply(a.dataset.id);},cancelReplyMsg:clearReply,jumpMsg,fwdMsg:a=>{hideRx();openFwd(a.dataset.id);},fwdPick,sendFwd,
@@ -2092,6 +2180,24 @@ $("overlay").onclick=closeAll;
 $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
+$("msgInp").addEventListener("input",()=>{updateSendBtn();broadcastTyping();});
+$("msgInp").addEventListener("blur",stopTyping);
+$("chatSearchInp").addEventListener("input",()=>{clearTimeout(chatSearchTimer);chatSearchTimer=setTimeout(runChatSearch,300);});
+$("chatSearchInp").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();nextSearchHit();}if(e.key==="Escape")closeChatSearch();});
+$("msgs").addEventListener("scroll",async ()=>{
+ if(!cur||loadingOlder||noMoreOlder)return;
+ const box=$("msgs");if(box.scrollTop>120)return;
+ loadingOlder=true;const chat=cur,first=chat.msgs[0];
+ if(!first){loadingOlder=false;return;}
+ const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",chat.id).lt("created_at",first.created_at).order("created_at",{ascending:false}).limit(50);
+ if(error||cur!==chat){loadingOlder=false;return;}
+ if(!data||!data.length){noMoreOlder=true;loadingOlder=false;return;}
+ for(const m of data)if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);
+ const older=data.reverse(),prevH=box.scrollHeight,prevTop=box.scrollTop;
+ chat.msgs=older.concat(chat.msgs);renderMsgs();
+ box.scrollTop=prevTop+(box.scrollHeight-prevH);
+ noMoreOlder=data.length<50;loadingOlder=false;
+});
 history.scrollRestoration="manual";
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me){markDelivered();if(cur){markRead();syncCurrent();}if(msgChannel&&msgChannel.state!=="joined")subscribeMessages();}if(me&&Date.now()-lastChatsLoad>30000)loadChats();if(me&&!msgChannel)subscribeMessages();}});
 window.addEventListener("online",()=>{
