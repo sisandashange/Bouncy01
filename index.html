@@ -891,7 +891,18 @@ async function subscribeMessages(){
    setRx(r.message_id,r.user_id,p.eventType==="DELETE"?null:r.emoji);scheduleRenderMsgs();
   })
   .on("postgres_changes",{event:"UPDATE",schema:"public",table:"conversation_members"},p=>{
-   if(cur&&p.new.conversation_id===cur.id){cur.mem.set(p.new.user_id,p.new);scheduleRenderMsgs();}
+   if(cur&&p.new.conversation_id===cur.id){
+    cur.mem.set(p.new.user_id,p.new);
+    if(p.new.user_id===me.id)cur.is_request=!!p.new.is_request;
+    if(p.new.user_id===cur.other_id)cur.other_is_request=!!p.new.is_request;
+    applyChatMode();scheduleRenderMsgs();
+   }
+   const c=chats.find(x=>x.id===p.new.conversation_id);
+   if(c){
+    if(p.new.user_id===me.id)c.is_request=!!p.new.is_request;
+    if(p.new.user_id===c.other_id)c.other_is_request=!!p.new.is_request;
+    render();
+   }
   })
   .on("postgres_changes",{event:"*",schema:"public",table:"blocks",filter:"blocker_id=eq."+me.id},p=>{
    const r=p.eventType==="DELETE"?p.old:p.new;if(!r)return;
