@@ -601,6 +601,21 @@ select.f option{background:#1f262f;color:#f2f5f8}
 <div id="setModal" class="modal2"><div class="box"><h3>My profile</h3><div class="who" id="setWho"></div><input class="f" id="setName" maxlength="40" placeholder="Name"><input class="f" id="setUsername" maxlength="24" autocapitalize="none" placeholder="Username"><textarea class="f" id="setBio" rows="3" maxlength="160" placeholder="Bio"></textarea><input class="f" id="setPhone" type="tel" placeholder="Phone number, so friends can find you"><button class="btn alt" data-act="changePhoto">Change photo</button><button class="btn" data-act="saveSettings">SAVE</button><button class="btn alt" data-act="closeAll">Cancel</button></div></div>
 <div id="storyView"><div id="stBars"></div><div id="stHead" class="sthead"></div><button class="stx" data-act="stClose" aria-label="Close story"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 6l12 12M18 6L6 18"/></svg></button><button class="stx del hidden" id="stDel" data-act="stDel" aria-label="Delete story"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button><div id="stMedia"></div><div id="stCap"></div><div id="stFoot"></div>
 <div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
+<div id="lockScreen" class="hidden" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+ <div class="logo" style="margin-bottom:20px">BOUNCY</div>
+ <p class="mute" style="margin-bottom:16px">Enter your PIN to unlock</p>
+ <input id="lockPin" type="password" inputmode="numeric" maxlength="6" placeholder="● ● ● ●" style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:24px;letter-spacing:8px;text-align:center;width:200px;color:var(--text);outline:none;margin-bottom:12px">
+ <div id="lockErr" style="color:var(--bad);font-size:14px;min-height:20px"></div>
+</div>
+<div id="pinModal" class="modal2"><div class="box">
+ <h3 id="pinTitle">App Lock PIN</h3>
+ <div id="pinOldWrap" class="hidden"><input class="f" id="pinOld" type="password" inputmode="numeric" maxlength="6" placeholder="Current PIN"></div>
+ <div id="pinNewWrap"><input class="f" id="pinNew" type="password" inputmode="numeric" maxlength="6" placeholder="New PIN (4-6 digits)"></div>
+ <div id="pinNew2Wrap"><input class="f" id="pinNew2" type="password" inputmode="numeric" maxlength="6" placeholder="Confirm new PIN"></div>
+ <div class="err" id="pinErr"></div>
+ <button class="btn" id="pinSaveBtn" data-act="savePin">SAVE PIN</button>
+ <button class="btn alt" data-act="closeAll">Cancel</button>
+</div></div>
 <div id="toast" role="status"></div>
 
 <div id="liveRegion" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap"></div>
@@ -660,18 +675,33 @@ function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cache
 
 
 /* ---------- AUTH ---------- */
+async function sha256(str){
+ const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));
+ return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
 async function maybeLock(){
  const h=localStorage.getItem("pinHash");
  if(!h)return;
- return new Promise((resolve) => {
-  setTimeout(async () => {
-   const p=prompt("Enter your BOUNCY PIN");
-   if(p===null){await sb.auth.signOut();resolve();return;}
-   const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p));
-   const got=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
-   if(got!==h){toast("Incorrect PIN.");await sb.auth.signOut();}
-   resolve();
-  }, 200);
+ const overlay=$("lockScreen"),input=$("lockPin"),err=$("lockErr");
+ overlay.classList.remove("hidden");overlay.style.display="flex";
+ input.value="";err.textContent="";
+ return new Promise(resolve=>{
+  let checking=false,timer=null;
+  const checkPin=async()=>{
+   if(checking||input.value.length<4)return;
+   checking=true;
+   const hashed=await sha256(input.value);
+   if(hashed===h){
+    overlay.style.display="none";overlay.classList.add("hidden");
+    input.removeEventListener("input",onInput);input.removeEventListener("keydown",onKey);resolve();
+   }else{
+    input.value="";err.textContent="Incorrect PIN. Try again.";checking=false;input.focus();
+   }
+  };
+  const onInput=()=>{clearTimeout(timer);if(input.value.length>=4)timer=setTimeout(checkPin,450);};
+  const onKey=e=>{if(e.key==="Enter"){e.preventDefault();clearTimeout(timer);checkPin();}};
+  input.addEventListener("input",onInput);input.addEventListener("keydown",onKey);
+  setTimeout(()=>input.focus(),100);
  });
 }
 async function enterApp(){
@@ -2346,8 +2376,39 @@ $("svBody").addEventListener("change",async e=>{
  if(k==="read_receipts"&&cur)renderMsgs();
 });
 async function openSettings(){closeAll();await loadSettings();renderSettings();$("settingsView").classList.add("show");}
-async function setPin(){const old=localStorage.getItem("pinHash");if(old){const p=prompt("Current PIN");if(p===null)return;const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p)),h=[...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join("");if(h!==old)return toast("Incorrect PIN.");}const p1=prompt("New PIN (4–6 digits)");if(!p1||!/^[0-9]{4,6}$/.test(p1))return toast("PIN must be 4–6 digits.");const p2=prompt("Confirm PIN");if(p1!==p2)return toast("PINs do not match.");const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p1));localStorage.setItem("pinHash",[...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join(""));renderSettings();toast("App PIN saved.");}
-async function clearPin(){const p=prompt("Enter current PIN");if(p===null)return;const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p)),h=[...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join("");if(h!==localStorage.getItem("pinHash"))return toast("Incorrect PIN.");localStorage.removeItem("pinHash");renderSettings();toast("App PIN removed.");}
+let pinRemoveMode=false;
+function setPin(){
+ closeAll();pinRemoveMode=false;
+ const hasOld=!!localStorage.getItem("pinHash");
+ $("pinOldWrap").classList.toggle("hidden",!hasOld);
+ $("pinNewWrap").classList.remove("hidden");$("pinNew2Wrap").classList.remove("hidden");
+ $("pinTitle").textContent="App Lock PIN";$("pinSaveBtn").textContent="SAVE PIN";
+ $("pinOld").value="";$("pinNew").value="";$("pinNew2").value="";$("pinErr").textContent="";
+ $("pinModal").classList.add("show");
+ setTimeout(() => $(hasOld ? "pinOld" : "pinNew").focus(),100);
+}
+async function savePin(){
+ const hasOld=!!localStorage.getItem("pinHash");
+ const oldPin=$("pinOld").value,newPin=$("pinNew").value,newPin2=$("pinNew2").value;
+ $("pinErr").textContent="";
+ if(hasOld && (await sha256(oldPin))!==localStorage.getItem("pinHash")){
+  $("pinErr").textContent="Incorrect current PIN.";return;
+ }
+ if(pinRemoveMode){
+  localStorage.removeItem("pinHash");pinRemoveMode=false;closeAll();renderSettings();toast("App PIN removed.");return;
+ }
+ if(!/^\d{4,6}$/.test(newPin)){$("pinErr").textContent="PIN must be 4–6 digits.";return;}
+ if(newPin!==newPin2){$("pinErr").textContent="PINs do not match.";return;}
+ localStorage.setItem("pinHash",await sha256(newPin));
+ closeAll();renderSettings();toast("App PIN saved.");
+}
+function clearPin(){
+ closeAll();pinRemoveMode=true;
+ $("pinOldWrap").classList.remove("hidden");$("pinNewWrap").classList.add("hidden");$("pinNew2Wrap").classList.add("hidden");
+ $("pinTitle").textContent="Remove App Lock";$("pinSaveBtn").textContent="REMOVE PIN";
+ $("pinOld").value="";$("pinNew").value="";$("pinNew2").value="";$("pinErr").textContent="";
+ $("pinModal").classList.add("show");setTimeout(()=>$("pinOld").focus(),100);
+}
 async function doChangePw(){
  const a=$("pwNew").value,b=$("pwNew2").value;setErr("pwErr","");
  if(!passOK(a)){setErr("pwErr","Password needs 8+ characters with upper and lower case letters and a number.");return;}
@@ -2470,7 +2531,7 @@ const actions={
  replyMsg:a=>{hideRx();setReply(a.dataset.id);},cancelReplyMsg:clearReply,jumpMsg,fwdMsg:a=>{hideRx();openFwd(a.dataset.id);},fwdPick,sendFwd,
  blockToggle,openBlocked:()=>openBlocked(),unblock:blockToggle,reportUser:a=>openReport({user:a.dataset.id}),reportMsg:a=>{hideRx();const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openReport({user:m.sender_id,message_id:m.id,evidence:{body:m.body,kind:m.kind,file_url:m.file_url||null,conversation_id:cur.id}});},
  reportPost:a=>{const p=feed.find(x=>x.id===a.dataset.id);if(p)openReport({user:p.author_id,post_id:p.id,evidence:{body:p.body,media_url:p.media_url}});},submitReport,
- openSettings,closeSettings:()=>$("settingsView").classList.remove("show"),setSeen:a=>{mySet.last_seen_visibility=a.dataset.v;saveMySettings();renderSettings();},doChangePw,doDelete,setPin,clearPin,openPw:()=>{closeAll();$("pwNew").value="";$("pwNew2").value="";$("pwErr").textContent="";$("pwModal").classList.add("show");},openDel:()=>{closeAll();$("delTxt").value="";$("delModal").classList.add("show");},
+ openSettings,closeSettings:()=>$("settingsView").classList.remove("show"),setSeen:a=>{mySet.last_seen_visibility=a.dataset.v;saveMySettings();renderSettings();},doChangePw,doDelete,setPin,savePin,clearPin,openPw:()=>{closeAll();$("pwNew").value="";$("pwNew2").value="";$("pwErr").textContent="";$("pwModal").classList.add("show");},openDel:()=>{closeAll();$("delTxt").value="";$("delModal").classList.add("show");},
  openStoryRef,vpMute:a=>{const v=a.closest("[data-vp]").querySelector("video");v.muted=!v.muted;a.innerHTML=v.muted?IC.volOff:IC.vol;},
  openReels:a=>openReels(a.dataset.id),reelsClose,reelLike:async a=>{const id=a.dataset.id,pr=like(id);updateReelUI(id);await pr;updateReelUI(id);},reelMute,
  feed:showFeed,fab:()=>tab==="feed"?newPost():openNewChat(),newPost,submitPost,pickPostFile,addStory,settings,saveSettings,changePhoto,sendCmt,
