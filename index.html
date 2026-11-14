@@ -2632,7 +2632,7 @@ if("serviceWorker" in navigator){
 const ptrNodes=new WeakMap();
 function restorePTR(el){const node=ptrNodes.get(el);if(node&&node.parentElement!==el)el.prepend(node);}
 function initPTR(el,callback){if(!el||ptrNodes.has(el))return;let startY=0,pulling=false,busy=false;const spinner=document.createElement("div");spinner.className="ptr-spinner";spinner.innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>';ptrNodes.set(el,spinner);el.prepend(spinner);el.addEventListener("touchstart",e=>{if(el.scrollTop<=0&&!busy){startY=e.touches[0].clientY;pulling=true;}},{passive:true});el.addEventListener("touchmove",e=>{if(!pulling)return;if(e.touches[0].clientY-startY>65){pulling=false;busy=true;spinner.classList.add("loading");Promise.resolve().then(callback).catch(err=>toast(errMsg(err))).finally(()=>{busy=false;setTimeout(()=>spinner.classList.remove("loading"),450);});}},{passive:true});el.addEventListener("touchend",()=>{pulling=false;});el.addEventListener("touchcancel",()=>{pulling=false;});}
-async function refreshFeed(){feed=[];feedEnd=false;await loadFeed();}
+async function refreshFeed(){if(feedBusy)return;feed=[];feedEnd=false;await loadFeed();}
 initPTR($("list"),()=>loadChats());
 initPTR($("feedList"),()=>refreshFeed());
 
