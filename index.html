@@ -696,6 +696,7 @@ async function openChat(id){
  const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");applyChatMode();updatePresence();render();
+ const cached=await idbGet("msgs:"+chat.id);if(cur!==chat)return;if(cached?.msgs?.length){cur.msgs=cached.msgs;cur.seen=true;renderMsgs();}
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(cur!==chat)return;
  subscribeTyping();
@@ -719,14 +720,22 @@ async function subscribeMessages(){
   const m=p.new;let c=chats.find(x=>x.id===m.conversation_id);
   if(!c){await loadChats();c=chats.find(x=>x.id===m.conversation_id);if(!c)return;}
   c.last=m.body;c.at=m.created_at;
-  if(cur&&cur.id===c.id){const ex=cur.msgs.find(x=>x.id===m.id);if(ex)Object.assign(ex,m,{pending:false,failed:false,uploading:false});else cur.msgs.push(m);scheduleRenderMsgs();}
+  if(cur&&cur.id===c.id){const ex=cur.msgs.find(x=>x.id===m.id);if(ex)Object.assign(ex,m,{pending:false,failed:false,uploading:false});else cur.msgs.push(m);scheduleRenderMsgs();}if(m.sender_id!==me.id){const lr=$("liveRegion");if(lr)lr.textContent=`New message from ${c.name}: ${(m.body||"").slice(0,100)}`;}
   else if(m.sender_id!==me.id&&!c.muted)c.unread++;if(m.sender_id!==me.id){markDelivered();if(cur&&cur.id===c.id&&!document.hidden)markRead();}
   chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
+ }).on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"}chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
+ }).on("postgres_changes",{event:"UPDATE",schema:"public",table:"messages"},p=>{
+  const m=p.new;if(!cur||cur.id!==m.conversation_id)return;
+  const ex=cur.msgs.find(x=>x.id===m.id);if(ex){Object.assign(ex,m);scheduleRenderMsgs();}
  }).on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},p=>{
   if(!cur)return;const r=p.eventType==="DELETE"?p.old:p.new;
   if(!r||!cur.msgs.some(m=>m.id===r.message_id))return;
   setRx(r.message_id,r.user_id,p.eventType==="DELETE"?null:r.emoji);scheduleRenderMsgs();
- }).on("postgres_changes",{event:"UPDATE",schema:"public",table:"conversation_members"},p=>{if(cur&&p.new.conversation_id===cur.id){cur.mem.set(p.new.user_id,p.new);scheduleRenderMsgs();}}).on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{
+ }).on("postgres_changes",{event:"UPDATE",schema:"public",table:"conversation_members"},p=>{if(cur&&p.new.conversation_id===cur.id){cur.mem.set(p.new.user_id,p.new);scheduleRenderMsgs();}}).on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{}}).on("postgres_changes",{event:"*",schema:"public",table:"blocks",filter:"blocker_id=eq."+me.id},p=>{
+  const r=p.eventType==="DELETE"?p.old:p.new;if(!r)return;
+  if(p.eventType==="DELETE")blockedIds.delete(r.blocked_id);else blockedIds.add(r.blocked_id);
+  if(cur&&cur.kind==="dm")applyChatMode();if(tab==="feed")showFeed();render();
+ }).on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{
   const id=p.old?.id;if(cur&&id&&cur.msgs.some(m=>m.id===id)){cur.msgs=cur.msgs.filter(m=>m.id!==id);scheduleRenderMsgs();}
  }).subscribe();
 }
@@ -1259,7 +1268,7 @@ async function loadStories(){
  const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").gte("created_at",cutoff).order("created_at",{ascending:true}).limit(300);
  if(error){toast("Stories: "+errMsg(error));return;}const m=new Map();
  for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
- storyGroups=[...m.values()].sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
+ storyGroups=[...m.values()].filter(g=>!blockedIds.has(g.author.id)).sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
 }
 function openStory(i){sv={g:storyGroups[i],i:0};$("storyView").classList.add("show");showStory();}
 function showStory(){
@@ -1468,13 +1477,19 @@ async function findChannels(){closeAll();$("chQ").value="";$("chModal").classLis
 $("chQ").addEventListener("input",()=>{clearTimeout(chTimer);chTimer=setTimeout(searchChannels,250);});
 async function joinCh(a){const id=a.dataset.id;const {error}=await sb.rpc("join_channel",{p_conv:id});if(error)throw error;closeAll();await loadChats();await openChat(id);}
 async function info(){
- if(!cur)return;if(cur.kind==="dm"){openProfile(cur.other_id);return;}
+ if(!cur)return;const chat=cur;if(cur.kind==="dm"){openProfile(cur.other_id);return;}
  $("infoTitle").textContent=cur.name;$("infoSub").textContent=cur.members+(cur.kind==="channel"?" subscribers":" members");
  $("infoAdd").classList.toggle("hidden",!(cur.kind==="group"&&["owner","admin"].includes(cur.role)));
  $("infoList").innerHTML='<p class="mute">Loading…</p>';$("infoModal").classList.add("show");
  const {data}=await sb.from("conversation_members").select("user_id,role,profiles(display_name,username,avatar_url)").eq("conversation_id",cur.id).limit(200);
  $("infoList").innerHTML=(data||[]).map(m=>`<div class="hit"><span class="pav" data-prof="${esc(m.user_id)}">${avatar(m.profiles)}</span><div><b>${esc(m.profiles?.display_name||m.profiles?.username||"Member")}</b><small>@${esc(m.profiles?.username||"")}${m.role!=="member"?" · "+esc(m.role):""}</small></div></div>`).join("");
  if(cur.kind==="group")$("infoList").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin:10px 0"><button class="btn" data-act="grpCallVoice" style="width:auto;flex:1">${IC.phone} Voice call</button><button class="btn alt" data-act="grpCallVideo" style="width:auto;flex:1">${IC.video} Video call</button></div>`);
+ const {data:media}=await sb.from("messages").select("id,kind,file_url,created_at").eq("conversation_id",chat.id).in("kind",["image","video"]).order("created_at",{ascending:false}).limit(30);
+ if(cur!==chat)return;
+ if(media&&media.length){
+  const grid=media.filter(m=>m.file_url).map(m=>`<button class="thumb" data-act="openMediaUrl" data-url="${esc(m.file_url)}" data-kind="${esc(m.kind)}" aria-label="Open ${esc(m.kind)}">${m.kind==="video"?`<video src="${esc(m.file_url)}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${esc(m.file_url)}" alt="" loading="lazy">`}</button>`).join("");
+  if(grid)$("infoList").insertAdjacentHTML("beforeend",`<div style="padding:12px 0 6px;color:var(--pink2);font-size:12px;letter-spacing:.08em;text-transform:uppercase">Media · ${media.length}</div><div class="thumbs" style="padding:0">${grid}</div>`);
+ }
 }
 async function addMember(){
  const u=$("infoUser").value.trim();if(!u||!cur)return;
@@ -1595,12 +1610,12 @@ renderMsgs=function(){
  box.innerHTML=list.map(m=>{
   const d=dayLabel(m.created_at),sep=d!==last?`<div class="day"><span>${esc(d)}</span></div>`:"";last=d;const mine=m.sender_id===me.id;
   const media=!m.view_once&&(m.kind==="image"||m.kind==="video");
-  return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${fwdTag(m)}${quoteHTML(m)}${storyHTML(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}${tickHTML(m)}</span></div>${rxHTML(m)}</div>`;
+  return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${fwdTag(m)}${quoteHTML(m)}${storyHTML(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}${m.edited_at?" (edited)":""}${tickHTML(m)}</span></div>${rxHTML(m)}</div>`;
  }).join("");
  box.querySelectorAll(".mvid").forEach(mv=>{const old=savedVideos.get(mv.dataset.id);if(!old)return;const fresh=mv.querySelector("video");if(fresh && fresh.src===old.src)mv.replaceChild(old,fresh);});
  savedVideos.clear();
  box.scrollTop=(near||!cur.seen)?box.scrollHeight:keep;if(list.length)cur.seen=true;
- updateSendBtn();applyPlaying();if(vid&&va.ontimeupdate)va.ontimeupdate();
+ updateSendBtn();applyPlaying();if(vid&&va.ontimeupdate)va.ontimeupdate();cacheMsgsDebounced();
 };
 function setRx(mid,uid,e){let m=cur.rx.get(mid);if(!m){m=new Map();cur.rx.set(mid,m);}if(e)m.set(uid,e);else m.delete(uid);}
 async function loadReactions(){
@@ -1629,6 +1644,16 @@ async function react(a){
  const was=cur.rx.get(id)?.get(me.id);setRx(id,me.id,was===e?null:e);renderMsgs();
  const r=was===e?await sb.from("message_reactions").delete().eq("message_id",id).eq("user_id",me.id):await sb.from("message_reactions").upsert({message_id:id,user_id:me.id,emoji:e},{onConflict:"message_id,user_id"});
  if(r.error){toast(errMsg(r.error));loadReactions();}
+}
+async function editMsg(a){
+ hideRx();const m=cur?.msgs.find(x=>x.id===a.dataset.id);
+ if(!m||m.sender_id!==me.id||m.kind!=="text")return;
+ const val=prompt("Edit message",m.body);if(val===null)return;
+ const body=val.trim();if(!body||body===m.body)return;
+ const now=new Date().toISOString();
+ const {error}=await sb.from("messages").update({body,edited_at:now,edited_by:me.id}).eq("id",m.id);
+ if(error){toast(errMsg(error));return;}
+ m.body=body;m.edited_at=now;m.edited_by=me.id;renderMsgs();
 }
 async function copyMsg(a){hideRx();const m=cur.msgs.find(x=>x.id===a.dataset.id);try{await navigator.clipboard.writeText(m.body);toast("Copied.");}catch{toast("Could not copy.");}}
 async function delMsg(a){
@@ -1761,7 +1786,20 @@ async function openProfile(id){
  $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button></div>`}`;
  if(!self)$("profBody").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin-top:10px"><button class="btn alt" style="width:auto;flex:1" data-act="blockToggle" data-id="${esc(id)}">${blockedIds.has(id)?"Unblock":"Block"}</button><button class="btn alt" style="width:auto;flex:1" data-act="reportUser" data-id="${esc(id)}">Report</button></div>`);
  $("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="shareProfile" data-id="${esc(id)}" style="margin-top:10px;width:100%">Share profile</button>`);
+ if(self)$("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="showQR" data-id="${esc(id)}" style="margin-top:10px;width:100%">Show QR code</button>`);
  if(cur&&cur.kind==="dm"&&cur.other_id===id)$("profBody").insertAdjacentHTML("beforeend",`<button class="srow" data-act="toggleMute" data-id="${esc(cur.id)}" style="border:0;border-radius:12px;margin-top:8px"><div class="sx1"><b>${cur.muted?"Unmute":"Mute"} notifications</b><small>${cur.muted?"You will get alerts again":"No alerts, no badge"}</small></div></button>`);
+}
+async function showQR(a){
+ const id=a.dataset.id;
+ const {data:p}=await sb.from("profiles").select("username,display_name").eq("id",id).maybeSingle();
+ if(!p||!p.username){toast("Set a username in Settings first.");return;}
+ const url=`${location.origin}${location.pathname}?u=${encodeURIComponent(p.username)}`;
+ const canvas=document.createElement("canvas");
+ try{await QRCode.toCanvas(canvas,url,{width:280,margin:2,color:{dark:"#0f1318",light:"#ffffff"}});}
+ catch(e){toast("Could not generate QR code.");return;}
+ const wrap=document.createElement("div");wrap.style.cssText="text-align:center;padding:20px;background:#fff;border-radius:14px;margin:12px 0";wrap.appendChild(canvas);
+ $("profBody").innerHTML="";$("profBody").appendChild(wrap);
+ $("profBody").insertAdjacentHTML("beforeend",`<p class="mute" style="text-align:center;margin-bottom:10px">Scan to open @${esc(p.username)} on BOUNCY</p><button class="btn alt" data-act="shareProfile" data-id="${esc(id)}" style="width:100%">Share link instead</button>`);
 }
 async function shareProfile(a){
  const id=a.dataset.id;
@@ -1936,7 +1974,7 @@ showRx=function(b){
  const m=cur?.msgs.find(x=>x.id===b.dataset.mid);if(!m||m.pending)return;if(navigator.vibrate)navigator.vibrate(15);
  const mine=m.sender_id===me.id,my=cur.rx.get(m.id)?.get(me.id),pop=$("rxPop");
  const item=(act,icon,label,cls="")=>`<button class="${cls}" data-act="${act}" data-id="${esc(m.id)}">${icon} ${label}</button>`;
- pop.innerHTML=`<div class="rxbar">${["👍","❤️","😂","😮","😢","🙏"].map(e=>`<button data-act="react" data-id="${esc(m.id)}" data-e="${e}" class="${my===e?"on":""}">${e}</button>`).join("")}</div><div class="rxmenu">${item("replyMsg",IC.reply,"Reply")}${m.view_once?"":item("fwdMsg",IC.fwd,"Forward")}${m.kind==="text"?item("copyMsg",IC.copy,"Copy"):""}${mine?"":item("reportMsg",IC.flag,"Report")}${mine?item("delMsg",IC.trash,"Delete","danger"):""}</div>`;
+ pop.innerHTML=`<div class="rxbar">${["👍","❤️","😂","😮","😢","🙏"].map(e=>`<button data-act="react" data-id="${esc(m.id)}" data-e="${e}" class="${my===e?"on":""}">${e}</button>`).join("")}</div><div class="rxmenu">${item("replyMsg",IC.reply,"Reply")}${m.view_once?"":item("fwdMsg",IC.fwd,"Forward")}${m.kind==="text"?item("copyMsg",IC.copy,"Copy"):""}${mine&&m.kind==="text"?item("editMsg",IC.copy,"Edit"):""}${mine?"":item("reportMsg",IC.flag,"Report")}${mine?item("delMsg",IC.trash,"Delete","danger"):""}</div>`;
  pop.classList.add("show");$("rxBack").classList.add("show");
  const rc=b.getBoundingClientRect();pop.style.top=Math.max(70,Math.min(rc.top-62,innerHeight-300))+"px";
  pop.style.left=mine?"auto":"12px";pop.style.right=mine?"12px":"auto";pop.style.alignItems=mine?"flex-end":"flex-start";
@@ -2199,7 +2237,8 @@ document.addEventListener("timeupdate",e=>{const v=e.target,sec=v.closest?.(".re
 document.querySelectorAll(".modal2,#modal,.ob").forEach(m=>{m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");});
 /* ---------- EVENTS ---------- */
 const actions={
- menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
+ menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},showQR,editMsg,openMediaUrl:a=>openMedia(a.dataset.url,a.dataset.kind==="video",""),
+ 
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
