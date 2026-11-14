@@ -853,13 +853,16 @@ async function loadChats(){
  if(error){toast(errMsg(error));return false;}
  const old=new Map(chats.map(c=>[c.id,c]));
  chats=(data||[]).map(r=>{
-  const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request,other_is_request:!!r.other_is_request};
-  const o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};
+  const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request,other_is_request:!!r.other_is_request,unread:Number(r.unread_count||0)};
+  const o=old.get(base.id);return o?Object.assign(o,base):{...base,msgs:[]};
  });
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
  render();return true;
 }
 function render(){
+ const totalUnread=chats.reduce((sum,c)=>sum+((c.archived||c.is_request)?0:(Number(c.unread)||0)),0);
+ const tabBtn=$("tabChats");
+ if(tabBtn)tabBtn.innerHTML=totalUnread>0?`CHATS <span class="badge" style="display:inline-flex;vertical-align:middle;margin-left:6px;min-width:18px;height:18px;align-items:center;justify-content:center;font-size:11px">${totalUnread>99?"99+":totalUnread}</span>`:"CHATS";
  const f=filter.toLowerCase();
  let found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(f));
  if(viewingArchived)found=found.filter(c=>c.archived);
@@ -1080,9 +1083,11 @@ function showChats(){
 async function showCalls(){
  closeAll();$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="calls";$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
  const cl=$("callsList");cl.classList.remove("hidden");
+ const {error:missErr}=await sb.rpc("mark_missed_calls");if(missErr)console.warn("Missed-call update:",missErr.message);
  const {data,error}=await sb.from("call_sessions").select("id,caller_id,call_type,status,created_at").order("created_at",{ascending:false}).limit(40);
  if(error){cl.innerHTML=`<div class="empty">${esc(errMsg(error))}</div>`;return;}
- cl.innerHTML=(data||[]).map(c=>{const out=c.caller_id===me.id;return `<div class="row"><div class="avatar">${c.call_type==="video"?IC.video:IC.phone}</div><div class="mid"><div class="top"><span class="name">${out?"Outgoing":"Incoming"} ${esc(c.call_type)}</span><span class="time">${new Date(c.created_at).toLocaleDateString()}</span></div><div class="sub"><span class="last">${esc(c.status)}</span></div></div></div>`;}).join("")||'<div class="empty">No calls yet.</div>';
+ cl.innerHTML=(data||[]).map(c=>{const out=c.caller_id===me.id,isMissed=(c.status==="missed"||c.status==="declined")&&!out,color=isMissed?"var(--bad)":"var(--text)";return `<div class="row"><div class="avatar" style="color:${color};border:1px solid ${color}">${c.call_type==="video"?IC.video:IC.phone}</div><div class="mid"><div class="top"><span class="name" style="color:${color}">${out?"Outgoing":"Incoming"} ${esc(c.call_type)}</span><span class="time">${new Date(c.created_at).toLocaleDateString()}</span></div><div class="sub"><span class="last" style="color:${color}">${esc(c.status)}</span></div></div></div>`;}).join("")||'<div class="empty">No calls yet.</div>';
+}
 }
 
 /* ---------- CALLS ---------- */
@@ -1399,7 +1404,7 @@ function cleanupCall(){
 }
 
 /* ---------- VOICE NOTES / FEED / STORIES ---------- */
-let tab="chats",feed=[],feedEnd=false,feedBusy=false,storyGroups=[],sv=null,svTimer=null,openPost=null,postFile=null,rec=null,vid=null;
+let tab="chats",feed=[],feedEnd=false,feedBusy=false,storyGroups=[],sv=null,svTimer=null,openPost=null,postFile=null,postTrim=null,rec=null,vid=null;
 const SVG={
  play:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
  pause:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>',
@@ -1600,7 +1605,7 @@ $("feedList").addEventListener("scroll",e=>{const f=e.target;if(f.scrollTop+f.cl
 function newPost(){closeAll();postFile=null;$("postText").value="";$("postFileName").textContent="";showPrev("postPrev",null);$("postCount").textContent="0";$("postWho").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><div class="mute">@${esc(profile.username||"")}</div></div>`;$("postModal").classList.add("show");$("postText").focus();}
 async function pickPostFile(){
  const f=await pickFile("image/*,video/*");if(!f)return;
- openEditor(f,editedFile=>{postFile=editedFile;$("postFileName").textContent=editedFile.name;showPrev("postPrev",editedFile);});
+ openEditor(f,(editedFile,trim)=>{postFile=editedFile;postTrim=trim;$("postFileName").textContent=editedFile.name;showPrev("postPrev",editedFile);});
 }
 async function submitPost(){
  const body=$("postText").value.trim();if(!body&&!postFile){toast("Write something or add a photo or video.");return;}
@@ -1609,7 +1614,7 @@ async function submitPost(){
  try{
   let media_url=null,media_type=null;
   if(postFile){media_url=await upload("posts",postFile,upBar("Posting"));media_type=postFile.type.startsWith("video")?"video":"image";}
-  const {error}=await sb.from("posts").insert({author_id:me.id,body,media_url,media_type});if(error)throw error;
+  const {error}=await sb.from("posts").insert({author_id:me.id,body,media_url,media_type,trim_start:postTrim?.start??null,trim_end:postTrim?.end??null});if(error)throw error;postFile=null;postTrim=null;
   closeAll();if(tab!=="feed")await showFeed();else{feed=[];feedEnd=false;await loadFeed();$("feedList").scrollTop=0;}
  }finally{b.disabled=false;}
 }
@@ -1634,7 +1639,7 @@ $("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
 /* stories */
 async function loadStories(){
  const cutoff=new Date(Date.now()-864e5).toISOString();
- const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").gte("created_at",cutoff).order("created_at",{ascending:true}).limit(300);
+ const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,trim_start,trim_end,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").gte("created_at",cutoff).order("created_at",{ascending:true}).limit(300);
  if(error){toast("Stories: "+errMsg(error));return;}
  const m=new Map(),chattingWith=new Set(chats.map(c=>c.other_id).filter(Boolean));chattingWith.add(me.id);
  for(const x of data||[]){if(!chattingWith.has(x.author_id))continue;if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
@@ -1659,7 +1664,7 @@ function showStory(){
  const finishBar=()=>{if(curBar){curBar.classList.remove("cur");curBar.classList.add("done");}};
 
  if(s.media_type==="video" && s.media_url){
-  box.innerHTML=`${load}<video src="${esc(s.media_url)}" autoplay playsinline preload="auto"></video>`;
+  box.innerHTML=`${load}<video src="${esc(mediaTrimSrc(s.media_url,s.trim_start,s.trim_end))}" autoplay playsinline preload="auto"></video>`;
   const v=box.querySelector("video");
   v.addEventListener("loadeddata",()=>{
    if(!sv||sv.g!==g||sv.i!==i)return;
@@ -1749,7 +1754,7 @@ async function changePhoto(){
 /* ---------- GROUPS / CHANNELS / STORY EXTRAS ---------- */
 const IC={phone:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>`,video:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>`,group:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14.5a5 5 0 0 1 4.5 5"/></svg>`,channel:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 10v4h4l8 4V6L7 10z"/><path d="M18 9a4 4 0 0 1 0 6"/></svg>`,eye:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`,x:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M6 6l12 12M18 6L6 18"/></svg>`};
 Object.assign(IC,{pin:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;color:var(--pink)"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg>`,bellOff:`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;opacity:.6"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`});
-const names=new Map();let storyFile=null,grpKind="group",grpMembers=new Map(),grpTimer=null,chTimer=null;
+const names=new Map();let storyFile=null,storyTrim=null,grpKind="group",grpMembers=new Map(),grpTimer=null,chTimer=null;
 function chatAvatar(c){return c.kind==="group"?`<div class="avatar">${IC.group}</div>`:c.kind==="channel"?`<div class="avatar">${IC.channel}</div>`:avatar(c.person);}
 function senderTag(m){
  if(!cur||cur.kind==="dm"||m.sender_id===me.id)return"";
@@ -1875,8 +1880,8 @@ async function leaveChat(){if(!cur)return;const id=cur.id,name=cur.name;appConfi
 async function addStory(){
  closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
  if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
- openEditor(f,editedFile=>{
-  storyFile=editedFile;$("stFileName").textContent=editedFile.name;showPrev("stPrev",editedFile);
+ openEditor(f,(editedFile,trim)=>{
+  storyFile=editedFile;storyTrim=trim;$("stFileName").textContent=editedFile.name;showPrev("stPrev",editedFile);
   $("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
  },90);
 }
@@ -1884,8 +1889,8 @@ async function submitStory(){
  if(!storyFile)return;const b=$("stBtn");b.disabled=true;
  try{
   toast("Uploading story…");const url=await upload("posts",storyFile,upBar("Sharing story"));
-  const {error}=await sb.from("stories").insert({author_id:me.id,media_url:url,media_type:storyFile.type.startsWith("video")?"video":"image",caption:$("stCapInput").value.trim()});
-  if(error)throw error;storyFile=null;closeAll();await loadStories();if(tab==="feed")renderFeed();toast("Story posted.");
+  const {error}=await sb.from("stories").insert({author_id:me.id,media_url:url,media_type:storyFile.type.startsWith("video")?"video":"image",caption:$("stCapInput").value.trim(),trim_start:storyTrim?.start??null,trim_end:storyTrim?.end??null});
+  if(error)throw error;storyFile=null;storyTrim=null;closeAll();await loadStories();if(tab==="feed")renderFeed();toast("Story posted.");
  }finally{b.disabled=false;}
 }
 function afterShow(s,g){
@@ -1959,7 +1964,7 @@ function msgInner(m){
  if(m.kind==="audio")return songHTML(m);
  if(m.kind==="file")return fileHTML(m);
  if(m.kind==="image")return `<img class="mimg" src="${esc(m.file_url)}" loading="lazy" alt="" data-act="viewMedia" data-id="${esc(m.id)}">`;
- if(m.kind==="video")return `<div class="mvid" data-act="viewMedia" data-id="${esc(m.id)}"><video src="${esc(m.file_url)}#t=0.1" preload="metadata" muted playsinline></video><span class="mplay">${SVG.play}</span></div>`;
+ if(m.kind==="video")return `<div class="mvid" data-act="viewMedia" data-id="${esc(m.id)}"><video src="${esc(mediaTrimSrc(m.file_url,m.trim_start,m.trim_end))}" preload="metadata" muted playsinline></video><span class="mplay">${SVG.play}</span></div>`;
  const body=cur?.kind==="group"&&m.body?esc(m.body).replace(/@([a-z0-9_]{2,24})/gi,'<span style="color:var(--pink2);font-weight:600">@$1</span>'):esc(m.body);
  return `<span class="body-text">${body}</span>`;
 }
@@ -2035,7 +2040,7 @@ async function delMsg(a){hideRx();const id=a.dataset.id;appConfirm("Delete messa
 function attach(){if(cur)$("attModal").classList.add("show");}
 const ACC_MEDIA="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/3gpp";
 const ACC_AUDIO="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/flac,audio/x-m4a,audio/webm,.mp3,.m4a,.aac,.wav,.opus,.flac,.ogg";
-let attFiles=[];
+let attFiles=[],attTrims=[];
 function pickFiles(accept){return new Promise(res=>{const i=$("fileIn");i.accept=accept;i.multiple=true;i.value="";i.onchange=()=>{i.multiple=false;res([...i.files]);};i.click();});}
 function okFiles(fs){const ok=fs.filter(f=>f.size<=50*1048576);if(ok.length<fs.length)toast("Some files were over 50 MB and were skipped.");return ok.slice(0,10);}
 function renderThumbs(){
@@ -2046,16 +2051,16 @@ function renderThumbs(){
  $("mdPrev")._urls=urls;
  $("mdBtn").textContent=attFiles.length>1?"SEND "+attFiles.length:"SEND";
 }
-function rmThumb(a){attFiles.splice(+a.dataset.i,1);if(!attFiles.length){closeAll();return;}renderThumbs();}
+function rmThumb(a){attFiles.splice(+a.dataset.i,1);attTrims.splice(+a.dataset.i,1);if(!attFiles.length){closeAll();return;}renderThumbs();}
 async function attMedia(){
  closeAll();const fs=okFiles(await pickFiles(ACC_MEDIA));if(!fs.length)return;
- openEditor(fs[0],editedFile=>{attFiles=[editedFile,...fs.slice(1)];$("onceChk").checked=false;renderThumbs();$("mediaModal").classList.add("show");});
+ openEditor(fs[0],(editedFile,trim)=>{attFiles=[editedFile,...fs.slice(1)];attTrims=[trim,...fs.slice(1).map(()=>null)];$("onceChk").checked=false;renderThumbs();$("mediaModal").classList.add("show");});
 }
 async function attDoc(){closeAll();for(const f of okFiles(await pickFiles("*/*")))await sendAttachment(f,"file",false);}
 async function attAudio(){closeAll();for(const f of okFiles(await pickFiles(ACC_AUDIO)))await sendAttachment(f,"audio",false);}
 async function sendMedia(){
- const fs=attFiles,once=$("onceChk").checked;if(!fs.length)return;closeAll();attFiles=[];
- for(const f of fs)await sendAttachment(f,f.type.startsWith("video")?"video":"image",once);
+ const fs=attFiles,trims=attTrims,once=$("onceChk").checked;if(!fs.length)return;closeAll();attFiles=[];attTrims=[];
+ for(let i=0;i<fs.length;i++){const f=fs[i];await sendAttachment(f,f.type.startsWith("video")?"video":"image",once,trims[i]||null);}
 }
 function uploadingHTML(m){
  const p=m.progress||0,circ=119.38;
@@ -2074,7 +2079,7 @@ function updateProg(m){
  el.querySelectorAll(".wave i").forEach((b,i,all)=>b.classList.toggle("on",i<all.length*p/100));
 }
 function cancelUpload(a){const m=cur?.msgs.find(x=>x.id===a.dataset.id);if(m&&m.ctl&&m.ctl.abort)m.ctl.abort();}
-async function sendAttachment(f,kind,once){
+async function sendAttachment(f,kind,once,trim=null){
  if(!cur)return;if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
  const conv=cur.id,id=crypto.randomUUID(),rid=takeReply();
  const label=once?(kind==="video"?"View once video":"View once photo"):kind==="image"?"Photo":kind==="video"?"Video":f.name;
@@ -2085,7 +2090,7 @@ async function sendAttachment(f,kind,once){
   const path=`${me.id}/${crypto.randomUUID()}.${ext}`;
   await putFile(bucket,path,f,pct=>{tmp.progress=pct;updateProg(tmp);},tmp.ctl);
   const url=once?null:sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
-  const {error}=await sb.from("messages").insert({id,conversation_id:conv,sender_id:me.id,reply_to:rid,body:tmp.body,kind,file_url:url,file_name:f.name.slice(0,200),file_size:f.size,mime:f.type||null,view_once:once,media_path:once?path:null});
+  const {error}=await sb.from("messages").insert({id,conversation_id:conv,sender_id:me.id,reply_to:rid,body:tmp.body,kind,file_url:url,file_name:f.name.slice(0,200),file_size:f.size,mime:f.type||null,view_once:once,media_path:once?path:null,trim_start:kind==="video"&&trim?trim.start:null,trim_end:kind==="video"&&trim?trim.end:null});
   if(error&&error.code!=="23505")throw error;
   Object.assign(tmp,{file_url:url,media_path:once?path:null,uploading:false,pending:false});
   if(cur&&cur.id===conv)renderMsgs();
@@ -2096,9 +2101,9 @@ async function sendAttachment(f,kind,once){
  }finally{setTimeout(()=>URL.revokeObjectURL(tmp.localUrl),1500);}
 }
 let mvCurrentUrl=null,currentViewOnce=false;
-function openMedia(url,isVideo,note,isViewOnce=false){
+function openMedia(url,isVideo,note,isViewOnce=false,trimStart=null,trimEnd=null){
  currentViewOnce=!!isViewOnce;mvCurrentUrl=url;
- $("mvBody").innerHTML=isVideo?vpHTML(url,{autoplay:true}):`<img src="${esc(url)}" alt="" draggable="false" oncontextmenu="return false">`;
+ $("mvBody").innerHTML=isVideo?vpHTML(mediaTrimSrc(url,trimStart,trimEnd),{autoplay:true}):`<img src="${esc(url)}" alt="" draggable="false" oncontextmenu="return false">`;
  $("mvNote").textContent=note||"";
  const saveBtn=document.querySelector('[data-act="saveMedia"]');
  if(saveBtn)saveBtn.style.display=currentViewOnce?"none":"flex";
@@ -2110,7 +2115,7 @@ function mvClose(){
  $("mvBody").innerHTML="";$("mvView").classList.remove("show");
 }
 async function saveMedia(){if(currentViewOnce){toast("Saving is disabled for view once media.");return;}if(!mvCurrentUrl)return;try{const r=await fetch(mvCurrentUrl);if(!r.ok)throw Error("Could not fetch file");const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="bouncy-"+Date.now()+(b.type.startsWith("video")?".mp4":".jpg");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Saved.");}catch(e){toast("Save failed: "+errMsg(e));}}
-function viewMedia(a){const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openMedia(m.file_url,m.kind==="video","");}
+function viewMedia(a){const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openMedia(m.file_url,m.kind==="video","",false,m.trim_start,m.trim_end);}
 async function openOnce(a){
  const id=a.dataset.id,{data,error}=await sb.rpc("open_view_once",{p_msg:id});if(error)throw error;
  const r=data?.[0];cur.opened.add(id);
@@ -2222,7 +2227,7 @@ async function saveEditor(){
  const btn=$("editorSaveBtn");if(!editorFile)return;
  btn.disabled=true;btn.textContent="Processing…";
  try{
-  let finalFile=editorFile;
+  let finalFile=editorFile,trimData=null;
   if(editorType==="image"){
    const img=$("editImg");if(!img.complete||!img.naturalWidth)throw Error("Image is not ready yet.");
    const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");if(!ctx)throw Error("Image editing is unavailable.");
@@ -2235,15 +2240,13 @@ async function saveEditor(){
   }else{
    const start=parseFloat($("vidStart").value),end=parseFloat($("vidEnd").value);
    if(!Number.isFinite(start)||!Number.isFinite(end)||end-start<0.5)throw Error("Choose a video section at least half a second long.");
-   $("editProcessing").classList.remove("hidden");
-   finalFile=await trimVideoInBrowser(start,end);
-   $("editProcessing").classList.add("hidden");
+   trimData={start,end};
   }
   if(finalFile.size>50*1048576)throw Error("Edited file is larger than 50 MB.");
   const cb=editorCallback;
   $("mediaEditorModal").classList.remove("show");releaseEditorUrl();editorFile=null;editorCallback=null;editorType=null;editorMaxDuration=null;
   $("editVid").pause();$("editVid").removeAttribute("src");$("editImg").removeAttribute("src");
-  if(cb)cb(finalFile);
+  if(cb)cb(finalFile,trimData);
  }catch(e){$("editProcessing").classList.add("hidden");toast("Media editor: "+(e&&e.message?e.message:String(e)));}
  finally{btn.disabled=false;btn.textContent="Done";}
 }
@@ -2615,7 +2618,10 @@ async function loadMembers(){
 }
 let mdT=null,mrT=null;
 function markDelivered(){clearTimeout(mdT);mdT=setTimeout(()=>{if(me)fire(sb.rpc("mark_all_delivered"));},800);}
-function markRead(){if(!cur)return;clearTimeout(mrT);const id=cur.id;mrT=setTimeout(()=>{if(me&&!document.hidden)fire(sb.rpc("mark_read",{p_conv:id}));},500);}
+function markRead(){
+ if(!cur||document.hidden)return;clearTimeout(mrT);const id=cur.id;
+ mrT=setTimeout(()=>{if(!me||document.hidden||!cur||cur.id!==id)return;fire(sb.rpc("mark_read",{p_conv:id}));const c=chats.find(x=>x.id===id);if(c&&c.unread){c.unread=0;render();}},1000);
+}
 function seenFmt(d){
  const t=new Date(),y=new Date(Date.now()-864e5),hm=d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
  return d.toDateString()===t.toDateString()?"today at "+hm:d.toDateString()===y.toDateString()?"yesterday at "+hm:d.toLocaleDateString([],{day:"numeric",month:"short"});
@@ -2626,9 +2632,10 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden){appHiddenA
 window.addEventListener("pagehide",()=>{if(me)fire(sb.rpc("touch_last_seen"));});
 
 /* story replies */
+function mediaTrimSrc(url,start,end){const base=String(url||"").split("#")[0];const hasStart=start!==null&&start!==undefined&&Number.isFinite(Number(start)),hasEnd=end!==null&&end!==undefined&&Number.isFinite(Number(end));if(!hasStart&&!hasEnd)return base+"#t=0.1";const a=hasStart?Math.max(0,Number(start)):0,b=hasEnd?Math.max(a+0.1,Number(end)):"";return base+"#t="+a+(b!==""?","+b:"");}
 function storyHTML(m){
  if(!m.story_id)return"";
- const th=m.story_media_url?(m.story_media_type==="video"?`<video src="${esc(m.story_media_url)}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${esc(m.story_media_url)}" alt="" loading="lazy">`):"";
+ const th=m.story_media_url?(m.story_media_type==="video"?`<video src="${esc(mediaTrimSrc(m.story_media_url,m.trim_start,m.trim_end))}" muted playsinline preload="metadata"></video>`:`<img src="${esc(m.story_media_url)}" alt="" loading="lazy">`):"";
  return `<div class="sref" data-act="openStoryRef" data-id="${esc(m.story_id)}"><div class="sth">${th}</div><div><b>${m.sender_id===me.id?"You replied to a story":"Replied to your story"}</b><span>Tap to view</span></div></div>`;
 }
 async function openStoryRef(a){
@@ -2758,9 +2765,9 @@ async function doDelete(){
 
 /* ---------- REELS (vertical swipe viewer) ---------- */
 let reels=[],reelsMuted=false,reelIO=null,reelClick=null;
-function fvHTML(p){return `<div class="fv" data-act="openReels" data-id="${esc(p.id)}"><video src="${esc(p.media_url)}" muted loop playsinline preload="metadata"></video><span class="fvb">${SVG.play} Reel</span></div>`;}
+function fvHTML(p){return `<div class="fv" data-act="openReels" data-id="${esc(p.id)}"><video src="${esc(mediaTrimSrc(p.media_url,p.trim_start,p.trim_end))}" muted loop playsinline preload="metadata"></video><span class="fvb">${SVG.play} Reel</span></div>`;}
 function reelHTML(p){
- return `<section class="reel" data-id="${esc(p.id)}"><video src="${esc(p.media_url)}" loop playsinline preload="metadata"></video><div class="reelPlay">${SVG.play}</div>
+ return `<section class="reel" data-id="${esc(p.id)}"><video src="${esc(mediaTrimSrc(p.media_url,p.trim_start,p.trim_end))}" loop playsinline preload="metadata"></video><div class="reelPlay">${SVG.play}</div>
  <div class="reelRail"><button class="rl" data-act="reelLike" data-id="${esc(p.id)}" aria-label="Like">${SVG.heart(p.liked)}<span>${p.like_count}</span></button><button class="rc" data-act="cmt" data-id="${esc(p.id)}" aria-label="Comments">${SVG.cmt}<span>${p.comment_count}</span></button><button data-act="share" data-id="${esc(p.id)}" aria-label="Share">${IC.share}<span>Share</span></button><button class="rm" data-act="reelMute" aria-label="Sound">${reelsMuted?IC.volOff:IC.vol}</button></div>
  <div class="reelInfo"><div class="who" data-prof="${esc(p.author_id)}">${avatar(p)}<div><b>${esc(p.display_name||p.username)}</b><small>@${esc(p.username||"")}</small></div></div>${p.body?`<p>${esc(p.body)}</p>`:""}</div><div class="reelBar"><i></i></div></section>`;
 }
