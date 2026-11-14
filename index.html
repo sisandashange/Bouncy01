@@ -467,7 +467,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
  </div>
 </div>
 <div id="addCallModal" class="modal2"><div class="box"><h3 id="addCallTitle">Add participant</h3><p class="mute" id="addCallSub" style="margin-bottom:8px"></p><input class="f" id="addCallQ" placeholder="Search name or username" autocomplete="off"><div id="addCallList" style="max-height:46vh;overflow:auto"></div></div></div>
-<div id="upBar" class="hidden"><div class="upT"><span id="upLbl">Uploading</span><b id="upPct">0%</b></div><div class="upTrack"><i id="upFill"></i></div></div></div>
+<div id="upBar" class="hidden"><div class="upT"><span id="upLbl">Uploading</span><b id="upPct">0%</b></div><div class="upTrack"><i id="upFill"></i></div></div>
 
 <div id="overlay" class="overlay"></div>
 <div id="drawer">
@@ -597,10 +597,13 @@ async function logout(){
 }
 
 /* ---------- CHATS ---------- */
+let lastChatsLoad=0;
 async function loadChats(){
  const {data,error}=await sb.rpc("get_my_chats");
  if(error){toast(errMsg(error));return;}
- chats=(data||[]).map(r=>({id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,unread:0,msgs:[]}));
+ lastChatsLoad=Date.now();const old=new Map(chats.map(c=>[c.id,c]));
+ chats=(data||[]).map(r=>{const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at},o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};});
+ if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
  render();
 }
 function render(){
@@ -609,10 +612,11 @@ function render(){
  $("list").innerHTML=found.map(c=>`<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}"`:""}>${chatAvatar(c)}</span><div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
 }
 async function openChat(id){
- cur=chats.find(c=>c.id===id);if(!cur)return;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
+ const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");applyChatMode();updatePresence();render();
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
+ if(cur!==chat)return;
  if(error){toast(errMsg(error));return;}
  for(const m of data||[])if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);cur.msgs=(data||[]).reverse();renderMsgs();loadReactions();loadOpens();loadMembers();markRead();if(cur.kind==="dm")sb.rpc("get_last_seen",{p_user:cur.other_id}).then(({data})=>{if(cur){cur.lastSeen=data?new Date(data):null;updatePresence();}});
 }
@@ -720,7 +724,8 @@ function subscribePresence(){
   .subscribe(s=>{if(s==="SUBSCRIBED"&&mySet.show_online)presenceChannel.track({at:Date.now()});});
 }
 function updatePresence(){if(cur)$("hStatus").textContent=cur.kind==="dm"?(onlineIds.has(cur.other_id)?"online":(cur.lastSeen?"last seen "+seenFmt(cur.lastSeen):"last seen recently")):cur.members+(cur.kind==="channel"?" subscribers":" members");}
-function closeAll(){document.querySelectorAll(".modal2.show").forEach(m=>m.classList.remove("show"));$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
+function resumeStory(){if(sv&&$("storyView").classList.contains("show")&&$("vwModal").classList.contains("show")){const s0=sv.g.items[sv.i];if(s0&&s0.media_type==="image"){clearTimeout(svTimer);svTimer=setTimeout(nextStory,5000);}}}
+function closeAll(){resumeStory();document.querySelectorAll(".modal2.show").forEach(m=>m.classList.remove("show"));$("drawer").classList.remove("open");$("overlay").classList.remove("show");$("modal").classList.remove("show");}
 function showChats(){$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="chats";$("tabChats").classList.add("on");$("tabCalls").classList.remove("on");$("list").classList.remove("hidden");$("callsList").classList.add("hidden");}
 async function showCalls(){
  closeAll();$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="calls";$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
@@ -797,7 +802,7 @@ async function refreshParts(){
  const m=new Map();
  for(const r of data||[])m.set(r.user_id,{status:r.status,joined_at:r.joined_at,name:r.profiles?.display_name||r.profiles?.username,profile:r.profiles});
  call.parts=m;
- for(const [u,p] of m)if(u!==me.id&&p.status!=="joined")removePeer(u);
+ for(const [u,p] of m)if(u!==me.id&&["declined","left","missed"].includes(p.status))removePeer(u);
  const mine=m.get(me.id);
  if(call.incomingPending){if(mine&&mine.status!=="invited"){cleanupCall();return;}}
  else{
@@ -979,7 +984,7 @@ function cleanupCall(){
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
  $("localVideo").srcObject=null;$("callGrid").innerHTML="";$("callLayer").classList.remove("show","video");
  for(const c of [sigChan,partChan])if(c)sb.removeChannel(c);
- sigChan=partChan=null;call=null;seen.clear();closeAll();
+ sigChan=partChan=null;call=null;seen.clear();$("addCallModal").classList.remove("show");
 }
 
 /* ---------- VOICE NOTES / FEED / STORIES ---------- */
@@ -994,7 +999,7 @@ const SVG={
 };
 const dur=ms=>{const t=Math.round((ms||0)/1000);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");};
 const ago=d=>{const t=(Date.now()-new Date(d))/1000;return t<60?"now":t<3600?Math.floor(t/60)+"m":t<86400?Math.floor(t/3600)+"h":Math.floor(t/86400)+"d";};
-function pickFile(accept){return new Promise(res=>{const i=$("fileIn");i.accept=accept;i.value="";i.onchange=()=>res(i.files[0]||null);i.click();});}
+function pickFile(accept){return new Promise(res=>{const i=$("fileIn");i.accept=accept;i.multiple=false;i.value="";i.onchange=()=>res(i.files[0]||null);i.click();});}
 const SB_URL="https://nruksvjkytpxbiemtalj.supabase.co",SB_KEY="sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-";
 function putFile(bucket,path,file,onProgress,ctl){
  return new Promise(async(res,rej)=>{
@@ -1345,14 +1350,14 @@ renderMsgs=function(){
 };
 function setRx(mid,uid,e){let m=cur.rx.get(mid);if(!m){m=new Map();cur.rx.set(mid,m);}if(e)m.set(uid,e);else m.delete(uid);}
 async function loadReactions(){
- if(!cur)return;const ids=cur.msgs.filter(m=>!String(m.id).startsWith("tmp")).map(m=>m.id);if(!ids.length)return;
+ if(!cur)return;const chat=cur,ids=cur.msgs.filter(m=>!String(m.id).startsWith("tmp")).map(m=>m.id);if(!ids.length)return;
  const {data}=await sb.from("message_reactions").select("message_id,user_id,emoji").in("message_id",ids);
- if(!cur)return;cur.rx=new Map();for(const r of data||[])setRx(r.message_id,r.user_id,r.emoji);renderMsgs();
+ if(cur!==chat)return;cur.rx=new Map();for(const r of data||[])setRx(r.message_id,r.user_id,r.emoji);renderMsgs();
 }
 async function loadOpens(){
- if(!cur)return;const ids=cur.msgs.filter(m=>m.view_once).map(m=>m.id);if(!ids.length)return;
+ if(!cur)return;const chat=cur,ids=cur.msgs.filter(m=>m.view_once).map(m=>m.id);if(!ids.length)return;
  const {data}=await sb.from("view_once_opens").select("message_id").in("message_id",ids);
- if(!cur)return;for(const r of data||[])cur.opened.add(r.message_id);renderMsgs();
+ if(cur!==chat)return;for(const r of data||[])cur.opened.add(r.message_id);renderMsgs();
 }
 /* long-press reaction menu */
 let lpTimer=null,lpX=0,lpY=0;
@@ -1433,7 +1438,7 @@ async function sendAttachment(f,kind,once){
  }catch(e){
   if(cur&&cur.id===conv){cur.msgs=cur.msgs.filter(x=>x!==tmp);renderMsgs();}
   if(e.message!=="cancelled")toast("Not sent: "+errMsg(e));
- }
+ }finally{setTimeout(()=>URL.revokeObjectURL(tmp.localUrl),1500);}
 }
 function openMedia(url,isVideo,note){
  $("mvBody").innerHTML=isVideo?vpHTML(url,{autoplay:true}):`<img src="${esc(url)}" alt="" draggable="false" oncontextmenu="return false">`;
@@ -1538,6 +1543,7 @@ const guess=()=>{const l=(navigator.language||"en").slice(0,2);return T[l]?l:"en
 const ob={lang:localStorage.getItem("lang")||guess(),dial:"+27",phone:"",email:"",pass:"",photo:null,unOk:false};
 const tr=k=>(T[ob.lang]||T.en)[k]||T.en[k];
 function applyLang(){
+ if(!T[ob.lang])ob.lang="en";
  document.documentElement.lang=ob.lang;
  document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=tr(el.dataset.t);});
  document.querySelectorAll("[data-tp]").forEach(el=>{el.placeholder=tr(el.dataset.tp);});
@@ -1914,6 +1920,7 @@ $("reelsScroll").addEventListener("dblclick",e=>{
 for(const ev of ["play","pause"])document.addEventListener(ev,e=>{const sec=e.target.closest?.(".reel");if(sec)sec.classList.toggle("paused",e.target.paused);},true);
 document.addEventListener("timeupdate",e=>{const v=e.target,sec=v.closest?.(".reel");if(sec&&v.duration)sec.querySelector(".reelBar i").style.width=(v.currentTime/v.duration*100)+"%";},true);
 
+document.querySelectorAll(".modal2,#modal,.ob").forEach(m=>{m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");});
 /* ---------- EVENTS ---------- */
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},
@@ -1948,7 +1955,7 @@ $("searchInput").addEventListener("input",e=>{filter=e.target.value;render();});
 $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 history.scrollRestoration="manual";
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me){markDelivered();if(cur){markRead();syncCurrent();}if(msgChannel&&msgChannel.state!=="joined")subscribeMessages();}if(me)loadChats();if(me&&!msgChannel)subscribeMessages();}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me){markDelivered();if(cur){markRead();syncCurrent();}if(msgChannel&&msgChannel.state!=="joined")subscribeMessages();}if(me&&Date.now()-lastChatsLoad>30000)loadChats();if(me&&!msgChannel)subscribeMessages();}});
 window.addEventListener("online",()=>{if(me){subscribeMessages();subscribeIncomingCalls();loadChats();syncCurrent();}});
 
 const t0=Date.now();
