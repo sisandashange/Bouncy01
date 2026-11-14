@@ -490,6 +490,12 @@ select.f option{background:#1f262f;color:#f2f5f8}
 #stFoot{padding:10px 16px calc(env(safe-area-inset-bottom) + 16px);background:transparent}
 #stFoot input{background:rgba(255,255,255,.15);border:0;padding:12px 16px;font-size:15px}
 #stFoot .send{background:var(--pink);color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+/* Stable chat sizing and Android keyboard handling */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+#app{height:100dvh;min-height:0;overflow:hidden}
+#chatView{width:100%;height:100dvh;min-height:0;overflow:hidden}
+.cHead,.inp,#replyBar,#recBar,#reqBar,#blkBar,#roBar{flex-shrink:0}
+.msgs{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 </style>
 </head>
 <body>
@@ -829,7 +835,7 @@ async function enterApp(){
  await loadSettings();await loadChats();await maybeLock();
  const qp=new URLSearchParams(location.search),shareUser=qp.get("u");
  if(shareUser){history.replaceState({},"",location.pathname);sb.rpc("search_people",{q:shareUser}).then(({data})=>{const hit=(data||[]).find(p=>(p.username||"").toLowerCase()===shareUser.toLowerCase())||(data||[])[0];if(hit)openProfile(hit.id);});}
- subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();await loadBlocks();
+ subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();await loadBlocks();checkMissedCalls();
 }
 async function logout(){
  appConfirm("Log out","Log out of BOUNCY?",async()=>{
@@ -859,10 +865,25 @@ async function loadChats(){
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
  render();return true;
 }
-function render(){
+let missedCallsCount=0;
+function renderTabs(){
  const totalUnread=chats.reduce((sum,c)=>sum+((c.archived||c.is_request)?0:(Number(c.unread)||0)),0);
- const tabBtn=$("tabChats");
- if(tabBtn)tabBtn.innerHTML=totalUnread>0?`CHATS <span class="badge" style="display:inline-flex;vertical-align:middle;margin-left:6px;min-width:18px;height:18px;align-items:center;justify-content:center;font-size:11px">${totalUnread>99?"99+":totalUnread}</span>`:"CHATS";
+ const chatTab=$("tabChats"),callTab=$("tabCalls");
+ if(chatTab)chatTab.innerHTML=totalUnread>0?`CHATS <span class="badge" style="display:inline-flex;vertical-align:middle;margin-left:6px;min-width:18px;height:18px;align-items:center;justify-content:center;font-size:11px">${totalUnread>99?"99+":totalUnread}</span>`:"CHATS";
+ if(callTab)callTab.innerHTML=missedCallsCount>0?`CALLS <span class="badge" style="display:inline-flex;vertical-align:middle;margin-left:6px;min-width:18px;height:18px;font-size:11px;background:var(--bad)">${missedCallsCount>99?"99+":missedCallsCount}</span>`:"CALLS";
+}
+async function checkMissedCalls(){
+ if(!me)return;
+ try{
+  const {error:rpcError}=await sb.rpc("mark_missed_calls");
+  if(rpcError)console.warn("Missed-call check:",rpcError.message);
+  const lastSeen=localStorage.getItem("lastSeenCallTime")||new Date(0).toISOString();
+  const {count,error}=await sb.from("call_sessions").select("id",{count:"exact",head:true}).eq("callee_id",me.id).eq("status","missed").gt("created_at",lastSeen);
+  if(!error){missedCallsCount=count||0;renderTabs();}
+ }catch(e){console.warn("Could not refresh missed-call badge:",e);}
+}
+function render(){
+ renderTabs();
  const f=filter.toLowerCase();
  let found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(f));
  if(viewingArchived)found=found.filter(c=>c.archived);
@@ -882,7 +903,9 @@ function render(){
  restorePTR($("list"));
 }
 async function openChat(id){
- const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
+ const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.msgs=[];cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
+ $("replyBar").classList.add("hidden");
+ $("msgs").innerHTML='<div class="empty">Loading messages...</div>';
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");
  applyChatMode();
@@ -891,11 +914,12 @@ async function openChat(id){
  $("reqBar").classList.toggle("hidden",!isReq);
  if(isReq)$("blkBar").classList.add("hidden");
  updatePresence();render();
- const cached=await idbGet("msgs:"+chat.id);if(cur!==chat)return;if(cached?.msgs?.length){cur.msgs=cached.msgs;cur.seen=true;renderMsgs();}
+ const cached=await idbGet("msgs:"+chat.id);if(cur!==chat)return;
+ if(cached?.msgs?.length){cur.msgs=cached.msgs;cur.seen=true;renderMsgs();}
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(cur!==chat)return;
  subscribeTyping();
- if(error){toast(errMsg(error));return;}
+ if(error){$("msgs").innerHTML='<div class="empty">Could not load messages. Check your connection and try again.</div>';toast(errMsg(error));return;}
  for(const m of data||[])if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);cur.msgs=(data||[]).reverse();loadingOlder=false;noMoreOlder=(data||[]).length<100;renderMsgs();loadReactions();loadOpens();loadMembers();markRead();
  if(chat.kind==="dm")sb.rpc("get_last_seen",{p_user:chat.other_id}).then(({data})=>{if(cur===chat){cur.lastSeen=data?new Date(data):null;updatePresence();}});
 }
@@ -1081,7 +1105,10 @@ function showChats(){
  render();
 }
 async function showCalls(){
- closeAll();$("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="calls";$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
+ closeAll();
+ localStorage.setItem("lastSeenCallTime",new Date().toISOString());
+ missedCallsCount=0;renderTabs();
+ $("feedList").classList.add("hidden");$("tabFeed").classList.remove("on");tab="calls";$("tabChats").classList.remove("on");$("tabCalls").classList.add("on");$("list").classList.add("hidden");
  const cl=$("callsList");cl.classList.remove("hidden");
  const {error:missErr}=await sb.rpc("mark_missed_calls");if(missErr)console.warn("Missed-call update:",missErr.message);
  const {data,error}=await sb.from("call_sessions").select("id,caller_id,call_type,status,created_at").order("created_at",{ascending:false}).limit(40);
@@ -2904,6 +2931,16 @@ $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 $("msgInp").addEventListener("input",()=>{updateSendBtn();broadcastTyping();});
 $("msgInp").addEventListener("blur",stopTyping);
+function scrollChatToBottom(){
+ const box=$("msgs");if(!box||!$("chatView").classList.contains("open"))return;
+ requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight;});
+}
+$("msgInp").addEventListener("focus",scrollChatToBottom);
+if(window.visualViewport){
+ window.visualViewport.addEventListener("resize",()=>{
+  if($("chatView").classList.contains("open")&&document.activeElement===$("msgInp"))scrollChatToBottom();
+ });
+}
 $("chatSearchInp").addEventListener("input",()=>{clearTimeout(chatSearchTimer);chatSearchTimer=setTimeout(runChatSearch,300);});
 $("chatSearchInp").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();nextSearchHit();}if(e.key==="Escape")closeChatSearch();});
 $("msgs").addEventListener("scroll",async ()=>{
@@ -2921,7 +2958,7 @@ $("msgs").addEventListener("scroll",async ()=>{
  noMoreOlder=data.length<50;loadingOlder=false;
 });
 history.scrollRestoration="manual";
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();if(me){markDelivered();if(cur){markRead();syncCurrent();}if(msgChannel&&msgChannel.state!=="joined")subscribeMessages();}if(me&&Date.now()-lastChatsLoad>30000)loadChats();if(me&&!msgChannel)subscribeMessages();}});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){checkRinging();checkMissedCalls();if(me){markDelivered();if(cur){markRead();syncCurrent();}if(msgChannel&&msgChannel.state!=="joined")subscribeMessages();}if(me&&Date.now()-lastChatsLoad>30000)loadChats();if(me&&!msgChannel)subscribeMessages();}});
 window.addEventListener("online",()=>{
  if(!me)return;
  if(!msgChannel||msgChannel.state!=="joined")subscribeMessages();
