@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "BOUNCY",
+    "slug": "bouncy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.sisandashange.bouncy",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      "react-native-webview"
+    ],
+    "extra": {
+      "websiteUrl": "https://sisandashange.github.io/bouncy01/"
+    }
+  }
+}
