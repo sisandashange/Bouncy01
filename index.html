@@ -791,14 +791,14 @@ let lastChatsLoad=0;
 async function loadChats(){
  lastChatsLoad=Date.now();
  const {data,error}=await sb.rpc("get_my_chats");
- if(error){toast(errMsg(error));return;}
+ if(error){toast(errMsg(error));return false;}
  const old=new Map(chats.map(c=>[c.id,c]));
  chats=(data||[]).map(r=>{
   const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request,other_is_request:!!r.other_is_request};
   const o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};
  });
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
- render();
+ render();return true;
 }
 function render(){
  const f=filter.toLowerCase();
@@ -1232,9 +1232,11 @@ function subscribeIncomingCalls(){
 async function startCall(type){
  if(call)return;
  if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
- await loadChats();
+ const refreshed=await loadChats();
+ if(!refreshed)return;
  if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
- if(cur.is_request||cur.other_is_request){toast("Calls are unavailable until the message request is accepted.");return;}
+ if(cur.is_request||cur.other_is_request){applyChatMode();toast("Calls are unavailable until the message request is accepted.");return;}
+ applyChatMode();
  call={type,incoming:false,incomingPending:false,otherName:cur.name,parts:new Map(),count:2};
  speakerOn=type==="video";
  try{
