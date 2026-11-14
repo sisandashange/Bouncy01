@@ -461,6 +461,35 @@ select.f option{background:#1f262f;color:#f2f5f8}
 /* View-once media interaction limits (not OS screenshot protection) */
 #mvBody img,#mvBody video{-webkit-user-drag:none;-webkit-user-select:none;user-select:none;pointer-events:none}
 #editProcessing .stLoad i{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:stSpin .8s linear infinite;display:block}
+/* Full-screen WhatsApp-style editor */
+#mediaEditorModal{align-items:stretch!important;justify-content:stretch!important;padding:0!important;background:#000!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#mediaEditorModal>.editorFull{display:flex;flex-direction:column;width:100%;height:100dvh;max-width:none;margin:0;background:#000;color:#fff;overflow:hidden}
+#mediaEditorModal .editorHead{display:flex;justify-content:space-between;align-items:center;flex:none;padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;background:#000;color:#fff}
+#mediaEditorModal .editorHead .lnk{color:#fff;font-size:16px}
+#mediaEditorModal .editorHead .editorDone{color:var(--pink);font-weight:700}
+#mediaEditorModal .editorPreview{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden}
+#mediaEditorModal #editImg,#mediaEditorModal #editVid{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+#mediaEditorModal #editVid{pointer-events:none}
+#mediaEditorModal #editPlayBtn{display:flex;z-index:2}
+#mediaEditorModal #editProcessing{position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;color:#fff}
+#mediaEditorModal #videoTrimUI{flex:none;padding:20px 16px calc(env(safe-area-inset-bottom) + 20px);background:#111;border-top:1px solid #333}
+#mediaEditorModal .editorTrimLabels{display:flex;justify-content:space-between;align-items:center;color:#aaa;font-size:13px;margin-bottom:16px}
+#mediaEditorModal .editorTrimLabels b{color:var(--pink);font-weight:700}
+#mediaEditorModal .trimTrack{position:relative;height:40px;display:flex;align-items:center}
+#mediaEditorModal .trimRail{position:absolute;left:0;right:0;height:6px;background:#333;border-radius:3px}
+#mediaEditorModal #trimHighlight{position:absolute;height:6px;background:var(--pink);border-radius:3px;left:0;right:0;pointer-events:none}
+#mediaEditorModal .trimTrack input[type=range]{position:absolute;inset:0;width:100%;height:40px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:none;outline:0}
+#mediaEditorModal .trimTrack input[type=range]::-webkit-slider-runnable-track{height:6px;background:transparent}
+#mediaEditorModal .trimTrack input[type=range]::-moz-range-track{height:6px;background:transparent}
+#mediaEditorModal .trimTrack input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;height:30px;width:14px;border-radius:4px;background:var(--pink);cursor:pointer;pointer-events:auto;box-shadow:0 2px 6px rgba(0,0,0,.5);margin-top:-12px}
+#mediaEditorModal .trimTrack input[type=range]::-moz-range-thumb{height:30px;width:14px;border:0;border-radius:4px;background:var(--pink);cursor:pointer;pointer-events:auto;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+#mediaEditorModal #vidStart{z-index:4}#mediaEditorModal #vidEnd{z-index:3}
+#storyView{background:#000!important}
+#stBars{top:calc(env(safe-area-inset-top) + 6px);left:8px;right:8px;gap:6px}
+#stBars i{height:2.5px;border-radius:2px}
+#stFoot{padding:10px 16px calc(env(safe-area-inset-bottom) + 16px);background:transparent}
+#stFoot input{background:rgba(255,255,255,.15);border:0;padding:12px 16px;font-size:15px}
+#stFoot .send{background:var(--pink);color:#fff;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -656,24 +685,28 @@ select.f option{background:#1f262f;color:#f2f5f8}
 </div></div>
 <div id="appConfirm" class="modal2"><div class="box" style="text-align:center"><h3 id="confirmTitle" style="margin-bottom:12px"></h3><p class="mute" id="confirmMsg" style="margin-bottom:20px;font-size:15px"></p><div style="display:flex;gap:10px"><button class="btn alt" data-act="cancelConfirm">CANCEL</button><button class="btn" style="background:var(--bad)" data-act="acceptConfirm">OK</button></div></div></div>
 <!-- BOUNCY media editor -->
-<div id="mediaEditorModal" class="modal2" style="z-index:200">
- <div class="box" style="max-width:100%;width:100%;height:100dvh;background:var(--bg);display:flex;flex-direction:column">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-top:env(safe-area-inset-top)">
+<!-- Full-screen WhatsApp-style media editor -->
+<div id="mediaEditorModal" class="modal2" style="z-index:200;background:#000;padding:0;align-items:stretch">
+ <div class="editorFull">
+  <div class="editorHead">
    <button class="lnk" data-act="cancelEditor">Cancel</button><b>Edit Media</b>
-   <button class="lnk" style="color:var(--pink);font-weight:bold" id="editorSaveBtn" data-act="saveEditor">Done</button>
+   <button class="lnk editorDone" id="editorSaveBtn" data-act="saveEditor">Done</button>
   </div>
-  <div style="flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;border-radius:12px">
-   <img id="editImg" class="hidden" alt="Image preview" style="max-width:100%;max-height:100%;object-fit:contain">
-   <video id="editVid" class="hidden" style="max-width:100%;max-height:100%;object-fit:contain" controls playsinline></video>
-   <div id="editProcessing" class="hidden" style="position:absolute;inset:0;background:rgba(0,0,0,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;color:#fff">
-    <div class="stLoad" style="margin-bottom:12px"><i></i></div><b id="editProgressTxt">Processing...</b>
+  <div class="editorPreview">
+   <img id="editImg" class="hidden" alt="Image preview">
+   <video id="editVid" class="hidden" playsinline preload="metadata"></video>
+   <button id="editPlayBtn" class="hidden" type="button" aria-label="Play video" style="position:absolute;background:rgba(0,0,0,.5);border:0;border-radius:50%;width:64px;height:64px;align-items:center;justify-content:center;color:#fff">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+   </button>
+   <div id="editProcessing" class="hidden"><div class="stLoad" style="margin-bottom:12px"><i></i></div><b id="editProgressTxt">Processing...</b></div>
+  </div>
+  <div id="videoTrimUI" class="hidden">
+   <div class="editorTrimLabels"><span id="vidStartTxt">0:00</span><b>Trim Video</b><span id="vidEndTxt">0:00</span></div>
+   <div class="trimTrack">
+    <div class="trimRail"></div><div id="trimHighlight"></div>
+    <input type="range" id="vidStart" min="0" max="100" step="0.1" value="0" aria-label="Trim start">
+    <input type="range" id="vidEnd" min="0" max="100" step="0.1" value="100" aria-label="Trim end">
    </div>
-  </div>
-  <div id="videoTrimUI" class="hidden" style="padding:20px 10px;background:var(--panel)">
-   <div class="mute" style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Start: <b id="vidStartTxt">0:00</b></span><span>End: <b id="vidEndTxt">0:00</b></span></div>
-   <input type="range" id="vidStart" min="0" max="100" step="0.1" value="0" style="width:100%;accent-color:var(--pink);margin-bottom:12px">
-   <input type="range" id="vidEnd" min="0" max="100" step="0.1" value="100" style="width:100%;accent-color:var(--pink)">
-   <div class="mute" style="font-size:12px;margin-top:8px">Video trimming records the selected section in real time.</div>
   </div>
  </div>
 </div>
@@ -2106,18 +2139,25 @@ function cancelEditor(){
 function openEditor(file,callback,maxDur=null){
  releaseEditorUrl();editorFile=file;editorCallback=callback;editorType=file.type.startsWith("video")?"video":"image";editorMaxDuration=maxDur;
  editorObjectUrl=URL.createObjectURL(file);
- const img=$("editImg"),vid=$("editVid");
+ const img=$("editImg"),vid=$("editVid"),play=$("editPlayBtn");
  $("editProcessing").classList.add("hidden");$("editorSaveBtn").disabled=false;$("editorSaveBtn").textContent="Done";
+ play.classList.add("hidden");play.style.opacity="1";
  img.classList.toggle("hidden",editorType!=="image");vid.classList.toggle("hidden",editorType!=="video");
  $("videoTrimUI").classList.toggle("hidden",editorType!=="video");
  if(editorType==="image"){img.src=editorObjectUrl;}
  else{
-  vid.pause();vid.src=editorObjectUrl;vid.controls=true;
+  vid.pause();vid.removeAttribute("controls");vid.src=editorObjectUrl;vid.muted=false;vid.currentTime=0;
+  play.classList.remove("hidden");
+  play.onclick=()=>{if(vid.paused){vid.play().catch(()=>toast("Could not play this video."));}else vid.pause();};
+  vid.onplay=()=>{play.style.opacity="0";play.style.pointerEvents="none";};
+  vid.onpause=()=>{play.style.opacity="1";play.style.pointerEvents="auto";};
+  vid.onended=()=>{play.style.opacity="1";play.style.pointerEvents="auto";};
   vid.onloadedmetadata=()=>{
    const d=Number.isFinite(vid.duration)?vid.duration:0;
    $("vidStart").max=d;$("vidEnd").max=d;$("vidStart").value=0;
    $("vidEnd").value=editorMaxDuration?Math.min(d,editorMaxDuration):d;
    updateTrimLabels();
+   if(editorMaxDuration&&d>editorMaxDuration)toast("Maximum length is "+dur(editorMaxDuration*1000)+". Trimmed automatically.");
   };
  }
  $("mediaEditorModal").classList.add("show");
@@ -2130,10 +2170,15 @@ function updateTrimLabels(ev){
   if(ev&&ev.target&&ev.target.id==="vidStart"){end=Math.min(duration,start+editorMaxDuration);$("vidEnd").value=end;}
   else{start=Math.max(0,end-editorMaxDuration);$("vidStart").value=start;}
  }
- if(end<=start){if(ev&&ev.target&&ev.target.id==="vidStart"){start=Math.max(0,end-0.1);$("vidStart").value=start;}else{end=Math.min(duration,start+0.1);$("vidEnd").value=end;}}
+ if(end<=start){
+  if(ev&&ev.target&&ev.target.id==="vidStart"){start=Math.max(0,end-0.1);$("vidStart").value=start;}
+  else{end=Math.min(duration,start+0.1);$("vidEnd").value=end;}
+ }
  $("vidStartTxt").textContent=editorTime(start);$("vidEndTxt").textContent=editorTime(end);
- if(vid.readyState>0&&!vid.paused)vid.pause();
- if(vid.readyState>0&&Math.abs(vid.currentTime-start)>0.15)vid.currentTime=start;
+ const total=duration||1;
+ $("trimHighlight").style.left=(start/total*100)+"%";
+ $("trimHighlight").style.right=(100-end/total*100)+"%";
+ if(vid.readyState>0&&vid.paused&&Math.abs(vid.currentTime-start)>0.15)vid.currentTime=start;
 }
 $("vidStart").addEventListener("input",updateTrimLabels);
 $("vidEnd").addEventListener("input",updateTrimLabels);
