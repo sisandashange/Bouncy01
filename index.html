@@ -1088,7 +1088,6 @@ async function showCalls(){
  if(error){cl.innerHTML=`<div class="empty">${esc(errMsg(error))}</div>`;return;}
  cl.innerHTML=(data||[]).map(c=>{const out=c.caller_id===me.id,isMissed=(c.status==="missed"||c.status==="declined")&&!out,color=isMissed?"var(--bad)":"var(--text)";return `<div class="row"><div class="avatar" style="color:${color};border:1px solid ${color}">${c.call_type==="video"?IC.video:IC.phone}</div><div class="mid"><div class="top"><span class="name" style="color:${color}">${out?"Outgoing":"Incoming"} ${esc(c.call_type)}</span><span class="time">${new Date(c.created_at).toLocaleDateString()}</span></div><div class="sub"><span class="last" style="color:${color}">${esc(c.status)}</span></div></div></div>`;}).join("")||'<div class="empty">No calls yet.</div>';
 }
-}
 
 /* ---------- CALLS ---------- */
 let ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}],iceAt=0;
