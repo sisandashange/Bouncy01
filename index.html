@@ -102,7 +102,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .wave{display:flex;align-items:center;gap:2px;height:32px;flex:1}
 .wave i{width:3px;border-radius:2px;background:rgba(255,255,255,.3);transition:background .15s;transform-origin:center}
 .wave i.on{background:#fff}
-.voice.playing .wave i{animation:wv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}
+.voice.playing .wave i:not(.ph){animation:wv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}
 .voice .wave{position:relative;cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none}
 .voice .wave .ph{position:absolute;top:-2px;bottom:-2px;left:0;width:2px;background:var(--pink2);border-radius:2px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:2;box-shadow:0 0 4px rgba(255,95,166,.6)}
 .voice.scrubbing .wave .ph,.voice.playing .wave .ph{opacity:1}
@@ -1325,8 +1325,9 @@ document.addEventListener("pointerdown",e=>{
  e.preventDefault();
  if(vid!==id||va.paused)vplay(id);
  voice.classList.add("scrubbing");
- const startX=e.clientX;
+ let lastX=e.clientX;
  const seek=(clientX)=>{
+  lastX=clientX;
   if(va.readyState<1)return;
   const rect=wave.getBoundingClientRect();
   const p=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
@@ -1335,9 +1336,9 @@ document.addEventListener("pointerdown",e=>{
   try{va.currentTime=p*totalSec;}catch{}
   if(va.ontimeupdate)va.ontimeupdate();
  };
- if(va.readyState>=1)seek(startX);
- else va.addEventListener("loadedmetadata",()=>seek(startX),{once:true});
- const move=ev=>{if(va.readyState>=1)seek(ev.clientX);};
+ if(va.readyState>=1)seek(lastX);
+ else va.addEventListener("loadedmetadata",()=>seek(lastX),{once:true});
+ const move=ev=>{lastX=ev.clientX;if(va.readyState>=1)seek(ev.clientX);};
  const up=()=>{
   document.removeEventListener("pointermove",move);
   document.removeEventListener("pointerup",up);
@@ -1432,7 +1433,6 @@ function showStory(){
  if(s.media_type==="video" && s.media_url){
   box.innerHTML=`${load}<video src="${esc(s.media_url)}" autoplay playsinline preload="auto"></video>`;
   const v=box.querySelector("video");
-  // loadeddata: first frame decoded; set duration without starting the progress animation.
   v.addEventListener("loadeddata",()=>{
    if(!sv||sv.g!==g||sv.i!==i)return;
    box.querySelector(".stLoad")?.remove();
@@ -1440,7 +1440,6 @@ function showStory(){
    armBar(d);
    v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});
   },{once:true});
-  // playing: playback has actually begun, so start the progress animation now.
   v.addEventListener("playing",()=>{
    if(!sv||sv.g!==g||sv.i!==i||!curBar)return;
    curBar.style.setProperty("--ps","running");
