@@ -668,6 +668,7 @@ const fire=q=>{Promise.resolve(q).then(()=>{},()=>{});};
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt=d=>d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
 const errMsg=e=>e?.message||String(e||"Something went wrong");
+let viewingArchived=false,viewingRequests=false;
 let me=null,profile=null,chats=[],cur=null,filter="",authMode="signin",onlineIds=new Set();
 let call=null,pc=null,localStream=null,callChannel=null,incomingChannel=null,msgChannel=null,presenceChannel=null;
 let typingChannel=null,typingLastSent=0,typingHideTimer=null,authListenerSet=false;
@@ -693,7 +694,7 @@ function avatar(p,cls=""){
  if(!p?.avatar_url)return `<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;
  const sep=p.avatar_url.includes("?")?"&":"?";
  const bust=p.updated_at?`v=${new Date(p.updated_at).getTime()}`:`d=${dailyBust}`;
- return `<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url+sep+bust)}">`;
+ return `<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url+sep+bust)}" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('div'),{className:'avatar',textContent:'BN'}))">`;
 }
 const IDB_NAME="bouncy-cache",IDB_STORE="kv";let idbDB=null;
 function idbOpen(){return new Promise((res,rej)=>{if(idbDB)return res(idbDB);const req=indexedDB.open(IDB_NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(IDB_STORE))req.result.createObjectStore(IDB_STORE);};req.onsuccess=()=>{idbDB=req.result;res(idbDB);};req.onerror=()=>rej(req.error);});}
@@ -784,7 +785,10 @@ async function loadChats(){
  const {data,error}=await sb.rpc("get_my_chats");
  if(error){toast(errMsg(error));return;}
  const old=new Map(chats.map(c=>[c.id,c]));
- chats=(data||[]).map(r=>{const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request},o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};});
+ chats=(data||[]).map(r=>{
+  const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request};
+  const o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};
+ });
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
  render();
 }
@@ -794,16 +798,17 @@ function render(){
  if(viewingArchived)found=found.filter(c=>c.archived);
  else if(viewingRequests)found=found.filter(c=>c.is_request&&!c.archived);
  else found=found.filter(c=>!c.archived&&!c.is_request);
- const requests=chats.filter(c=>c.is_request&&!c.archived),archCount=chats.filter(c=>c.archived).length;
  const pinned=found.filter(c=>c.pinned).sort((a,b)=>new Date(b.pinned_at||0)-new Date(a.pinned_at||0)),ordered=[...pinned,...found.filter(c=>!c.pinned)];
+ const archCount=chats.filter(c=>c.archived).length,reqCount=chats.filter(c=>c.is_request&&!c.archived).length;
  let header="";
- if(viewingArchived||viewingRequests){const label=viewingArchived?"Archived":"Message Requests";header=`<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)"><button class="iconBtn" data-act="closeSpecialList" style="width:32px;height:32px" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><b style="font-size:18px">${label}</b></div>`;}
- else{if(requests.length)header+=`<button class="chip" data-act="showRequests" style="margin:8px 16px;border:1px solid var(--orange);background:var(--panel2)">Message Requests (${requests.length})</button>`;if(archCount)header+=`<button class="chip" data-act="showArchived" style="margin:8px 16px;border:1px solid var(--pink);background:var(--panel2)">Archived (${archCount})</button>`;}
+ if(viewingArchived||viewingRequests){const label=viewingArchived?"Archived":"Requests";header=`<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);background:var(--panel)"><button class="iconBtn" data-act="backToMain" style="width:32px;height:32px" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><b style="font-size:18px">${label}</b></div>`;}
+ else{if(reqCount)header+=`<button class="chip" data-act="showRequests" style="margin:8px 16px;border:1px solid var(--pink);background:var(--panel2);color:var(--pink)">Requests (${reqCount})</button>`;if(archCount)header+=`<button class="chip" data-act="showArchived" style="margin:8px 16px;border:1px solid var(--line);background:var(--panel2)">Archived (${archCount})</button>`;}
  const rows=ordered.map(c=>{
-  const extra=viewingArchived?`<button class="btn alt" style="width:auto;height:32px;padding:0 12px;font-size:12px;margin-left:10px" data-act="unarchiveDirect" data-id="${esc(c.id)}">Restore</button>`:viewingRequests?`<div style="display:flex;gap:6px;margin-left:8px"><button class="btn" style="width:auto;height:32px;padding:0 10px;font-size:12px" data-act="acceptRequest" data-id="${esc(c.id)}">Accept</button><button class="btn alt" style="width:auto;height:32px;padding:0 10px;font-size:12px" data-act="declineRequest" data-id="${esc(c.id)}">Decline</button></div>`:"";
-  return `<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}`:""}>${chatAvatar(c)}</span><div class="mid" style="display:flex;align-items:center;justify-content:space-between"><div style="flex:1;min-width:0"><div class="top"><span class="name">${c.pinned?IC.pin:""}${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${c.muted?IC.bellOff:""}${esc(c.last)}</span>${!c.muted&&c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div>${extra}</div></div>`;
+  const avatarHtml=c.kind==="group"?`<div class="avatar">${IC.group}</div>`:c.kind==="channel"?`<div class="avatar">${IC.channel}</div>`:avatar(c.person);
+  const extra=viewingArchived?`<button class="btn alt" style="width:auto;height:32px;padding:0 12px;font-size:12px;margin-left:10px;flex-shrink:0" data-act="unarchiveDirect" data-id="${esc(c.id)}">Restore</button>`:viewingRequests?`<div style="display:flex;gap:6px;margin-left:8px;flex-shrink:0"><button class="btn" style="width:auto;height:32px;padding:0 10px;font-size:12px" data-act="acceptRequest" data-id="${esc(c.id)}">Accept</button><button class="btn alt" style="width:auto;height:32px;padding:0 10px;font-size:12px" data-act="declineRequest" data-id="${esc(c.id)}">Decline</button></div>`:"";
+  return `<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}"`:""}>${avatarHtml}</span><div class="mid"><div class="top"><span class="name">${c.pinned?IC.pin:""}${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${c.muted?IC.bellOff:""}${esc(c.last)}</span>${!c.muted&&c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div>${extra}</div>`;
  }).join("");
- $("list").innerHTML=header+(rows||`<div class="empty">${viewingArchived?"No archived chats.":viewingRequests?"No message requests.":f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`);
+ $("list").innerHTML=header+(rows||`<div class="empty">${viewingArchived?"No archived chats.":viewingRequests?"No pending requests.":f?"No matching chats.":"No conversations yet."}</div>`);
  restorePTR($("list"));
 }
 async function openChat(id){
@@ -1507,8 +1512,9 @@ $("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
 async function loadStories(){
  const cutoff=new Date(Date.now()-864e5).toISOString();
  const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").gte("created_at",cutoff).order("created_at",{ascending:true}).limit(300);
- if(error){toast("Stories: "+errMsg(error));return;}const m=new Map();
- for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
+ if(error){toast("Stories: "+errMsg(error));return;}
+ const m=new Map(),chattingWith=new Set(chats.map(c=>c.other_id).filter(Boolean));chattingWith.add(me.id);
+ for(const x of data||[]){if(!chattingWith.has(x.author_id))continue;if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
  storyGroups=[...m.values()].filter(g=>!blockedIds.has(g.author.id)).sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
 }
 function openStory(i){sv={g:storyGroups[i],i:0};$("storyView").classList.add("show");showStory();}
