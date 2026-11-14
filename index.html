@@ -106,7 +106,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .wave i.on{background:#fff}
 .voice.playing .wave i:not(.ph){animation:wv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}
 .voice .wave{position:relative;cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none}
-.voice .wave .ph{position:absolute;top:-2px;bottom:-2px;left:0;width:2px;background:var(--pink2);border-radius:2px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:2;box-shadow:0 0 4px rgba(255,95,166,.6)}
+.voice .wave .ph{position:absolute;top:0;bottom:0;left:0;width:2px;background:var(--pink2);border-radius:2px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:2}
 .voice.scrubbing .wave .ph,.voice.playing .wave .ph{opacity:1}
 @keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.5)}}
 .vdur{font-size:12px;opacity:.8;min-width:32px;text-align:right}
