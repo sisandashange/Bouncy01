@@ -103,6 +103,9 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .wave i{width:3px;border-radius:2px;background:rgba(255,255,255,.3);transition:background .15s;transform-origin:center}
 .wave i.on{background:#fff}
 .voice.playing .wave i{animation:wv .9s ease-in-out infinite;animation-delay:calc(var(--i)*-70ms)}
+.voice .wave{position:relative;cursor:pointer;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.voice .wave .ph{position:absolute;top:-2px;bottom:-2px;left:0;width:2px;background:var(--pink2);border-radius:2px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:2;box-shadow:0 0 4px rgba(255,95,166,.6)}
+.voice.scrubbing .wave .ph,.voice.playing .wave .ph{opacity:1}
 @keyframes wv{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.5)}}
 .vdur{font-size:12px;opacity:.8;min-width:32px;text-align:right}
 .recdot{width:10px;height:10px;border-radius:50%;background:var(--bad);animation:bl 1s infinite;flex-shrink:0}
@@ -1288,21 +1291,69 @@ async function recFinish(send){
 
 /* playback with animated waveform */
 const va=new Audio();let vaRate=parseFloat(localStorage.getItem("vaRate"))||1;va.playbackRate=vaRate;
-function voiceHTML(m){const pk=Array.isArray(m.peaks)?m.peaks:[];return `<div class="voice" data-voice="${esc(m.id)}"><button class="vplay" data-act="vplay" data-id="${esc(m.id)}" aria-label="Play voice note"${m.uploading?" disabled":""}>${SVG.play}</button><div class="wave">${pk.map((h,i)=>`<i style="height:${Math.max(12,Math.min(100,h))}%;--i:${i}"></i>`).join("")}</div><button data-act="vaSpeed" style="background:none;border:0;color:inherit;font-size:11px;opacity:.7;padding:4px 2px;min-width:28px">${vaRate}×</button><span class="vdur${m.uploading?" up":""}">${m.uploading?(m.progress||0)+"%":dur(m.audio_ms)}</span></div>`;}
+async function applyVmSpeaker(){
+ if(!canRouteAudio||!va)return;
+ try{
+  const mode=localStorage.getItem("vmSpeaker")||"speaker";
+  if(mode==="earpiece"){
+   const outs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="audiooutput");
+   const ear=outs.find(d=>/earpiece|receiver/i.test(d.label))||outs.find(d=>/communications/i.test(d.label))||outs[1];
+   if(ear)await va.setSinkId(ear.deviceId);
+  }else await va.setSinkId("default");
+ }catch{}
+}
+applyVmSpeaker();
+function voiceHTML(m){const pk=Array.isArray(m.peaks)?m.peaks:[];return `<div class="voice" data-voice="${esc(m.id)}"><button class="vplay" data-act="vplay" data-id="${esc(m.id)}" aria-label="Play voice note"${m.uploading?" disabled":""}>${SVG.play}</button><div class="wave"><i class="ph"></i>${pk.map((h,i)=>`<i style="height:${Math.max(12,Math.min(100,h))}%;--i:${i}"></i>`).join("")}</div><button data-act="vaSpeed" style="background:none;border:0;color:inherit;font-size:11px;opacity:.7;padding:4px 2px;min-width:28px">${vaRate}×</button><span class="vdur${m.uploading?" up":""}">${m.uploading?(m.progress||0)+"%":dur(m.audio_ms)}</span></div>`;}
 function applyPlaying(){document.querySelectorAll(".voice").forEach(el=>{const on=el.dataset.voice===vid&&!va.paused;el.classList.toggle("playing",on);el.querySelector(".vplay").innerHTML=on?SVG.pause:SVG.play;});}
 function resetBars(){document.querySelectorAll(".voice").forEach(el=>{el.querySelectorAll("i.on").forEach(i=>i.classList.remove("on"));const m=cur?.msgs.find(x=>x.id===el.dataset.voice);if(el.classList.contains("song")){el.querySelector(".sbar i").style.width="0";el.querySelector(".vdur").textContent=fsize(m?.file_size||0);}else el.querySelector(".vdur").textContent=dur(m?.audio_ms);});}
 function stopVoice(){va.pause();vid=null;resetBars();applyPlaying();}
 function vplay(id){
  const m=cur?.msgs.find(x=>x.id===id);if(!m)return;
  if(vid===id&&!va.paused){va.pause();return;}
- if(vid!==id){va.src=m.audio_url||m.file_url;vid=id;resetBars();}
+ if(vid!==id){va.src=m.audio_url||m.file_url;vid=id;resetBars();applyVmSpeaker();}
  va.play().catch(()=>toast("Could not play this voice note."));
 }
+document.addEventListener("pointerdown",e=>{
+ if(e.button!==undefined&&e.button!==0)return;
+ const wave=e.target.closest?.(".voice .wave");
+ if(!wave)return;
+ const voice=wave.closest(".voice");
+ const id=voice?.dataset.voice;
+ if(!id)return;
+ const m=cur?.msgs.find(x=>x.id===id);
+ if(!m||m.uploading)return;
+ e.preventDefault();
+ if(vid!==id||va.paused)vplay(id);
+ voice.classList.add("scrubbing");
+ const startX=e.clientX;
+ const seek=(clientX)=>{
+  if(va.readyState<1)return;
+  const rect=wave.getBoundingClientRect();
+  const p=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+  const totalSec=(va.duration&&isFinite(va.duration))?va.duration:((m.audio_ms||0)/1000);
+  if(!totalSec)return;
+  try{va.currentTime=p*totalSec;}catch{}
+  if(va.ontimeupdate)va.ontimeupdate();
+ };
+ if(va.readyState>=1)seek(startX);
+ else va.addEventListener("loadedmetadata",()=>seek(startX),{once:true});
+ const move=ev=>{if(va.readyState>=1)seek(ev.clientX);};
+ const up=()=>{
+  document.removeEventListener("pointermove",move);
+  document.removeEventListener("pointerup",up);
+  document.removeEventListener("pointercancel",up);
+  voice.classList.remove("scrubbing");
+ };
+ document.addEventListener("pointermove",move);
+ document.addEventListener("pointerup",up);
+ document.addEventListener("pointercancel",up);
+},{passive:false});
 va.ontimeupdate=()=>{
  const el=document.querySelector(`.voice[data-voice="${vid}"]`);if(!el)return;
  if(el.classList.contains("song")){el.querySelector(".sbar i").style.width=(va.duration?va.currentTime/va.duration*100:0)+"%";el.querySelector(".vdur").textContent=dur(va.currentTime*1000);return;}
  const total=cur?.msgs.find(x=>x.id===vid)?.audio_ms||(va.duration*1000)||1,p=Math.min(1,va.currentTime*1000/total);
- const b=el.querySelectorAll("i"),n=Math.round(p*b.length);b.forEach((x,i)=>x.classList.toggle("on",i<n));
+ const b=el.querySelectorAll(".wave i:not(.ph)"),n=Math.round(p*b.length);b.forEach((x,i)=>x.classList.toggle("on",i<n));
+ const ph=el.querySelector(".wave .ph");if(ph)ph.style.left=(p*100)+"%";
  el.querySelector(".vdur").textContent=dur(va.currentTime*1000);
 };
 va.onplay=va.onpause=applyPlaying;
@@ -2247,6 +2298,9 @@ function renderSettings(){
   ${tg("notify_stories","Story notifications","")}
   ${tg("notify_reactions","Reaction notifications","")}
  </div>
+ <div class="sgroup"><h4>Voice messages</h4>
+  <div class="srow"><div class="sx1"><b>Play on</b><small>Speaker is loud. Earpiece is more private.</small></div><div class="sseg"><button class="${(localStorage.getItem("vmSpeaker")||"speaker")==="speaker"?"on":""}" data-act="setVmSpeaker" data-v="speaker">Speaker</button><button class="${(localStorage.getItem("vmSpeaker")||"speaker")==="earpiece"?"on":""}" data-act="setVmSpeaker" data-v="earpiece">Earpiece</button></div></div>
+ </div>
  <div class="sgroup"><h4>Account</h4>
 ${go("setPin",localStorage.getItem("pinHash")?"Change app PIN":"Set app PIN","4–6 digit app lock")}
   ${localStorage.getItem("pinHash")?go("clearPin","Remove app PIN",""):""}
@@ -2384,7 +2438,7 @@ const actions={
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
- voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),toggleSpeaker,addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
+ voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),toggleSpeaker,setVmSpeaker:a=>{localStorage.setItem("vmSpeaker",a.dataset.v);applyVmSpeaker();renderSettings();toast("Voice messages will play on "+(a.dataset.v==="speaker"?"speaker":"earpiece"));},addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,toggleMute,shareProfile,openChatSearch,closeChatSearch,nextSearchHit,prevSearchHit,grpCallVoice:async()=>{closeAll();await startGroupCall("voice");},grpCallVideo:async()=>{closeAll();await startGroupCall("video");},submitStory,stSend,stViews,
  segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
