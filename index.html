@@ -1906,7 +1906,7 @@ function afterShow(s,g){
 async function stSend(){
  const t=$("stReply")?.value.trim();if(!t||!sv)return;
  const {data:id,error}=await sb.rpc("get_or_create_dm",{other:sv.g.author.id});if(error)throw error;
- const st=sv.g.items[sv.i];const {error:e2}=await sb.from("messages").insert({conversation_id:id,sender_id:me.id,body:t.slice(0,5000),story_id:st.id,story_media_url:st.media_url,story_media_type:st.media_type});if(e2)throw e2;
+ const st=sv.g.items[sv.i];const {error:e2}=await sb.from("messages").insert({conversation_id:id,sender_id:me.id,body:t.slice(0,5000),story_id:st.id,story_media_url:st.media_url,story_media_type:st.media_type,trim_start:st.trim_start??null,trim_end:st.trim_end??null});if(e2)throw e2;
  $("stReply").value="";$("stReply").blur();toast("Reply sent.");
 }
 async function stViews(){
