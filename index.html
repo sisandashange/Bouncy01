@@ -2076,7 +2076,7 @@ function mvClose(){
  const saveBtn=document.querySelector('[data-act="saveMedia"]');if(saveBtn)saveBtn.style.display="flex";
  $("mvBody").innerHTML="";$("mvView").classList.remove("show");
 }
-async function saveMedia(){if(currentViewOnce){toast("Saving is disabled for view once media.");return;}if(!mvCurrentUrl)return;try{}const r=await fetch(mvCurrentUrl);if(!r.ok)throw Error("Could not fetch file");const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="bouncy-"+Date.now()+(b.type.startsWith("video")?".mp4":".jpg");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Saved.");}catch(e){toast("Save failed: "+errMsg(e));}}
+async function saveMedia(){if(currentViewOnce){toast("Saving is disabled for view once media.");return;}if(!mvCurrentUrl)return;try{const r=await fetch(mvCurrentUrl);if(!r.ok)throw Error("Could not fetch file");const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="bouncy-"+Date.now()+(b.type.startsWith("video")?".mp4":".jpg");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Saved.");}catch(e){toast("Save failed: "+errMsg(e));}}
 function viewMedia(a){const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openMedia(m.file_url,m.kind==="video","");}
 async function openOnce(a){
  const id=a.dataset.id,{data,error}=await sb.rpc("open_view_once",{p_msg:id});if(error)throw error;
@@ -2150,8 +2150,8 @@ async function trimVideoInBrowser(start,end){
  const chunks=[];
  const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(recorder.error||Error("Video recording failed."));});
  recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
- video.pause();video.currentTime=start;
- await new Promise((resolve,reject)=>{const ok=()=>{video.removeEventListener("seeked",ok);resolve();};video.addEventListener("seeked",ok,{once:true});video.addEventListener("error",()=>reject(Error("Could not seek this video.")),{once:true});});
+ video.pause();
+ if(video.readyState<2||Math.abs(video.currentTime-start)>0.05){video.currentTime=start;await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error("Video seek timed out.")),10000);const ok=()=>{clearTimeout(timer);resolve();};video.addEventListener("seeked",ok,{once:true});video.addEventListener("error",()=>{clearTimeout(timer);reject(Error("Could not seek this video."));},{once:true});});}
  $("editProgressTxt").textContent="Trimming video… keep BOUNCY open";
  video.controls=false;video.muted=false;
  recorder.start(250);
@@ -2194,6 +2194,7 @@ async function saveEditor(){
    finalFile=await trimVideoInBrowser(start,end);
    $("editProcessing").classList.add("hidden");
   }
+  if(finalFile.size>50*1048576)throw Error("Edited file is larger than 50 MB.");
   const cb=editorCallback;
   $("mediaEditorModal").classList.remove("show");releaseEditorUrl();editorFile=null;editorCallback=null;editorType=null;editorMaxDuration=null;
   $("editVid").pause();$("editVid").removeAttribute("src");$("editImg").removeAttribute("src");
