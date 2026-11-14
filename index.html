@@ -1524,18 +1524,18 @@ function storiesHTML(){
 }
 function renderFeed(){
  const f=filter.toLowerCase().trim();
- let storiesHtml=\`<div class="stories"><div class="st" data-act="addStory"><div class="ring add"><div class="avatar">+</div></div><span>Add story</span></div>\`;
+ let storiesHtml=`<div class="stories"><div class="st" data-act="addStory"><div class="ring add"><div class="avatar">+</div></div><span>Add story</span></div>`;
  storyGroups.forEach((g,i)=>{
   const name=g.author.id===me.id?"Your story":(g.author.display_name||g.author.username||"");
   const username=g.author.username||"";
   if(!f||name.toLowerCase().includes(f)||username.toLowerCase().includes(f)){
-   storiesHtml+=\`<div class="st" data-act="openStory" data-i="\${i}"><div class="ring">\${avatar(g.author)}</div><span>\${esc(name)}</span></div>\`;
+   storiesHtml+=`<div class="st" data-act="openStory" data-i="${i}"><div class="ring">${avatar(g.author)}</div><span>${esc(name)}</span></div>`;
   }
  });
  storiesHtml+="</div>";
  const filteredFeed=f?feed.filter(p=>(p.body||"").toLowerCase().includes(f)||(p.caption||"").toLowerCase().includes(f)||(p.display_name||"").toLowerCase().includes(f)||(p.username||"").toLowerCase().includes(f)):feed;
  const empty=f?"No people or posts found.":"No posts yet.<br>Tap the pencil to share the first one.";
- $("feedList").innerHTML=storiesHtml+(filteredFeed.map(postHTML).join("")||\`<div class="empty">\${empty}</div>\`);
+ $("feedList").innerHTML=storiesHtml+(filteredFeed.map(postHTML).join("")||`<div class="empty">${empty}</div>`);
  restorePTR($("feedList"));observeVideos();
 }
 $("feedList").addEventListener("scroll",e=>{const f=e.target;if(f.scrollTop+f.clientHeight>f.scrollHeight-600)loadFeed();});
