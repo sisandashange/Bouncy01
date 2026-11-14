@@ -493,7 +493,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
 /* Stable chat sizing and Android keyboard handling */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
 #app{height:100dvh;min-height:0;overflow:hidden}
-#chatView{width:100%;height:100dvh;min-height:0;overflow:hidden}
+#chatView{width:100%;height:var(--chat-vh,100dvh);min-height:0;overflow:hidden}
 .cHead,.inp,#replyBar,#recBar,#reqBar,#blkBar,#roBar{flex-shrink:0}
 .msgs{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 </style>
@@ -907,7 +907,7 @@ async function openChat(id){
  $("replyBar").classList.add("hidden");
  $("msgs").innerHTML='<div class="empty">Loading messages...</div>';
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
- $("chatView").classList.add("open");
+ $("chatView").classList.add("open");syncChatViewport();
  applyChatMode();
  const isReq=cur.is_request&&cur.kind==="dm";
  $("inpBar").classList.toggle("hidden",isReq);
@@ -2931,6 +2931,11 @@ $("newName").addEventListener("input",searchPeople);
 $("msgInp").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}});
 $("msgInp").addEventListener("input",()=>{updateSendBtn();broadcastTyping();});
 $("msgInp").addEventListener("blur",stopTyping);
+function syncChatViewport(){
+ const vv=window.visualViewport;if(!vv)return;
+ document.documentElement.style.setProperty("--chat-vh",vv.height+"px");
+ $("chatView").style.top=vv.offsetTop+"px";
+}
 function scrollChatToBottom(){
  const box=$("msgs");if(!box||!$("chatView").classList.contains("open"))return;
  requestAnimationFrame(()=>{box.scrollTop=box.scrollHeight;});
@@ -2938,6 +2943,7 @@ function scrollChatToBottom(){
 $("msgInp").addEventListener("focus",scrollChatToBottom);
 if(window.visualViewport){
  window.visualViewport.addEventListener("resize",()=>{
+  syncChatViewport();
   if($("chatView").classList.contains("open")&&document.activeElement===$("msgInp"))scrollChatToBottom();
  });
 }
