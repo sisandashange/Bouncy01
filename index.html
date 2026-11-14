@@ -508,7 +508,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <div class="cHead">
   <button class="iconBtn" data-act="closeChat" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
   <span class="pav" data-act="info"><div class="avatar" id="hAv">J</div></span>
-  <div style="flex:1;min-width:0;cursor:pointer" data-act="info"><b id="hName"></b><br><small id="hStatus">last seen recently</small></div>
+  <div style="flex:1;min-width:0;cursor:pointer" data-act="info"><b id="hName"></b><br><small id="hStatus" aria-live="polite">last seen recently</small></div>
   <button class="iconBtn" data-act="voice" aria-label="Voice call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button>
   <button class="iconBtn" data-act="video" aria-label="Video call"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></button>
  </div>
@@ -570,6 +570,8 @@ const fmt=d=>d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit
 const errMsg=e=>e?.message||String(e||"Something went wrong");
 let me=null,profile=null,chats=[],cur=null,filter="",authMode="signin",onlineIds=new Set();
 let call=null,pc=null,localStream=null,callChannel=null,incomingChannel=null,msgChannel=null,presenceChannel=null;
+let typingChannel=null,typingLastSent=0,typingHideTimer=null,authListenerSet=false;
+let chatSearchTerm="",chatSearchResults=[],chatSearchIdx=0,chatSearchTimer=null,loadingOlder=false,noMoreOlder=false;
 let callTick=null,ringPoll=null,seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
 
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500);}
@@ -577,6 +579,19 @@ function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="
 
 /* ---------- AUTH ---------- */
 async function enterApp(){
+ if(!authListenerSet){
+  authListenerSet=true;
+  sb.auth.onAuthStateChange((evt)=>{
+   if(evt==="SIGNED_OUT"&&me){
+    me=profile=cur=null;chats=[];
+    try{for(const c of [presenceChannel,incomingChannel,msgChannel,typingChannel])if(c)sb.removeChannel(c);}catch{}
+    presenceChannel=incomingChannel=msgChannel=typingChannel=null;
+    closeAll();closeChat();
+    $("list").innerHTML="";$("callsList").innerHTML="";$("feedList").innerHTML="";
+    showAuth();toast("Session ended. Please log in again.");
+   }
+  });
+ }
  const {data:{user}}=await sb.auth.getUser();me=user;if(!me)return;
  let {data:p,error}=await sb.from("profiles").select(PCOLS).eq("id",me.id).maybeSingle();
  if(error)throw error;
@@ -587,14 +602,17 @@ async function enterApp(){
  }
  profile=p;$("authGate").classList.add("hidden");document.querySelectorAll(".ob").forEach(x=>x.classList.remove("show"));sb.rpc("get_my_phone").then(({data})=>{if(data){const d=[...DIALS].sort((x,y)=>y[1].length-x[1].length).find(x=>data.startsWith(x[1]));if(d)localStorage.setItem("dial",d[1]);}});
  $("drawerMe").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><br><span style="color:var(--mute)">@${esc(profile.username||"")}</span></div>`;
- await loadSettings();await loadChats();subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();loadBlocks();
+ await loadSettings();await loadChats();
+ const qp=new URLSearchParams(location.search),shareUser=qp.get("u");
+ if(shareUser){history.replaceState({},"",location.pathname);sb.rpc("search_people",{q:shareUser}).then(({data})=>{const hit=(data||[]).find(p=>(p.username||"").toLowerCase()===shareUser.toLowerCase())||(data||[])[0];if(hit)openProfile(hit.id);});}
+ subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();loadBlocks();
 }
 async function logout(){
  if(!confirm("Log out of BOUNCY?"))return;
  try{
   if(call)await endCall();try{const reg=await navigator.serviceWorker?.getRegistration();const sub=await reg?.pushManager.getSubscription();if(sub)await sb.from("push_subscriptions").delete().eq("endpoint",sub.endpoint);}catch{}
-  for(const c of [presenceChannel,incomingChannel,msgChannel])if(c)await sb.removeChannel(c);
-  presenceChannel=incomingChannel=msgChannel=null;clearInterval(ringPoll);
+  for(const c of [presenceChannel,incomingChannel,msgChannel,typingChannel])if(c)await sb.removeChannel(c);
+  presenceChannel=incomingChannel=msgChannel=typingChannel=null;clearInterval(ringPoll);
   await sb.auth.signOut();
   me=profile=cur=null;chats=[];onlineIds.clear();closeAll();closeChat();
   $("list").innerHTML="";$("callsList").innerHTML="";showAuth();
@@ -608,14 +626,14 @@ async function loadChats(){
  const {data,error}=await sb.rpc("get_my_chats");
  if(error){toast(errMsg(error));return;}
  const old=new Map(chats.map(c=>[c.id,c]));
- chats=(data||[]).map(r=>{const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at},o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};});
+ chats=(data||[]).map(r=>{const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted},o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};});
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
  render();
 }
 function render(){
  const f=filter.toLowerCase();
  const found=chats.filter(c=>(c.name+" "+(c.person.username||"")).toLowerCase().includes(f));
- $("list").innerHTML=found.map(c=>`<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}"`:""}>${chatAvatar(c)}</span><div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${esc(c.last)}</span>${c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
+ $("list").innerHTML=found.map(c=>`<div class="row${c.unread?" unread":""}" data-chat="${esc(c.id)}" role="button" tabindex="0"><span class="pav"${c.kind==="dm"?` data-prof="${esc(c.other_id)}"`:""}>${chatAvatar(c)}</span><div class="mid"><div class="top"><span class="name">${esc(c.name)}${onlineIds.has(c.other_id)?'<span class="dot" title="online"></span>':""}</span><span class="time">${fmt(c.at)}</span></div><div class="sub"><span class="last">${c.muted?"🔕 ":""}${esc(c.last)}</span>${!c.muted&&c.unread?`<span class="badge">${c.unread}</span>`:""}</div></div></div>`).join("")||`<div class="empty">${f?"No matching chats.":"No conversations yet.<br>Tap the pencil to find someone by username."}</div>`;
 }
 async function openChat(id){
  const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
@@ -623,12 +641,17 @@ async function openChat(id){
  $("chatView").classList.add("open");applyChatMode();updatePresence();render();
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(cur!==chat)return;
+ subscribeTyping();
  if(error){toast(errMsg(error));return;}
- for(const m of data||[])if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);cur.msgs=(data||[]).reverse();renderMsgs();loadReactions();loadOpens();loadMembers();markRead();
+ for(const m of data||[])if(m.profiles?.display_name)names.set(m.sender_id,m.profiles.display_name);cur.msgs=(data||[]).reverse();loadingOlder=false;noMoreOlder=(data||[]).length<100;renderMsgs();loadReactions();loadOpens();loadMembers();markRead();
  if(chat.kind==="dm")sb.rpc("get_last_seen",{p_user:chat.other_id}).then(({data})=>{if(cur===chat){cur.lastSeen=data?new Date(data):null;updatePresence();}});
 }
 let renderMsgs=function(){};
-function closeChat(){stopVoice();if(rec)recFinish(false);cur=null;$("chatView").classList.remove("open");render();}
+function closeChat(){
+ if(typingChannel){sb.removeChannel(typingChannel);typingChannel=null;}
+ clearTimeout(typingHideTimer);closeChatSearch();
+ stopVoice();if(rec)recFinish(false);cur=null;$("chatView").classList.remove("open");render();
+}
 
 let msgSubToken=0;
 async function subscribeMessages(){
@@ -640,7 +663,7 @@ async function subscribeMessages(){
   if(!c){await loadChats();c=chats.find(x=>x.id===m.conversation_id);if(!c)return;}
   c.last=m.body;c.at=m.created_at;
   if(cur&&cur.id===c.id){const ex=cur.msgs.find(x=>x.id===m.id);if(ex)Object.assign(ex,m,{pending:false,failed:false,uploading:false});else cur.msgs.push(m);scheduleRenderMsgs();}
-  else if(m.sender_id!==me.id)c.unread++;if(m.sender_id!==me.id){markDelivered();if(cur&&cur.id===c.id&&!document.hidden)markRead();}
+  else if(m.sender_id!==me.id&&!c.muted)c.unread++;if(m.sender_id!==me.id){markDelivered();if(cur&&cur.id===c.id&&!document.hidden)markRead();}
   chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
  }).on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},p=>{
   if(!cur)return;const r=p.eventType==="DELETE"?p.old:p.new;
@@ -1162,7 +1185,8 @@ $("cmtInp").addEventListener("keydown",e=>{if(e.key==="Enter")sendCmt();});
 
 /* stories */
 async function loadStories(){
- const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").order("created_at",{ascending:true}).limit(300);
+ const cutoff=new Date(Date.now()-864e5).toISOString();
+ const {data,error}=await sb.from("stories").select("id,author_id,media_url,media_type,caption,created_at,profiles!stories_author_id_fkey(display_name,username,avatar_url)").gte("created_at",cutoff).order("created_at",{ascending:true}).limit(300);
  if(error){toast("Stories: "+errMsg(error));return;}const m=new Map();
  for(const x of data||[]){if(!m.has(x.author_id))m.set(x.author_id,{author:{id:x.author_id,...x.profiles},items:[]});m.get(x.author_id).items.push(x);}
  storyGroups=[...m.values()].sort((a,b)=>a.author.id===me.id?-1:b.author.id===me.id?1:new Date(b.items.at(-1).created_at)-new Date(a.items.at(-1).created_at));
