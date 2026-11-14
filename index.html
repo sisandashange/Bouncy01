@@ -650,6 +650,7 @@ async function enterApp(){
   authListenerSet=true;
   sb.auth.onAuthStateChange((evt)=>{
    if(evt==="SIGNED_OUT"&&me){
+    if(call){try{cleanupCall();}catch{}}
     me=profile=cur=null;chats=[];
     try{for(const c of [presenceChannel,incomingChannel,msgChannel,typingChannel])if(c)sb.removeChannel(c);}catch{}
     presenceChannel=incomingChannel=msgChannel=typingChannel=null;
@@ -724,33 +725,64 @@ function closeChat(){
 
 let msgSubToken=0;
 let bannerTimer=null,bannerEl=null;
-function showBanner(m,c){if(bannerEl)bannerEl.remove();const el=document.createElement("div");el.style.cssText="position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);z-index:250;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45)";el.textContent=(names.get(m.sender_id)||c.name)+": "+(m.body||"New message").slice(0,90);el.onclick=()=>{el.remove();bannerEl=null;openChat(c.id);};document.body.appendChild(el);bannerEl=el;clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{el.remove();bannerEl=null;},3500);}
+function showBanner(m,c){
+ if(bannerEl)bannerEl.remove();
+ const el=document.createElement("div");
+ el.style.cssText="position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 8px);z-index:250;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45)";
+ el.textContent=(names.get(m.sender_id)||c.name)+": "+(m.body||"New message").slice(0,90);
+ el.onclick=()=>{el.remove();bannerEl=null;openChat(c.id);};
+ document.body.appendChild(el);bannerEl=el;
+ clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>{el.remove();bannerEl=null;},3500);
+}
 async function subscribeMessages(){
  const token=++msgSubToken;
  if(msgChannel){try{await sb.removeChannel(msgChannel);}catch{}msgChannel=null;}
  if(token!==msgSubToken)return;
- msgChannel=sb.channel("my-messages").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},async p=>{
-  const m=p.new;let c=chats.find(x=>x.id===m.conversation_id);
-  if(!c){await loadChats();c=chats.find(x=>x.id===m.conversation_id);if(!c)return;}
-  c.last=m.body;c.at=m.created_at;
-  if(cur&&cur.id===c.id){const ex=cur.msgs.find(x=>x.id===m.id);if(ex)Object.assign(ex,m,{pending:false,failed:false,uploading:false});else cur.msgs.push(m);scheduleRenderMsgs();}if(m.sender_id!==me.id){const lr=$("liveRegion");if(lr)lr.textContent=`New message from ${c.name}: ${(m.body||"").slice(0,100)}`;}
-  if(m.sender_id!==me.id&&!(cur&&cur.id===c.id)){if(!c.muted)c.unread++;if(!document.hidden&&!c.muted)showBanner(m,c);}if(m.sender_id!==me.id){markDelivered();if(cur&&cur.id===c.id&&!document.hidden)markRead();}
-  chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
- }).on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"}chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
- }).on("postgres_changes",{event:"UPDATE",schema:"public",table:"messages"},p=>{
-  const m=p.new;if(!cur||cur.id!==m.conversation_id)return;
-  const ex=cur.msgs.find(x=>x.id===m.id);if(ex){Object.assign(ex,m);scheduleRenderMsgs();}
- }).on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},p=>{
-  if(!cur)return;const r=p.eventType==="DELETE"?p.old:p.new;
-  if(!r||!cur.msgs.some(m=>m.id===r.message_id))return;
-  setRx(r.message_id,r.user_id,p.eventType==="DELETE"?null:r.emoji);scheduleRenderMsgs();
- }).on("postgres_changes",{event:"UPDATE",schema:"public",table:"conversation_members"},p=>{if(cur&&p.new.conversation_id===cur.id){cur.mem.set(p.new.user_id,p.new);scheduleRenderMsgs();}}).on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{}}).on("postgres_changes",{event:"*",schema:"public",table:"blocks",filter:"blocker_id=eq."+me.id},p=>{
-  const r=p.eventType==="DELETE"?p.old:p.new;if(!r)return;
-  if(p.eventType==="DELETE")blockedIds.delete(r.blocked_id);else blockedIds.add(r.blocked_id);
-  if(cur&&cur.kind==="dm")applyChatMode();if(tab==="feed")showFeed();render();
- }).on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{
-  const id=p.old?.id;if(cur&&id&&cur.msgs.some(m=>m.id===id)){cur.msgs=cur.msgs.filter(m=>m.id!==id);scheduleRenderMsgs();}
- }).subscribe();
+ msgChannel=sb.channel("my-messages")
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},async p=>{
+   const m=p.new;let c=chats.find(x=>x.id===m.conversation_id);
+   if(!c){await loadChats();c=chats.find(x=>x.id===m.conversation_id);if(!c)return;}
+   c.last=m.body;c.at=m.created_at;
+   if(cur&&cur.id===c.id){
+    const ex=cur.msgs.find(x=>x.id===m.id);
+    if(ex)Object.assign(ex,m,{pending:false,failed:false,uploading:false});
+    else cur.msgs.push(m);
+    scheduleRenderMsgs();
+   }
+   if(m.sender_id!==me.id){
+    const lr=$("liveRegion");
+    if(lr)lr.textContent=`New message from ${c.name}: ${(m.body||"").slice(0,100)}`;
+    if(!(cur&&cur.id===c.id)){if(!c.muted)c.unread++;if(!document.hidden&&!c.muted)showBanner(m,c);}
+    markDelivered();
+    if(cur&&cur.id===c.id&&!document.hidden)markRead();
+   }
+   chats.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));render();
+  })
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"messages"},p=>{
+   const m=p.new;if(!cur||cur.id!==m.conversation_id)return;
+   const ex=cur.msgs.find(x=>x.id===m.id);if(ex){Object.assign(ex,m);scheduleRenderMsgs();}
+  })
+  .on("postgres_changes",{event:"*",schema:"public",table:"message_reactions"},p=>{
+   if(!cur)return;
+   const r=p.eventType==="DELETE"?p.old:p.new;
+   if(!r||!cur.msgs.some(m=>m.id===r.message_id))return;
+   setRx(r.message_id,r.user_id,p.eventType==="DELETE"?null:r.emoji);scheduleRenderMsgs();
+  })
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"conversation_members"},p=>{
+   if(cur&&p.new.conversation_id===cur.id){cur.mem.set(p.new.user_id,p.new);scheduleRenderMsgs();}
+  })
+  .on("postgres_changes",{event:"*",schema:"public",table:"blocks",filter:"blocker_id=eq."+me.id},p=>{
+   const r=p.eventType==="DELETE"?p.old:p.new;if(!r)return;
+   if(p.eventType==="DELETE")blockedIds.delete(r.blocked_id);else blockedIds.add(r.blocked_id);
+   if(cur&&cur.kind==="dm")applyChatMode();
+   if(tab==="feed")showFeed();
+   render();
+  })
+  .on("postgres_changes",{event:"DELETE",schema:"public",table:"messages"},p=>{
+   const id=p.old?.id;
+   if(cur&&id&&cur.msgs.some(m=>m.id===id)){cur.msgs=cur.msgs.filter(m=>m.id!==id);scheduleRenderMsgs();}
+  })
+  .subscribe();
 }
 async function sendMsg(){
  const input=$("msgInp"),body=input.value.trim();if(!body||!cur)return;input.value="";updateSendBtn();
@@ -1797,10 +1829,12 @@ async function deleteConv(a){const id=a.dataset.id,c=chats.find(x=>x.id===id);if
 async function toggleMute(a){
  const c=chats.find(x=>x.id===a.dataset.id);if(!c)return;
  const next=!c.muted;
- const {error}=await sb.rpc("set_chat_muted",{p_conv:c.id,p_muted:next});
- if(error)throw error;
+ const {error}=await sb.from("conversation_members").update({muted:next}).eq("conversation_id",c.id).eq("user_id",me.id);
+ if(error){toast(errMsg(error));return;}
  c.muted=next;if(next)c.unread=0;if(cur&&cur.id===c.id)cur.muted=next;
- render();a.innerHTML='<div class="sx1"><b>'+(next?"Unmute":"Mute")+' notifications</b><small>'+(next?"You will get alerts again":"No alerts, no badge")+'</small></div>';
+ render();
+ const btn=document.querySelector(`[data-act="toggleMute"][data-id="${c.id}"]`);
+ if(btn)btn.innerHTML=`<div class="sx1"><b>${next?"Unmute":"Mute"} notifications</b><small>${next?"You will get alerts again":"No alerts, no badge"}</small></div>`;
  toast(next?"Chat muted":"Chat unmuted");
 }
 async function openProfile(id){
