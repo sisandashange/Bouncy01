@@ -604,6 +604,19 @@ select.f option{background:#1f262f;color:#f2f5f8}
 <div id="toast" role="status"></div>
 
 <div id="liveRegion" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap"></div>
+<script>
+(function(){
+ function fail(msg){
+  var s=document.getElementById("splash");if(s)s.style.display="none";
+  var d=document.createElement("div");
+  d.style.cssText="position:fixed;inset:0;z-index:999;background:#0f1318;color:#fff;padding:24px;font:14px system-ui;overflow:auto";
+  d.innerHTML="<h2>BOUNCY couldn't start</h2><p style='color:#8b97a5;margin:8px 0 12px'>Refresh the page. If it keeps happening, send this message to your developer:</p><pre style='white-space:pre-wrap;color:#ff8b8b'></pre>";
+  d.querySelector("pre").textContent=msg;document.body.appendChild(d);
+ }
+ window.addEventListener("error",function(e){if(!window.__bouncyReady)fail((e.message||"Error")+" (line "+(e.lineno||"?")+")");});
+ setTimeout(function(){if(!window.__bouncyReady)fail("The app is taking too long to load. Check your internet and refresh.");},15000);
+})();
+</script>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const sb = createClient("https://nruksvjkytpxbiemtalj.supabase.co","sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-");
@@ -1645,7 +1658,6 @@ async function info(){
  }
  $("infoList").insertAdjacentHTML("beforeend",`<button class="srow" data-act="deleteConv" data-id="${esc(chat.id)}" style="border:0;border-radius:12px;margin-top:10px;color:#ff7b7b"><div class="sx1"><b>Delete conversation</b><small>Removes this group from your list. Other people keep theirs.</small></div></button>`);
 }
-}
 async function grpKick(a){if(!confirm("Remove this member from the group?"))return;const {error}=await sb.rpc("remove_from_group",{p_conv:a.dataset.conv,p_user:a.dataset.user});if(error){toast(errMsg(error));return;}toast("Member removed.");await info();}
 async function grpPromote(a){const {error}=await sb.rpc("promote_member",{p_conv:a.dataset.conv,p_user:a.dataset.user});if(error){toast(errMsg(error));return;}toast("Promoted to admin.");await info();}
 async function addMember(){
@@ -2535,6 +2547,7 @@ try {
  showAuth();
  toast("Connection error. Please check your internet and refresh.");
 } finally {
+ window.__bouncyReady=true;
  setTimeout(hideSplash, 300);
 }
 </script>
