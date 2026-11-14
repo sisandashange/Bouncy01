@@ -425,6 +425,10 @@ select.f option{background:#1f262f;color:#f2f5f8}
 [data-theme="light"] #storyView,[data-theme="light"] #mvView,[data-theme="light"] #reelsView,[data-theme="light"] #callLayer.video{background:#000!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 .msg.flash{outline:2px solid var(--pink2);outline-offset:3px;box-shadow:0 0 0 5px rgba(255,45,135,.16)}
+
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.thumbs .thumb{display:block;aspect-ratio:1;border:0;border-radius:8px;overflow:hidden;background:var(--panel2);padding:0}
+.thumbs .thumb img,.thumbs .thumb video{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -2135,6 +2139,7 @@ function renderSettings(){
   ${go("logout","Log out","")}
   ${go("openDel","Delete account","Permanently remove your account and data","danger")}
  </div>
+ <div class="sgroup"><h4>Appearance</h4><div class="srow"><div class="sx1"><b>Theme</b><small>Choose light, dark or follow your device</small></div><div class="sseg"><button data-act="themeSet" data-v="system" data-theme-opt="system" class="${themeVal==="system"?"on":""}">System</button><button data-act="themeSet" data-v="light" data-theme-opt="light" class="${themeVal==="light"?"on":""}">Light</button><button data-act="themeSet" data-v="dark" data-theme-opt="dark" class="${themeVal==="dark"?"on":""}">Dark</button></div></div></div>
  <div class="sgroup"><h4>About</h4><div class="srow"><div class="sx1"><b>BOUNCY</b><small>Version 1.0</small></div></div></div>`;
 }
 async function saveMySettings(){
@@ -2235,9 +2240,29 @@ for(const ev of ["play","pause"])document.addEventListener(ev,e=>{const sec=e.ta
 document.addEventListener("timeupdate",e=>{const v=e.target,sec=v.closest?.(".reel");if(sec&&v.duration)sec.querySelector(".reelBar i").style.width=(v.currentTime/v.duration*100)+"%";},true);
 
 document.querySelectorAll(".modal2,#modal,.ob").forEach(m=>{m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");});
+function trapFocus(el){
+ const sel='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+ setTimeout(()=>{try{el.querySelector(sel)?.focus();}catch{}},60);
+ if(el._trap)return;el._trap=true;
+ el.addEventListener("keydown",e=>{
+  if(e.key!=="Tab")return;
+  const focusable=[...el.querySelectorAll(sel)].filter(x=>x.offsetParent!==null);
+  if(!focusable.length)return;const first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+ });
+}
+const focusTrapObs=new MutationObserver(muts=>{
+ for(const m of muts){if(m.type!=="attributes"||m.attributeName!=="class")continue;
+  const el=m.target;if(!el.classList)continue;
+  if((el.classList.contains("modal2")||el.classList.contains("ob")||el.id==="modal")&&el.classList.contains("show"))trapFocus(el);
+ }
+});
+setTimeout(()=>document.querySelectorAll(".modal2,.ob,#modal").forEach(el=>focusTrapObs.observe(el,{attributes:true,attributeFilter:["class"]})),0);
+
 /* ---------- EVENTS ---------- */
 const actions={
- menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},showQR,editMsg,openMediaUrl:a=>openMedia(a.dataset.url,a.dataset.kind==="video",""),
+ menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},themeSet:a=>applyTheme(a.dataset.v),showQR,editMsg,openMediaUrl:a=>openMedia(a.dataset.url,a.dataset.kind==="video",""),
  
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
@@ -2294,8 +2319,20 @@ window.addEventListener("online",()=>{
  if(!msgChannel||msgChannel.state!=="joined")subscribeMessages();
  if(!incomingChannel||incomingChannel.state!=="joined")subscribeIncomingCalls();
  loadChats();syncCurrent();
+ if(cur){const failed=cur.msgs.filter(m=>m.failed);if(failed.length){failed.forEach(m=>retryMsg({dataset:{id:m.id}}));toast(`Retrying ${failed.length} failed message${failed.length>1?"s":""}…`);}}
 });
 
+
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("sw.js").then(reg=>{
+  const promptUpdate=()=>setTimeout(()=>{if(confirm("BOUNCY has been updated. Reload now?"))location.reload();},1200);
+  if(reg.waiting&&navigator.serviceWorker.controller)promptUpdate();
+  reg.addEventListener("updatefound",()=>{
+   const nw=reg.installing;if(!nw)return;
+   nw.addEventListener("statechange",()=>{if(nw.state==="installed"&&navigator.serviceWorker.controller)promptUpdate();});
+  });
+ }).catch(()=>{});
+}
 const t0=Date.now();
 const {data:{session}}=await sb.auth.getSession();
 if(session){try{await enterApp();}catch(e){showAuth();toast(errMsg(e));}}else showAuth();
