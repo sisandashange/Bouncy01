@@ -633,8 +633,9 @@ const IDB_NAME="bouncy-cache",IDB_STORE="kv";let idbDB=null;
 function idbOpen(){return new Promise((res,rej)=>{if(idbDB)return res(idbDB);const req=indexedDB.open(IDB_NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(IDB_STORE))req.result.createObjectStore(IDB_STORE);};req.onsuccess=()=>{idbDB=req.result;res(idbDB);};req.onerror=()=>rej(req.error);});}
 async function idbSet(key,val){try{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readwrite");tx.objectStore(IDB_STORE).put(val,key);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}catch{return;}}
 async function idbGet(key){try{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readonly"),req=tx.objectStore(IDB_STORE).get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}catch{return null;}}
+async function idbClearAll(){try{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readwrite");tx.objectStore(IDB_STORE).clear();tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}catch{}}
 let cacheTimer=null;
-function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cacheTimer=setTimeout(()=>{const cid=cur.id;const slim=cur.msgs.slice(-50).map(m=>({id:m.id,conversation_id:m.conversation_id,body:m.body,kind:m.kind,sender_id:m.sender_id,created_at:m.created_at,file_url:m.file_url,file_name:m.file_name,file_size:m.file_size,audio_url:m.audio_url,audio_ms:m.audio_ms,peaks:m.peaks,view_once:m.view_once,reply_to:m.reply_to||null,story_id:m.story_id||null,story_media_url:m.story_media_url||null,story_media_type:m.story_media_type||null,forwarded:!!m.forwarded,edited_at:m.edited_at||null}));idbSet("msgs:"+cid,{msgs:slim,at:Date.now()});},500);}
+function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cacheTimer=setTimeout(()=>{const cid=cur.id;const slim=cur.msgs.filter(m=>!m.view_once).slice(-50).map(m=>({id:m.id,conversation_id:m.conversation_id,body:m.body,kind:m.kind,sender_id:m.sender_id,created_at:m.created_at,file_url:m.file_url,file_name:m.file_name,file_size:m.file_size,audio_url:m.audio_url,audio_ms:m.audio_ms,peaks:m.peaks,view_once:false,reply_to:m.reply_to||null,story_id:m.story_id||null,story_media_url:m.story_media_url||null,story_media_type:m.story_media_type||null,forwarded:!!m.forwarded,edited_at:m.edited_at||null}));idbSet("msgs:"+cid,{msgs:slim,at:Date.now()});},500);}
 
 
 /* ---------- AUTH ---------- */
@@ -674,6 +675,7 @@ async function logout(){
   for(const c of [presenceChannel,incomingChannel,msgChannel,typingChannel])if(c)await sb.removeChannel(c);
   presenceChannel=incomingChannel=msgChannel=typingChannel=null;clearInterval(ringPoll);
   await sb.auth.signOut();
+  clearTimeout(cacheTimer);await idbClearAll();
   me=profile=cur=null;chats=[];onlineIds.clear();closeAll();closeChat();
   $("list").innerHTML="";$("callsList").innerHTML="";showAuth();
  }catch(e){toast("Could not log out: "+errMsg(e));}
@@ -2253,7 +2255,7 @@ function trapFocus(el){
  if(el._trap)return;el._trap=true;
  el.addEventListener("keydown",e=>{
   if(e.key!=="Tab")return;
-  const focusable=[...el.querySelectorAll(sel)].filter(x=>x.offsetParent!==null);
+  const focusable=[...el.querySelectorAll(sel)].filter(x=>x.getClientRects().length>0);
   if(!focusable.length)return;const first=focusable[0],last=focusable[focusable.length-1];
   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
