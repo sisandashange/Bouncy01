@@ -402,6 +402,29 @@ select.f option{background:#1f262f;color:#f2f5f8}
 .upT{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.upTrack{height:5px;border-radius:3px;background:#2a3340;overflow:hidden}.upTrack i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pink),#7a5af8);transition:width .12s}
 .tk.fail{color:#ff6b6b;cursor:pointer;font-weight:900;opacity:1}
 .vdur.up{font-weight:700;opacity:1}.vplay:disabled{opacity:.5}
+
+/* Light theme + reduced motion */
+[data-theme="light"]{--bg:#f5f7fa;--panel:#fff;--panel2:#eef1f4;--line:#e2e6eb;--text:#0f1318;--mute:#6b7280;--mine:#ffe0ee;--ok:#10b981;--bad:#dc2626;color-scheme:light}
+[data-theme="light"] body,[data-theme="light"] #app,[data-theme="light"] .msgs{background:var(--bg);color:var(--text)}
+[data-theme="light"] .msg.me{background:linear-gradient(135deg,#ffe0ee,#ffd0e2);color:#0f1318}
+[data-theme="light"] .msg.me .t,[data-theme="light"] .msg .t{color:#6b7280}
+[data-theme="light"] .badge{color:#fff}
+[data-theme="light"] #authGate{background:radial-gradient(700px 420px at 50% -5%,rgba(255,45,135,.12),transparent),radial-gradient(600px 400px at 100% 100%,rgba(122,90,248,.08),transparent),var(--bg)!important}
+[data-theme="light"] #splash{background:radial-gradient(800px 520px at 50% 38%,#fff5fa,var(--bg))}
+[data-theme="light"] #callLayer:not(.video){background:linear-gradient(180deg,#eef1f4 0%,#f5f7fa 70%)!important}
+[data-theme="light"] #callLayer .callWho #callTitle{color:#0f1318;text-shadow:none}
+[data-theme="light"] #callLayer .callWho #callStatus{color:#6b7280!important}
+[data-theme="light"] #callLayer:not(.video) .callDock{background:rgba(255,255,255,.96);border:1px solid var(--line)}
+[data-theme="light"] .ctBtn,[data-theme="light"] .cbtn{background:rgba(15,19,24,.10);color:#0f1318}
+[data-theme="light"] .cbtn.off{background:#111;color:#fff}
+[data-theme="light"] .cbtn.end{background:#dc2626;color:#fff}
+[data-theme="light"] .cbtn.acc{background:#10b981;color:#fff}
+[data-theme="light"] #toast{background:#fff;color:#0f1318;border:1px solid var(--line);box-shadow:0 4px 16px rgba(0,0,0,.12)}
+[data-theme="light"] .box::before,[data-theme="light"] .obBox::before{background:#cbd5e1}
+[data-theme="light"] .sx{background:var(--panel2);color:var(--mute)}
+[data-theme="light"] #storyView,[data-theme="light"] #mvView,[data-theme="light"] #reelsView,[data-theme="light"] #callLayer.video{background:#000!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+.msg.flash{outline:2px solid var(--pink2);outline-offset:3px;box-shadow:0 0 0 5px rgba(255,45,135,.16)}
 </style>
 </head>
 <body>
@@ -568,8 +591,10 @@ select.f option{background:#1f262f;color:#f2f5f8}
 <div class="stzone l" data-act="stPrev"></div><div class="stzone r" data-act="stNext"></div></div>
 <div id="toast" role="status"></div>
 
+<div id="liveRegion" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap"></div>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
 const sb = createClient("https://nruksvjkytpxbiemtalj.supabase.co","sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-");
 const $=id=>document.getElementById(id);
 const fire=q=>{Promise.resolve(q).then(()=>{},()=>{});};
@@ -583,7 +608,31 @@ let chatSearchTerm="",chatSearchResults=[],chatSearchIdx=0,chatSearchTimer=null,
 let callTick=null,ringPoll=null,seen=new Set(),pendingIce=[],ringTimer=null,searchTimer=null,toastTimer=null;
 
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500);}
-function avatar(p,cls=""){return p?.avatar_url?`<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url)}">`:`<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;}
+const themeVal=localStorage.getItem("theme")||"system";
+function applyTheme(v){
+ const resolved=v==="system"?(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):v;
+ document.documentElement.setAttribute("data-theme",resolved);
+ document.querySelector('meta[name="theme-color"]')?.setAttribute("content",resolved==="light"?"#f5f7fa":"#0f1318");
+ localStorage.setItem("theme",v);
+ document.querySelectorAll("[data-theme-opt]").forEach(b=>b.classList.toggle("on",b.dataset.themeOpt===v));
+}
+applyTheme(themeVal);
+matchMedia("(prefers-color-scheme: light)").addEventListener("change",()=>{if((localStorage.getItem("theme")||"system")==="system")applyTheme("system");});
+
+const dailyBust=Math.floor(Date.now()/864e5);
+function avatar(p,cls=""){
+ if(!p?.avatar_url)return `<div class="avatar ${cls}">${esc((p?.display_name||p?.username||"?").slice(0,2).toUpperCase())}</div>`;
+ const sep=p.avatar_url.includes("?")?"&":"?";
+ const bust=p.updated_at?`v=${new Date(p.updated_at).getTime()}`:`d=${dailyBust}`;
+ return `<img class="avatar ${cls}" alt="" src="${esc(p.avatar_url+sep+bust)}">`;
+}
+const IDB_NAME="bouncy-cache",IDB_STORE="kv";let idbDB=null;
+function idbOpen(){return new Promise((res,rej)=>{if(idbDB)return res(idbDB);const req=indexedDB.open(IDB_NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(IDB_STORE))req.result.createObjectStore(IDB_STORE);};req.onsuccess=()=>{idbDB=req.result;res(idbDB);};req.onerror=()=>rej(req.error);});}
+async function idbSet(key,val){try{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readwrite");tx.objectStore(IDB_STORE).put(val,key);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}catch{return;}}
+async function idbGet(key){try{const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,"readonly"),req=tx.objectStore(IDB_STORE).get(key);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}catch{return null;}}
+let cacheTimer=null;
+function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cacheTimer=setTimeout(()=>{const cid=cur.id;const slim=cur.msgs.slice(-50).map(m=>({id:m.id,conversation_id:m.conversation_id,body:m.body,kind:m.kind,sender_id:m.sender_id,created_at:m.created_at,file_url:m.file_url,file_name:m.file_name,file_size:m.file_size,audio_url:m.audio_url,audio_ms:m.audio_ms,peaks:m.peaks,view_once:m.view_once,reply_to:m.reply_to||null,story_id:m.story_id||null,story_media_url:m.story_media_url||null,story_media_type:m.story_media_type||null,forwarded:!!m.forwarded,edited_at:m.edited_at||null}));idbSet("msgs:"+cid,{msgs:slim,at:Date.now()});},500);}
+
 
 /* ---------- AUTH ---------- */
 async function enterApp(){
@@ -1316,7 +1365,7 @@ async function changePhoto(){
  const f=await pickFile("image/jpeg,image/png,image/webp");if(!f)return;
  if(f.size>5*1048576){toast("Photo must be under 5 MB.");return;}
  const url=await upload("posts",f);
- const {data,error}=await sb.from("profiles").update({avatar_url:url}).eq("id",me.id).select(PCOLS).single();if(error)throw error;
+ const {data,error}=await sb.from("profiles").update({avatar_url:url,updated_at:new Date().toISOString()}).eq("id",me.id).select(PCOLS).single();if(error)throw error;
  profile=data;refreshMe();toast("Photo updated.");
 }
 
@@ -1706,7 +1755,7 @@ async function toggleMute(a){
 }
 async function openProfile(id){
  if(!id)return;closeAll();$("profBody").innerHTML='<p class="mute">Loading…</p>';$("profModal").classList.add("show");
- const [{data:p},{count}]=await Promise.all([sb.from("profiles").select("id,display_name,username,avatar_url,bio,created_at").eq("id",id).maybeSingle(),sb.from("posts").select("id",{count:"exact",head:true}).eq("author_id",id)]);
+ const [{data:p},{count}]=await Promise.all([sb.from("profiles").select("id,display_name,username,avatar_url,bio,created_at,updated_at").eq("id",id).maybeSingle(),sb.from("posts").select("id",{count:"exact",head:true}).eq("author_id",id)]);
  if(!p){$("profBody").innerHTML='<p class="mute">Profile not found.</p>';return;}
  const self=id===me.id;
  $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button></div>`}`;
@@ -1756,7 +1805,7 @@ navigator.serviceWorker?.addEventListener("message",e=>{
 });
 
 /* ---------- SPLASH + ONBOARDING ---------- */
-const PCOLS="id,display_name,username,avatar_url,bio,created_at,language";
+const PCOLS="id,display_name,username,avatar_url,bio,created_at,language,updated_at";
 const LANGS=[["en","English"],["zu","isiZulu"],["af","Afrikaans"],["fr","Français"],["pt","Português"]];
 const DIALS=[["ZA","+27"],["ZW","+263"],["MZ","+258"],["BW","+267"],["NA","+264"],["LS","+266"],["SZ","+268"],["MW","+265"],["ZM","+260"],["AO","+244"],["TZ","+255"],["KE","+254"],["UG","+256"],["RW","+250"],["NG","+234"],["GH","+233"],["CM","+237"],["CD","+243"],["US","+1"],["GB","+44"],["FR","+33"],["PT","+351"],["DE","+49"],["BR","+55"],["IN","+91"]];
 const T={
