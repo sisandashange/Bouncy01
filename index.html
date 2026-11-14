@@ -501,7 +501,7 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <video id="localVideo" autoplay muted playsinline></video>
  <div class="callDock">
   <div class="dockRow hidden" id="inRow"><button class="cbtn end" data-label="Decline" data-act="end" aria-label="Decline"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button><button id="acceptBtn" class="cbtn acc" data-label="Accept" data-act="accept" aria-label="Accept"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button></div>
-  <div class="dockRow" id="actRow"><button id="flipBtn" class="cbtn hidden" data-label="Flip" data-act="flipCam" aria-label="Flip camera"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg></button><button id="camBtn" class="cbtn hidden" data-label="Camera" data-act="cam" aria-label="Camera"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button><button id="muteBtn" class="cbtn" data-label="Mute" data-act="mute" aria-label="Mute"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="cbtn end" data-label="End" data-act="end" aria-label="End call"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button></div>
+  <div class="dockRow" id="actRow"><button id="flipBtn" class="cbtn hidden" data-label="Flip" data-act="flipCam" aria-label="Flip camera"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg></button><button id="camBtn" class="cbtn hidden" data-label="Camera" data-act="cam" aria-label="Camera"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button><button id="muteBtn" class="cbtn" data-label="Mute" data-act="mute" aria-label="Mute"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button id="speakerBtn" class="cbtn hidden" data-label="Earpiece" data-act="toggleSpeaker" aria-label="Speaker"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg></button><button class="cbtn end" data-label="End" data-act="end" aria-label="End call"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></button></div>
  </div>
 </div>
 <div id="addCallModal" class="modal2"><div class="box"><h3 id="addCallTitle">Add participant</h3><p class="mute" id="addCallSub" style="margin-bottom:8px"></p><input class="f" id="addCallQ" placeholder="Search name or username" autocomplete="off"><div id="addCallList" style="max-height:46vh;overflow:auto"></div></div></div>
@@ -889,6 +889,26 @@ async function showCalls(){
 
 /* ---------- CALLS ---------- */
 let ICE=[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}],iceAt=0;
+let speakerOn=false;
+const canRouteAudio=typeof HTMLMediaElement!=="undefined"&&"setSinkId" in HTMLMediaElement.prototype;
+async function routeAudio(el){
+ if(!el||!el.setSinkId)return;
+ try{
+  if(speakerOn){await el.setSinkId("default");}
+  else{
+   const outs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="audiooutput");
+   const ear=outs.find(d=>/earpiece|receiver/i.test(d.label))||outs.find(d=>/communications/i.test(d.label))||outs[1];
+   if(ear)await el.setSinkId(ear.deviceId);
+  }
+ }catch{}
+}
+async function toggleSpeaker(){
+ if(!canRouteAudio){toast("Your browser can't route call audio. Use headphones for privacy.");return;}
+ speakerOn=!speakerOn;
+ for(const p of peers.values())if(p.audioEl)await routeAudio(p.audioEl);
+ const b=$("speakerBtn");
+ if(b){b.dataset.label=speakerOn?"Speaker":"Earpiece";b.classList.toggle("off",!speakerOn);}
+}
 async function loadIce(){
  if(Date.now()-iceAt<3300000)return;
  try{const {data,error}=await sb.functions.invoke("turn-credentials");if(!error&&data?.iceServers?.length){ICE=data.iceServers;iceAt=Date.now();}}catch{}
@@ -914,6 +934,12 @@ function syncCallBtns(){
  $("addBtn").classList.toggle("hidden",!live||activeCount()>=4);
  $("inRow").classList.toggle("hidden",!call.incomingPending);$("actRow").classList.toggle("hidden",!!call.incomingPending);
  $("localVideo").classList.toggle("camoff",!!v&&!v.enabled);
+ const spk=$("speakerBtn");
+ if(spk){
+  spk.classList.toggle("hidden",!canRouteAudio||call.incomingPending||peers.size===0);
+  spk.dataset.label=speakerOn?"Speaker":"Earpiece";
+  spk.classList.toggle("off",!speakerOn);
+ }
 }
 function toggle(kind){
  const t=kind==="a"?localStream?.getAudioTracks():localStream?.getVideoTracks();
@@ -935,6 +961,7 @@ function renderTiles(){
   if(!t){t=document.createElement("div");t.className="tile";t.dataset.u=u;t.innerHTML='<video autoplay playsinline></video><div class="tav"></div><div class="tn"></div>';g.appendChild(t);}
   const peer=peers.get(u),v=t.querySelector("video");
   if(peer?.stream&&v.srcObject!==peer.stream)v.srcObject=peer.stream;
+  v.muted=true;
   t.classList.toggle("novid",!(vid&&peer?.stream));t.classList.toggle("ringing",p.status==="invited");
   t.querySelector(".tav").innerHTML=avatar(p.profile||{display_name:p.name});
   t.querySelector(".tn").textContent=(p.name||"Member")+(p.status==="invited"?" · calling…":(peer&&peer.connected)?"":" · connecting…");
@@ -988,7 +1015,20 @@ function getPeer(uid){
  const pc=new RTCPeerConnection({iceServers:ICE});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
  p={pc,pend:[],stream:null,connected:false};peers.set(uid,p);
- pc.ontrack=e=>{p.stream=e.streams[0];p.connected=true;startTimer();renderTiles();};
+ pc.ontrack=e=>{
+  p.stream=e.streams[0];p.connected=true;
+  if(!p.audioEl){
+   p.audioEl=document.createElement("audio");
+   p.audioEl.autoplay=true;
+   p.audioEl.setAttribute("playsinline","");
+   p.audioEl.style.cssText="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none";
+   document.body.appendChild(p.audioEl);
+  }
+  p.audioEl.srcObject=e.streams[0];
+  p.audioEl.play().catch(()=>{});
+  routeAudio(p.audioEl).catch(()=>{});
+  startTimer();renderTiles();
+ };
  pc.onicecandidate=e=>{if(e.candidate)sendSignal(uid,{type:"ice",candidate:e.candidate.toJSON()}).catch(()=>{});};
  pc.onconnectionstatechange=()=>{
   if(pc.connectionState==="connected"){p.connected=true;startTimer();renderTiles();tuneSenders(pc);}
@@ -999,6 +1039,7 @@ function getPeer(uid){
 function removePeer(uid){
  const p=peers.get(uid);if(!p)return;
  try{p.pc.ontrack=p.pc.onicecandidate=p.pc.onconnectionstatechange=null;p.pc.close();}catch{}
+ if(p.audioEl){try{p.audioEl.srcObject=null;p.audioEl.remove();}catch{}}
  peers.delete(uid);if(call)renderTiles();
 }
 async function offerTo(uid){
@@ -1059,6 +1100,7 @@ async function startCall(type){
  if(call)return;
  if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
  call={type,incoming:false,incomingPending:false,otherName:cur.name,parts:new Map(),count:2};
+ speakerOn=type==="video";
  try{
   await Promise.all([getMedia(type),loadIce()]);
   const {data,error}=await sb.from("call_sessions").insert({caller_id:me.id,callee_id:cur.other_id,call_type:type}).select("id").single();
@@ -1072,6 +1114,7 @@ async function startGroupCall(type){
  if(cur.members>4){toast("Group calls support up to 4 people.");return;}
  const chat=cur;
  call={type,incoming:false,incomingPending:false,otherName:chat.name,parts:new Map(),count:chat.members};
+ speakerOn=type==="video";
  try{
   await Promise.all([getMedia(type),loadIce()]);
   const {data:id,error}=await sb.rpc("create_group_call",{p_conv:chat.id,p_type:type});
@@ -1086,6 +1129,7 @@ async function acceptCall(){
   await Promise.all([getMedia(call.type),loadIce()]);
   const {error}=await sb.rpc("join_call",{p_call:call.id});if(error)throw error;
   call.incomingPending=false;
+  speakerOn=call.type==="video";
   await subscribeSignals();await refreshParts();
   const mj=Date.parse(call.parts.get(me.id)?.joined_at||0);
   for(const [u,p] of call.parts){
@@ -1142,6 +1186,7 @@ async function endCall(){
  cleanupCall();
 }
 function cleanupCall(){
+ speakerOn=false;
  clearTimeout(ringTimer);clearInterval(callTick);callTick=null;clearInterval(partPoll);partPoll=null;
  for(const u of [...peers.keys()])removePeer(u);
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
@@ -2339,7 +2384,7 @@ const actions={
  closeAll,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
  search:()=>{$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";render();},
- voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
+ voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),toggleSpeaker,addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
  newGroup:()=>openGroup("group"),newChannel:()=>openGroup("channel"),createGroup,grpPick:a=>{grpMembers.set(a.dataset.id,{id:a.dataset.id,display_name:a.dataset.dn,username:a.dataset.un});renderChips();$("grpSearch").value="";$("grpResults").innerHTML="";},rmPostFile:()=>{postFile=null;showPrev("postPrev",null);},rmChip:a=>{grpMembers.delete(a.dataset.id);renderChips();},
  findChannels,joinCh,openCh:a=>{closeAll();openChat(a.dataset.id);},info,addMember,leaveChat,toggleMute,shareProfile,openChatSearch,closeChatSearch,nextSearchHit,prevSearchHit,grpCallVoice:async()=>{closeAll();await startGroupCall("voice");},grpCallVideo:async()=>{closeAll();await startGroupCall("video");},submitStory,stSend,stViews,
  segPhone:()=>setNewMode("phone"),segUser:()=>setNewMode("user"),scanContacts,obNext1,obNext2,obBack2:()=>showOb(""),obBack3:()=>showOb("obStep2"),obPickPhoto,obDone,obToLogin:()=>{showOb("loginSheet");$("lgEmail").value=ob.email||$("lgEmail").value;},obCloseLogin:()=>showOb(""),doLogin,forgotPw,pwToggle:a=>{const i=a.parentElement.querySelector("input");i.type=i.type==="password"?"text":"password";},
