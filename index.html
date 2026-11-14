@@ -644,7 +644,7 @@ function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cache
 
 
 /* ---------- AUTH ---------- */
-async function maybeLock(){const h=localStorage.getItem("pinHash");if(!h)return;const p=prompt("Enter your BOUNCY PIN");if(p===null)return;const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p));const got=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");if(got!==h){toast("Incorrect PIN.");await sb.auth.signOut();return;} }
+async function maybeLock(){const h=localStorage.getItem("pinHash");if(!h)return;const p=prompt("Enter your BOUNCY PIN");if(p===null){await sb.auth.signOut();return;}const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p));const got=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");if(got!==h){toast("Incorrect PIN.");await sb.auth.signOut();return;} }
 async function enterApp(){
  if(!authListenerSet){
   authListenerSet=true;
@@ -2108,7 +2108,8 @@ function seenFmt(d){
  return d.toDateString()===t.toDateString()?"today at "+hm:d.toDateString()===y.toDateString()?"yesterday at "+hm:d.toLocaleDateString([],{day:"numeric",month:"short"});
 }
 setInterval(()=>{if(me&&!document.hidden)fire(sb.rpc("touch_last_seen"));},60000);
-document.addEventListener("visibilitychange",()=>{if(document.hidden&&me)fire(sb.rpc("touch_last_seen"));});
+let appHiddenAt=0;
+document.addEventListener("visibilitychange",()=>{if(document.hidden){appHiddenAt=Date.now();if(me)fire(sb.rpc("touch_last_seen"));}else if(me&&appHiddenAt&&Date.now()-appHiddenAt>60000){appHiddenAt=0;maybeLock();}});
 window.addEventListener("pagehide",()=>{if(me)fire(sb.rpc("touch_last_seen"));});
 
 /* story replies */
@@ -2169,6 +2170,7 @@ function renderSettings(){
  </div>
  <div class="sgroup"><h4>Account</h4>
 ${go("setPin",localStorage.getItem("pinHash")?"Change app PIN":"Set app PIN","4–6 digit app lock")}
+  ${localStorage.getItem("pinHash")?go("clearPin","Remove app PIN",""):""}
   ${go("openPw","Change password","")}
   ${go("logout","Log out","")}
   ${go("openDel","Delete account","Permanently remove your account and data","danger")}
