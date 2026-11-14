@@ -598,7 +598,6 @@ select.f option{background:#1f262f;color:#f2f5f8}
 <div id="liveRegion" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap"></div>
 <script type="module">
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm";
 const sb = createClient("https://nruksvjkytpxbiemtalj.supabase.co","sb_publishable_0MgMCUpV93vXHxkthK5AYQ_9IoQgk0-");
 const $=id=>document.getElementById(id);
 const fire=q=>{Promise.resolve(q).then(()=>{},()=>{});};
@@ -666,7 +665,7 @@ async function enterApp(){
  await loadSettings();await loadChats();
  const qp=new URLSearchParams(location.search),shareUser=qp.get("u");
  if(shareUser){history.replaceState({},"",location.pathname);sb.rpc("search_people",{q:shareUser}).then(({data})=>{const hit=(data||[]).find(p=>(p.username||"").toLowerCase()===shareUser.toLowerCase())||(data||[])[0];if(hit)openProfile(hit.id);});}
- subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();loadBlocks();
+ subscribeMessages();subscribeIncomingCalls();subscribePresence();markDelivered();fire(sb.rpc("touch_last_seen"));pushInit();await loadBlocks();
 }
 async function logout(){
  if(!confirm("Log out of BOUNCY?"))return;
@@ -1792,6 +1791,14 @@ async function openProfile(id){
  $("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="shareProfile" data-id="${esc(id)}" style="margin-top:10px;width:100%">Share profile</button>`);
  if(self)$("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="showQR" data-id="${esc(id)}" style="margin-top:10px;width:100%">Show QR code</button>`);
  if(cur&&cur.kind==="dm"&&cur.other_id===id)$("profBody").insertAdjacentHTML("beforeend",`<button class="srow" data-act="toggleMute" data-id="${esc(cur.id)}" style="border:0;border-radius:12px;margin-top:8px"><div class="sx1"><b>${cur.muted?"Unmute":"Mute"} notifications</b><small>${cur.muted?"You will get alerts again":"No alerts, no badge"}</small></div></button>`);
+ if(cur&&cur.kind==="dm"&&cur.other_id===id){
+  const chat=cur;const {data:media}=await sb.from("messages").select("id,kind,file_url,created_at").eq("conversation_id",chat.id).in("kind",["image","video"]).order("created_at",{ascending:false}).limit(30);
+  if(cur===chat&&media?.length){
+   const grid=media.filter(m=>m.file_url).map(m=>`<button class="thumb" data-act="openMediaUrl" data-url="${esc(m.file_url)}" data-kind="${esc(m.kind)}" aria-label="Open ${esc(m.kind)}">${m.kind==="video"?`<video src="${esc(m.file_url)}#t=0.1" muted playsinline preload="metadata"></video>`:`<img src="${esc(m.file_url)}" alt="" loading="lazy">`}</button>`).join("");
+   if(grid)$("profBody").insertAdjacentHTML("beforeend",`<div style="padding:14px 0 6px;color:var(--pink2);font-size:12px;letter-spacing:.08em;text-transform:uppercase">Shared media · ${media.length}</div><div class="thumbs" style="padding:0">${grid}</div>`);
+  }
+ }
+
 }
 async function showQR(a){
  const id=a.dataset.id;
@@ -1799,7 +1806,7 @@ async function showQR(a){
  if(!p||!p.username){toast("Set a username in Settings first.");return;}
  const url=`${location.origin}${location.pathname}?u=${encodeURIComponent(p.username)}`;
  const canvas=document.createElement("canvas");
- try{await QRCode.toCanvas(canvas,url,{width:280,margin:2,color:{dark:"#0f1318",light:"#ffffff"}});}
+ try{const {default:QRCode}=await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.3/+esm");await QRCode.toCanvas(canvas,url,{width:280,margin:2,color:{dark:"#0f1318",light:"#ffffff"}});}
  catch(e){toast("Could not generate QR code.");return;}
  const wrap=document.createElement("div");wrap.style.cssText="text-align:center;padding:20px;background:#fff;border-radius:14px;margin:12px 0";wrap.appendChild(canvas);
  $("profBody").innerHTML="";$("profBody").appendChild(wrap);
