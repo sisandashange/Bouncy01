@@ -2013,7 +2013,7 @@ renderMsgs=function(){
   const d=dayLabel(m.created_at),sep=d!==last?`<div class="day"><span>${esc(d)}</span></div>`:"";last=d;const mine=m.sender_id===me.id;
   const media=!m.view_once&&(m.kind==="image"||m.kind==="video");
   return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${fwdTag(m)}${quoteHTML(m)}${storyHTML(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}${m.edited_at?" (edited)":""}${tickHTML(m)}</span></div>${rxHTML(m)}</div>`;
- }).join(\x22\x22):\x27<div class="empty">No messages yet. Say hello.</div>\x27);
+ }).join(""):'<div class="empty">No messages yet. Say hello.</div>');
  box.querySelectorAll(".mvid").forEach(mv=>{const old=savedVideos.get(mv.dataset.id);if(!old)return;const fresh=mv.querySelector("video");if(fresh && fresh.src===old.src)mv.replaceChild(old,fresh);});
  savedVideos.clear();
  box.scrollTop=(near||!cur.seen)?box.scrollHeight:keep;if(list.length)cur.seen=true;
