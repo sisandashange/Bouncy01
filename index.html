@@ -794,7 +794,7 @@ async function loadChats(){
  if(error){toast(errMsg(error));return;}
  const old=new Map(chats.map(c=>[c.id,c]));
  chats=(data||[]).map(r=>{
-  const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request};
+  const base={id:r.conversation_id,kind:r.kind,role:r.my_role,members:Number(r.member_count||0),other_id:r.other_id,person:{display_name:r.display_name,username:r.username,avatar_url:r.avatar_url},name:r.display_name||r.username||"BOUNCY member",last:r.last_body||"No messages yet",at:r.last_at,muted:!!r.muted,pinned_at:r.pinned_at||null,pinned:!!r.pinned_at,archived:!!r.archived,is_request:!!r.is_request,other_is_request:!!r.other_is_request};
   const o=old.get(base.id);return o?Object.assign(o,base):{...base,unread:0,msgs:[]};
  });
  if(cur){const n=chats.find(c=>c.id===cur.id);if(n)cur=n;}
@@ -871,6 +871,7 @@ async function subscribeMessages(){
     scheduleRenderMsgs();
    }
    if(m.sender_id!==me.id){
+    c.requestHint=false;if(cur&&cur.id===c.id)cur.requestHint=false;
     const lr=$("liveRegion");
     if(lr)lr.textContent=`New message from ${c.name}: ${(m.body||"").slice(0,100)}`;
     if(c.is_request){toast("New message request from "+c.name);}else if(!(cur&&cur.id===c.id)){if(!c.muted)c.unread++;if(!document.hidden&&!c.muted)showBanner(m,c);}
@@ -1220,6 +1221,9 @@ function subscribeIncomingCalls(){
 async function startCall(type){
  if(call)return;
  if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
+ await loadChats();
+ if(!cur||cur.kind!=="dm"){toast("Open a one-to-one chat to start a call.");return;}
+ if(cur.is_request||cur.other_is_request){toast("Calls are unavailable until the message request is accepted.");return;}
  call={type,incoming:false,incomingPending:false,otherName:cur.name,parts:new Map(),count:2};
  speakerOn=type==="video";
  try{
@@ -1650,8 +1654,9 @@ function senderTag(m){
 }
 function applyChatMode(){
  const dm=cur.kind==="dm",ro=cur.kind==="channel"&&!["owner","admin"].includes(cur.role);
- document.querySelectorAll('[data-act="voice"],[data-act="video"]').forEach(b=>b.classList.toggle("hidden",!dm||(dm&&blockedIds.has(cur.other_id))));
- $("inpBar").classList.toggle("hidden",ro);$("roBar").classList.toggle("hidden",!ro);$("recBar").classList.add("hidden");$("replyBar").classList.add("hidden");
+ const pending=dm&&(cur.is_request||cur.other_is_request);
+ document.querySelectorAll('[data-act="voice"],[data-act="video"]').forEach(b=>b.classList.toggle("hidden",!dm||(dm&&blockedIds.has(cur.other_id))||pending));
+ $("inpBar").classList.toggle("hidden",ro||(dm&&cur.is_request));$("roBar").classList.toggle("hidden",!ro);$("recBar").classList.add("hidden");$("replyBar").classList.add("hidden");
  const blk=dm&&blockedIds.has(cur.other_id);$("blkBar").classList.toggle("hidden",!blk);
  if(blk){$("inpBar").classList.add("hidden");$("blkBtn").dataset.id=cur.other_id;$("blkTxt").textContent="You blocked "+cur.name;}
 }
@@ -1864,7 +1869,8 @@ renderMsgs=function(){
  const savedVideos=new Map();
  box.querySelectorAll(".mvid").forEach(mv=>{const v=mv.querySelector("video");if(v)savedVideos.set(mv.dataset.id,v);});
  const near=box.scrollHeight-box.scrollTop-box.clientHeight<160,keep=box.scrollTop;let last="";
- box.innerHTML=list.map(m=>{
+ const requestHint=cur.requestHint?'<div class="day" style="margin:14px 0"><span>Message request sent. They will see this when they accept.</span></div>':"";
+ box.innerHTML=requestHint+list.map(m=>{
   const d=dayLabel(m.created_at),sep=d!==last?`<div class="day"><span>${esc(d)}</span></div>`:"";last=d;const mine=m.sender_id===me.id;
   const media=!m.view_once&&(m.kind==="image"||m.kind==="video");
   return sep+`<div class="mrow${mine?" me":""}"><div class="msg${mine?" me":""}${m.pending?" pending":""}${media?" media":""}" data-mid="${esc(m.id)}">${senderTag(m)}${fwdTag(m)}${quoteHTML(m)}${storyHTML(m)}${msgInner(m)}<span class="t">${fmt(m.created_at)}${m.edited_at?" (edited)":""}${tickHTML(m)}</span></div>${rxHTML(m)}</div>`;
@@ -2079,7 +2085,9 @@ async function openProfile(id){
  const [{data:p},{count}]=await Promise.all([sb.from("profiles").select("id,display_name,username,avatar_url,bio,created_at,updated_at").eq("id",id).maybeSingle(),sb.from("posts").select("id",{count:"exact",head:true}).eq("author_id",id)]);
  if(!p){$("profBody").innerHTML='<p class="mute">Profile not found.</p>';return;}
  const self=id===me.id;
- $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button></div>`}`;
+ const existingDm=chats.find(c=>c.kind==="dm"&&c.other_id===id);
+ const pendingDm=!!(existingDm&&(existingDm.is_request||existingDm.other_is_request));
+ $("profBody").innerHTML=`<div class="pbig">${avatar(p)}<h3>${esc(p.display_name||p.username)}</h3><div class="mute">@${esc(p.username)}${onlineIds.has(id)?" · online":""}</div></div>${p.bio?`<p class="pbio">${esc(p.bio)}</p>`:""}<div class="pstats"><div><b>${count||0}</b><span>Posts</span></div><div><b>${new Date(p.created_at).toLocaleDateString([],{month:"short",year:"numeric"})}</b><span>Joined</span></div></div>${self?"":`<div class="pbtns"><button class="btn" data-act="profMsg" data-id="${esc(id)}">${IC.chat} Message</button>${pendingDm?"":`<button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="voice" aria-label="Voice call">${IC.phone}</button><button class="btn alt" data-act="profCall" data-id="${esc(id)}" data-t="video" aria-label="Video call">${IC.video}</button>`}</div>`}`;
  if(!self)$("profBody").insertAdjacentHTML("beforeend",`<div class="pbtns" style="margin-top:10px"><button class="btn alt" style="width:auto;flex:1" data-act="blockToggle" data-id="${esc(id)}">${blockedIds.has(id)?"Unblock":"Block"}</button><button class="btn alt" style="width:auto;flex:1" data-act="reportUser" data-id="${esc(id)}">Report</button></div>`);
  $("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="shareProfile" data-id="${esc(id)}" style="margin-top:10px;width:100%">Share profile</button>`);
  if(self)$("profBody").insertAdjacentHTML("beforeend",`<button class="btn alt" data-act="showQR" data-id="${esc(id)}" style="margin-top:10px;width:100%">Show QR code</button>`);
@@ -2113,7 +2121,7 @@ async function shareProfile(a){
  if(navigator.share){try{await navigator.share({title:"BOUNCY",text:"Chat with @"+data.username+" on BOUNCY",url});}catch{}}
  else{try{await navigator.clipboard.writeText(url);toast("Profile link copied.");}catch{toast("Could not copy.");}}
 }
-async function profMsg(a){const id=a.dataset.id;const {data:cid,error}=await sb.rpc("get_or_create_dm",{other:id});if(error)throw error;closeAll();await loadChats();showChats();await openChat(cid);}
+async function profMsg(a){const id=a.dataset.id;const {data:cid,error}=await sb.rpc("get_or_create_dm",{other:id});if(error)throw error;closeAll();await loadChats();showChats();const target=chats.find(c=>c.id===cid);if(target&&target.other_is_request)target.requestHint=true;await openChat(cid);}
 async function profCall(a){await profMsg(a);await startCall(a.dataset.t);}
 
 /* ---------- PUSH NOTIFICATIONS ---------- */
