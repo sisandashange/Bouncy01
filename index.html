@@ -458,6 +458,9 @@ select.f option{background:#1f262f;color:#f2f5f8}
 .ptr-spinner.loading{height:50px}
 .ptr-spinner svg{animation:ptrSpin 1s linear infinite}
 @keyframes ptrSpin{100%{transform:rotate(360deg)}}
+/* View-once media interaction limits (not OS screenshot protection) */
+#mvBody img,#mvBody video{-webkit-user-drag:none;-webkit-user-select:none;user-select:none;pointer-events:none}
+#editProcessing .stLoad i{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:stSpin .8s linear infinite;display:block}
 </style>
 </head>
 <body>
@@ -652,6 +655,28 @@ select.f option{background:#1f262f;color:#f2f5f8}
  <button class="btn alt" data-act="closeAll" style="margin-top:10px">CANCEL</button>
 </div></div>
 <div id="appConfirm" class="modal2"><div class="box" style="text-align:center"><h3 id="confirmTitle" style="margin-bottom:12px"></h3><p class="mute" id="confirmMsg" style="margin-bottom:20px;font-size:15px"></p><div style="display:flex;gap:10px"><button class="btn alt" data-act="cancelConfirm">CANCEL</button><button class="btn" style="background:var(--bad)" data-act="acceptConfirm">OK</button></div></div></div>
+<!-- BOUNCY media editor -->
+<div id="mediaEditorModal" class="modal2" style="z-index:200">
+ <div class="box" style="max-width:100%;width:100%;height:100dvh;background:var(--bg);display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-top:env(safe-area-inset-top)">
+   <button class="lnk" data-act="cancelEditor">Cancel</button><b>Edit Media</b>
+   <button class="lnk" style="color:var(--pink);font-weight:bold" id="editorSaveBtn" data-act="saveEditor">Done</button>
+  </div>
+  <div style="flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#000;border-radius:12px">
+   <img id="editImg" class="hidden" alt="Image preview" style="max-width:100%;max-height:100%;object-fit:contain">
+   <video id="editVid" class="hidden" style="max-width:100%;max-height:100%;object-fit:contain" controls playsinline></video>
+   <div id="editProcessing" class="hidden" style="position:absolute;inset:0;background:rgba(0,0,0,.8);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;color:#fff">
+    <div class="stLoad" style="margin-bottom:12px"><i></i></div><b id="editProgressTxt">Processing...</b>
+   </div>
+  </div>
+  <div id="videoTrimUI" class="hidden" style="padding:20px 10px;background:var(--panel)">
+   <div class="mute" style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Start: <b id="vidStartTxt">0:00</b></span><span>End: <b id="vidEndTxt">0:00</b></span></div>
+   <input type="range" id="vidStart" min="0" max="100" step="0.1" value="0" style="width:100%;accent-color:var(--pink);margin-bottom:12px">
+   <input type="range" id="vidEnd" min="0" max="100" step="0.1" value="100" style="width:100%;accent-color:var(--pink)">
+   <div class="mute" style="font-size:12px;margin-top:8px">Video trimming records the selected section in real time.</div>
+  </div>
+ </div>
+</div>
 <div id="toast" role="status"></div>
 
 <div id="liveRegion" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap"></div>
@@ -1540,7 +1565,10 @@ function renderFeed(){
 }
 $("feedList").addEventListener("scroll",e=>{const f=e.target;if(f.scrollTop+f.clientHeight>f.scrollHeight-600)loadFeed();});
 function newPost(){closeAll();postFile=null;$("postText").value="";$("postFileName").textContent="";showPrev("postPrev",null);$("postCount").textContent="0";$("postWho").innerHTML=avatar(profile)+`<div><b>${esc(profile.display_name)}</b><div class="mute">@${esc(profile.username||"")}</div></div>`;$("postModal").classList.add("show");$("postText").focus();}
-async function pickPostFile(){const f=await pickFile("image/*,video/*");if(f){postFile=f;$("postFileName").textContent=f.name;showPrev("postPrev",f);}}
+async function pickPostFile(){
+ const f=await pickFile("image/*,video/*");if(!f)return;
+ openEditor(f,editedFile=>{postFile=editedFile;$("postFileName").textContent=editedFile.name;showPrev("postPrev",editedFile);});
+}
 async function submitPost(){
  const body=$("postText").value.trim();if(!body&&!postFile){toast("Write something or add a photo or video.");return;}
  if(postFile&&postFile.size>50*1048576){toast("File too big (50 MB max).");return;}
@@ -1814,7 +1842,10 @@ async function leaveChat(){if(!cur)return;const id=cur.id,name=cur.name;appConfi
 async function addStory(){
  closeAll();const f=await pickFile("image/*,video/*");if(!f)return;
  if(f.size>50*1048576){toast("File too big (50 MB max).");return;}
- storyFile=f;$("stFileName").textContent=f.name;showPrev("stPrev",f);$("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
+ openEditor(f,editedFile=>{
+  storyFile=editedFile;$("stFileName").textContent=editedFile.name;showPrev("stPrev",editedFile);
+  $("stCapInput").value="";$("stModal").classList.add("show");$("stCapInput").focus();
+ },90);
 }
 async function submitStory(){
  if(!storyFile)return;const b=$("stBtn");b.disabled=true;
@@ -1983,7 +2014,10 @@ function renderThumbs(){
  $("mdBtn").textContent=attFiles.length>1?"SEND "+attFiles.length:"SEND";
 }
 function rmThumb(a){attFiles.splice(+a.dataset.i,1);if(!attFiles.length){closeAll();return;}renderThumbs();}
-async function attMedia(){closeAll();const fs=okFiles(await pickFiles(ACC_MEDIA));if(!fs.length)return;attFiles=fs;$("onceChk").checked=false;renderThumbs();$("mediaModal").classList.add("show");}
+async function attMedia(){
+ closeAll();const fs=okFiles(await pickFiles(ACC_MEDIA));if(!fs.length)return;
+ openEditor(fs[0],editedFile=>{attFiles=[editedFile,...fs.slice(1)];$("onceChk").checked=false;renderThumbs();$("mediaModal").classList.add("show");});
+}
 async function attDoc(){closeAll();for(const f of okFiles(await pickFiles("*/*")))await sendAttachment(f,"file",false);}
 async function attAudio(){closeAll();for(const f of okFiles(await pickFiles(ACC_AUDIO)))await sendAttachment(f,"audio",false);}
 async function sendMedia(){
@@ -2028,21 +2062,144 @@ async function sendAttachment(f,kind,once){
   if(e.message!=="cancelled")toast("Not sent: "+errMsg(e));
  }finally{setTimeout(()=>URL.revokeObjectURL(tmp.localUrl),1500);}
 }
-let mvCurrentUrl=null;
-function openMedia(url,isVideo,note){
- mvCurrentUrl=url;
+let mvCurrentUrl=null,currentViewOnce=false;
+function openMedia(url,isVideo,note,isViewOnce=false){
+ currentViewOnce=!!isViewOnce;mvCurrentUrl=url;
  $("mvBody").innerHTML=isVideo?vpHTML(url,{autoplay:true}):`<img src="${esc(url)}" alt="" draggable="false" oncontextmenu="return false">`;
- $("mvNote").textContent=note||"";$("mvView").classList.add("show");
+ $("mvNote").textContent=note||"";
+ const saveBtn=document.querySelector('[data-act="saveMedia"]');
+ if(saveBtn)saveBtn.style.display=currentViewOnce?"none":"flex";
+ $("mvBody").style.filter="none";$("mvView").classList.add("show");
 }
-function mvClose(){mvCurrentUrl=null;$("mvBody").innerHTML="";$("mvView").classList.remove("show");}
-async function saveMedia(){if(!mvCurrentUrl)return;try{const r=await fetch(mvCurrentUrl);if(!r.ok)throw Error("Could not fetch file");const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="bouncy-"+Date.now()+(b.type.startsWith("video")?".mp4":".jpg");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Saved.");}catch(e){toast("Save failed: "+errMsg(e));}}
+function mvClose(){
+ currentViewOnce=false;mvCurrentUrl=null;$("mvBody").style.filter="none";
+ const saveBtn=document.querySelector('[data-act="saveMedia"]');if(saveBtn)saveBtn.style.display="flex";
+ $("mvBody").innerHTML="";$("mvView").classList.remove("show");
+}
+async function saveMedia(){if(currentViewOnce){toast("Saving is disabled for view once media.");return;}if(!mvCurrentUrl)return;try{}const r=await fetch(mvCurrentUrl);if(!r.ok)throw Error("Could not fetch file");const b=await r.blob(),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="bouncy-"+Date.now()+(b.type.startsWith("video")?".mp4":".jpg");document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Saved.");}catch(e){toast("Save failed: "+errMsg(e));}}
 function viewMedia(a){const m=cur.msgs.find(x=>x.id===a.dataset.id);if(m)openMedia(m.file_url,m.kind==="video","");}
 async function openOnce(a){
  const id=a.dataset.id,{data,error}=await sb.rpc("open_view_once",{p_msg:id});if(error)throw error;
  const r=data?.[0];cur.opened.add(id);
  if(!r?.o_granted){renderMsgs();toast("This was already opened.");return;}
  const {data:u,error:se}=await sb.storage.from("view-once").createSignedUrl(r.o_path,60);if(se)throw se;
- openMedia(u.signedUrl,r.o_kind==="video","View once: this will disappear when you close it");renderMsgs();
+ openMedia(u.signedUrl,r.o_kind==="video","View once: this will disappear when you close it",true);renderMsgs();
+}
+document.addEventListener("visibilitychange",()=>{
+ if(!currentViewOnce)return;
+ $("mvBody").style.filter=document.hidden?"blur(50px)":"none";
+});
+document.addEventListener("contextmenu",e=>{
+ if(currentViewOnce&&e.target.closest("#mvBody")){e.preventDefault();toast("Saving is disabled for view once media.");}
+});
+
+
+/* ---------- MEDIA EDITOR: image optimization + real-time video trim ---------- */
+let editorFile=null,editorType=null,editorCallback=null,editorMaxDuration=null,editorObjectUrl=null;
+const editorTime=seconds=>{seconds=Math.max(0,Number(seconds)||0);const m=Math.floor(seconds/60),sec=Math.floor(seconds%60);return m+":"+String(sec).padStart(2,"0");};
+function releaseEditorUrl(){if(editorObjectUrl){URL.revokeObjectURL(editorObjectUrl);editorObjectUrl=null;}}
+function cancelEditor(){
+ releaseEditorUrl();editorFile=null;editorCallback=null;editorType=null;editorMaxDuration=null;
+ $("editVid").pause();$("editVid").removeAttribute("src");$("editImg").removeAttribute("src");
+ $("mediaEditorModal").classList.remove("show");$("editProcessing").classList.add("hidden");
+}
+function openEditor(file,callback,maxDur=null){
+ releaseEditorUrl();editorFile=file;editorCallback=callback;editorType=file.type.startsWith("video")?"video":"image";editorMaxDuration=maxDur;
+ editorObjectUrl=URL.createObjectURL(file);
+ const img=$("editImg"),vid=$("editVid");
+ $("editProcessing").classList.add("hidden");$("editorSaveBtn").disabled=false;$("editorSaveBtn").textContent="Done";
+ img.classList.toggle("hidden",editorType!=="image");vid.classList.toggle("hidden",editorType!=="video");
+ $("videoTrimUI").classList.toggle("hidden",editorType!=="video");
+ if(editorType==="image"){img.src=editorObjectUrl;}
+ else{
+  vid.pause();vid.src=editorObjectUrl;vid.controls=true;
+  vid.onloadedmetadata=()=>{
+   const d=Number.isFinite(vid.duration)?vid.duration:0;
+   $("vidStart").max=d;$("vidEnd").max=d;$("vidStart").value=0;
+   $("vidEnd").value=editorMaxDuration?Math.min(d,editorMaxDuration):d;
+   updateTrimLabels();
+  };
+ }
+ $("mediaEditorModal").classList.add("show");
+}
+function updateTrimLabels(ev){
+ const vid=$("editVid"),duration=Number.isFinite(vid.duration)?vid.duration:0;
+ let start=Math.max(0,Math.min(duration,parseFloat($("vidStart").value)||0));
+ let end=Math.max(0,Math.min(duration,parseFloat($("vidEnd").value)||duration));
+ if(editorMaxDuration&&end-start>editorMaxDuration){
+  if(ev&&ev.target&&ev.target.id==="vidStart"){end=Math.min(duration,start+editorMaxDuration);$("vidEnd").value=end;}
+  else{start=Math.max(0,end-editorMaxDuration);$("vidStart").value=start;}
+ }
+ if(end<=start){if(ev&&ev.target&&ev.target.id==="vidStart"){start=Math.max(0,end-0.1);$("vidStart").value=start;}else{end=Math.min(duration,start+0.1);$("vidEnd").value=end;}}
+ $("vidStartTxt").textContent=editorTime(start);$("vidEndTxt").textContent=editorTime(end);
+ if(vid.readyState>0&&!vid.paused)vid.pause();
+ if(vid.readyState>0&&Math.abs(vid.currentTime-start)>0.15)vid.currentTime=start;
+}
+$("vidStart").addEventListener("input",updateTrimLabels);
+$("vidEnd").addEventListener("input",updateTrimLabels);
+async function trimVideoInBrowser(start,end){
+ const video=$("editVid");
+ const capture=video.captureStream||video.mozCaptureStream;
+ if(!capture)throw Error("This browser cannot trim video here. Try Chrome on Android or send the original video.");
+ if(typeof MediaRecorder==="undefined")throw Error("Video trimming is not supported by this browser.");
+ const stream=capture.call(video);
+ const types=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm","video/mp4"];
+ const mime=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+ let recorder;
+ try{recorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);}catch(e){stream.getTracks().forEach(t=>t.stop());throw Error("This browser cannot record the trimmed video format.");}
+ const chunks=[];
+ const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(recorder.error||Error("Video recording failed."));});
+ recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+ video.pause();video.currentTime=start;
+ await new Promise((resolve,reject)=>{const ok=()=>{video.removeEventListener("seeked",ok);resolve();};video.addEventListener("seeked",ok,{once:true});video.addEventListener("error",()=>reject(Error("Could not seek this video.")),{once:true});});
+ $("editProgressTxt").textContent="Trimming video… keep BOUNCY open";
+ video.controls=false;video.muted=false;
+ recorder.start(250);
+ try{
+  await video.play();
+  await new Promise((resolve,reject)=>{
+   const check=()=>{if(video.currentTime>=end||video.ended){video.pause();if(recorder.state!=="inactive")recorder.stop();resolve();}};
+   const timer=setInterval(()=>{try{check();}catch(e){clearInterval(timer);reject(e);}},80);
+   video.addEventListener("timeupdate",check);
+   video.addEventListener("error",()=>{clearInterval(timer);reject(Error("Video playback failed while trimming."));},{once:true});
+   stopped.then(()=>{clearInterval(timer);video.removeEventListener("timeupdate",check);resolve();}).catch(e=>{clearInterval(timer);reject(e);});
+  });
+  await stopped;
+ }catch(e){if(recorder.state!=="inactive")recorder.stop();try{await stopped;}catch(_){}throw e;}
+ finally{video.pause();video.controls=true;stream.getTracks().forEach(t=>t.stop());}
+ const type=recorder.mimeType||mime||"video/webm";
+ const blob=new Blob(chunks,{type});
+ if(!blob.size)throw Error("The trimmed video was empty. Please try again.");
+ const ext=type.includes("mp4")?"mp4":"webm";
+ return new File([blob],"trimmed_video."+ext,{type});
+}
+async function saveEditor(){
+ const btn=$("editorSaveBtn");if(!editorFile)return;
+ btn.disabled=true;btn.textContent="Processing…";
+ try{
+  let finalFile=editorFile;
+  if(editorType==="image"){
+   const img=$("editImg");if(!img.complete||!img.naturalWidth)throw Error("Image is not ready yet.");
+   const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");if(!ctx)throw Error("Image editing is unavailable.");
+   const MAX=1200;let w=img.naturalWidth,h=img.naturalHeight;
+   if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+   canvas.width=w;canvas.height=h;ctx.drawImage(img,0,0,w,h);
+   const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.85));
+   if(!blob)throw Error("Could not process this image.");
+   finalFile=new File([blob],"edited_image.jpg",{type:"image/jpeg"});
+  }else{
+   const start=parseFloat($("vidStart").value),end=parseFloat($("vidEnd").value);
+   if(!Number.isFinite(start)||!Number.isFinite(end)||end-start<0.5)throw Error("Choose a video section at least half a second long.");
+   $("editProcessing").classList.remove("hidden");
+   finalFile=await trimVideoInBrowser(start,end);
+   $("editProcessing").classList.add("hidden");
+  }
+  const cb=editorCallback;
+  $("mediaEditorModal").classList.remove("show");releaseEditorUrl();editorFile=null;editorCallback=null;editorType=null;editorMaxDuration=null;
+  $("editVid").pause();$("editVid").removeAttribute("src");$("editImg").removeAttribute("src");
+  if(cb)cb(finalFile);
+ }catch(e){$("editProcessing").classList.add("hidden");toast("Media editor: "+(e&&e.message?e.message:String(e)));}
+ finally{btn.disabled=false;btn.textContent="Done";}
 }
 
 /* ---------- COMMENTS: replies, likes ---------- */
@@ -2646,7 +2803,7 @@ setTimeout(()=>document.querySelectorAll(".modal2,.ob,#modal").forEach(el=>focus
 const actions={
  menu:()=>{$("drawer").classList.add("open");$("overlay").classList.add("show");},themeSet:a=>applyTheme(a.dataset.v),showQR,editMsg,openMediaUrl:a=>openMedia(a.dataset.url,a.dataset.kind==="video",""),
  
- closeAll,showRequestsDrawer:()=>{closeAll();showChats();viewingRequests=true;viewingArchived=false;render();},cancelConfirm:()=>{$("appConfirm").classList.remove("show");confirmCb=null;},acceptConfirm:()=>{$("appConfirm").classList.remove("show");const cb=confirmCb;confirmCb=null;if(cb)return cb();},chatOptPin:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.pinned,upd={pinned_at:next?new Date().toISOString():null};const {error}=await sb.from("conversation_members").update(upd).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));Object.assign(chatOptTarget,upd,{pinned:next});closeAll();render();},chatOptArchive:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.archived;const {error}=await sb.from("conversation_members").update({archived:next}).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));chatOptTarget.archived=next;closeAll();render();},showArchived,showRequests,backToMain:()=>{viewingArchived=false;viewingRequests=false;render();},closeSpecialList:()=>{viewingArchived=false;viewingRequests=false;render();},unarchiveDirect,acceptRequest,declineRequest,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
+ closeAll,cancelEditor,saveEditor,showRequestsDrawer:()=>{closeAll();showChats();viewingRequests=true;viewingArchived=false;render();},cancelConfirm:()=>{$("appConfirm").classList.remove("show");confirmCb=null;},acceptConfirm:()=>{$("appConfirm").classList.remove("show");const cb=confirmCb;confirmCb=null;if(cb)return cb();},chatOptPin:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.pinned,upd={pinned_at:next?new Date().toISOString():null};const {error}=await sb.from("conversation_members").update(upd).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));Object.assign(chatOptTarget,upd,{pinned:next});closeAll();render();},chatOptArchive:async()=>{if(!chatOptTarget)return;const next=!chatOptTarget.archived;const {error}=await sb.from("conversation_members").update({archived:next}).eq("conversation_id",chatOptTarget.id).eq("user_id",me.id);if(error)return toast(errMsg(error));chatOptTarget.archived=next;closeAll();render();},showArchived,showRequests,backToMain:()=>{viewingArchived=false;viewingRequests=false;render();},closeSpecialList:()=>{viewingArchived=false;viewingRequests=false;render();},unarchiveDirect,acceptRequest,declineRequest,chats:showChats,calls:showCalls,logout,newChat:openNewChat,createChat,closeChat,send:sendMsg,deleteConv,starMsg,openStarred,jumpToStar,grpKick,grpPromote,showArchived,saveMedia,vaSpeed:()=>{const a=[1,1.5,2];vaRate=a[(a.indexOf(vaRate)+1)%a.length];va.playbackRate=vaRate;localStorage.setItem("vaRate",String(vaRate));document.querySelectorAll(".voice [data-act=vaSpeed]").forEach(x=>x.textContent=vaRate+"×");},
  search:()=>{$("searchInput").placeholder=tab==="feed"?"Search people, captions...":"Search chats";$("searchBar").classList.add("show");$("searchInput").focus();},
  closeSearch:()=>{$("searchBar").classList.remove("show");filter="";$("searchInput").value="";if(tab==="feed")renderFeed();else render();},
  voice:()=>startCall("voice"),video:()=>startCall("video"),accept:acceptCall,end:endCall,mute:()=>toggle("a"),toggleSpeaker,setVmSpeaker:a=>{localStorage.setItem("vmSpeaker",a.dataset.v);applyVmSpeaker();renderSettings();toast("Voice messages will play on "+(a.dataset.v==="speaker"?"speaker":"earpiece"));},addToCall,inviteCall,cam:()=>toggle("v"),flipCam,retryMsg,cancelUpload,
