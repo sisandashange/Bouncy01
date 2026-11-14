@@ -123,7 +123,8 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .post img,.post video{width:100%;max-height:70vh;object-fit:cover;background:#000;display:block}
 .pa{display:flex;gap:20px;padding:10px 14px}.act{background:none;border:0;display:flex;gap:6px;align-items:center}
 .lnk{background:none;border:0;color:var(--mute);font-size:13px}
-#storyView{position:fixed;inset:0;background:#000;z-index:120;display:none}#storyView.show{display:block}
+#storyView{position:fixed;top:0;left:0;right:0;background:#000;z-index:120;display:none;width:100vw;height:100vh;height:100dvh;overflow:hidden}
+#storyView.show{display:block}
 #stBars{position:absolute;top:calc(env(safe-area-inset-top) + 8px);left:10px;right:10px;display:flex;gap:4px;z-index:3}
 #stBars i{flex:1;height:3px;background:rgba(255,255,255,.3);border-radius:2px;overflow:hidden;position:relative}
 #stBars i.done{background:#fff}#stBars i.cur::after{content:"";position:absolute;inset:0;background:#fff;transform-origin:left;animation:fill var(--dur,5s) linear forwards;animation-play-state:var(--ps,running)}
@@ -133,7 +134,7 @@ input.f,textarea.f{width:100%;background:var(--panel2);border:0;outline:0;color:
 .stx{position:absolute;top:calc(env(safe-area-inset-top) + 18px);right:10px;z-index:4;background:none;border:0;font-size:24px;width:44px;height:44px;color:#fff}
 .stx.del{right:56px;font-size:20px}
 #stMedia{position:absolute;inset:0;background:#000;overflow:hidden}
-#stMedia img,#stMedia video{position:absolute;top:0;left:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;display:block}
+#stMedia img,#stMedia video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;background:#000}
 #stMedia .stLoad{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;z-index:3;pointer-events:none}
 #stMedia .stLoad i{width:34px;height:34px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:stSpin .8s linear infinite;display:block}
 @keyframes stSpin{to{transform:rotate(360deg)}}
@@ -1181,19 +1182,25 @@ function showStory(){
   if(!curBar)return;
   curBar.style.setProperty("--dur",dur+"s");
   curBar.style.setProperty("--ps","running");
-  curBar.classList.add("cur");
  };
  const finishBar=()=>{if(curBar){curBar.classList.remove("cur");curBar.classList.add("done");}};
 
  if(s.media_type==="video" && s.media_url){
   box.innerHTML=`${load}<video src="${esc(s.media_url)}" autoplay playsinline preload="auto"></video>`;
   const v=box.querySelector("video");
+  // loadeddata: first frame decoded; set duration without starting the progress animation.
   v.addEventListener("loadeddata",()=>{
    if(!sv||sv.g!==g||sv.i!==i)return;
    box.querySelector(".stLoad")?.remove();
    const d=(isFinite(v.duration)&&v.duration>0)?v.duration:15;
    armBar(d);
    v.play().catch(()=>{v.muted=true;v.play().catch(()=>{});});
+  },{once:true});
+  // playing: playback has actually begun, so start the progress animation now.
+  v.addEventListener("playing",()=>{
+   if(!sv||sv.g!==g||sv.i!==i||!curBar)return;
+   curBar.style.setProperty("--ps","running");
+   curBar.classList.add("cur");
   },{once:true});
   v.addEventListener("ended",()=>{if(sv&&sv.g===g&&sv.i===i){finishBar();nextStory();}},{once:true});
   v.addEventListener("error",()=>{if(sv&&sv.g===g&&sv.i===i)nextStory();},{once:true});
@@ -1206,6 +1213,7 @@ function showStory(){
    if(!sv||sv.g!==g||sv.i!==i)return;
    box.querySelector(".stLoad")?.remove();
    armBar(5);
+   if(curBar)curBar.classList.add("cur");
    clearTimeout(svTimer);
    svTimer=setTimeout(()=>{if(sv&&sv.g===g&&sv.i===i){finishBar();nextStory();}},5000);
   };
