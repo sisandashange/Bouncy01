@@ -647,7 +647,20 @@ function cacheMsgsDebounced(){if(!cur||!me)return;clearTimeout(cacheTimer);cache
 
 
 /* ---------- AUTH ---------- */
-async function maybeLock(){const h=localStorage.getItem("pinHash");if(!h)return;const p=prompt("Enter your BOUNCY PIN");if(p===null){await sb.auth.signOut();return;}const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p));const got=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");if(got!==h){toast("Incorrect PIN.");await sb.auth.signOut();return;} }
+async function maybeLock(){
+ const h=localStorage.getItem("pinHash");
+ if(!h)return;
+ return new Promise((resolve) => {
+  setTimeout(async () => {
+   const p=prompt("Enter your BOUNCY PIN");
+   if(p===null){await sb.auth.signOut();resolve();return;}
+   const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(p));
+   const got=[...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+   if(got!==h){toast("Incorrect PIN.");await sb.auth.signOut();}
+   resolve();
+  }, 200);
+ });
+}
 async function enterApp(){
  if(!authListenerSet){
   authListenerSet=true;
@@ -2504,10 +2517,26 @@ if("serviceWorker" in navigator){
   });
  }).catch(()=>{});
 }
-const t0=Date.now();
-const {data:{session}}=await sb.auth.getSession();
-if(session){try{await enterApp();}catch(e){showAuth();toast(errMsg(e));}}else showAuth();
-setTimeout(hideSplash,Math.max(0,2300-(Date.now()-t0)));
+
+// --- SAFE STARTUP BLOCK ---
+// This guarantees the splash screen will always disappear, even if network fails.
+setTimeout(hideSplash, 2500);
+
+try {
+ const t0=Date.now();
+ const {data:{session}}=await sb.auth.getSession();
+ if(session){
+  await enterApp();
+ } else {
+  showAuth();
+ }
+} catch(e) {
+ console.error("Initialization error:", e);
+ showAuth();
+ toast("Connection error. Please check your internet and refresh.");
+} finally {
+ setTimeout(hideSplash, 300);
+}
 </script>
 </body>
 </html>
