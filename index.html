@@ -823,11 +823,12 @@ async function openChat(id){
  const chat=chats.find(c=>c.id===id);if(!chat)return;cur=chat;cur.unread=0;cur.rx=new Map();cur.opened=new Set();cur.seen=false;cur.replyTo=null;cur.mem=new Map();cur.lastSeen=null;
  $("hName").textContent=cur.name;$("hAv").outerHTML=chatAvatar(cur).replace('class="avatar','id="hAv" class="avatar');
  $("chatView").classList.add("open");
+ applyChatMode();
  const isReq=cur.is_request&&cur.kind==="dm";
  $("inpBar").classList.toggle("hidden",isReq);
  $("reqBar").classList.toggle("hidden",!isReq);
- $("blkBar").classList.add("hidden");
- applyChatMode();updatePresence();render();
+ if(isReq)$("blkBar").classList.add("hidden");
+ updatePresence();render();
  const cached=await idbGet("msgs:"+chat.id);if(cur!==chat)return;if(cached?.msgs?.length){cur.msgs=cached.msgs;cur.seen=true;renderMsgs();}
  const {data,error}=await sb.from("messages").select("*,profiles!messages_sender_id_fkey(display_name)").eq("conversation_id",cur.id).order("created_at",{ascending:false}).limit(100);
  if(cur!==chat)return;
