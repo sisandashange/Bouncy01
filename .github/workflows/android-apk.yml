@@ -14,10 +14,15 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm install
+
+      - name: Validate Expo configuration
+        env:
+          EXPO_DEBUG: "1"
+        run: npx expo config --json
 
       - name: Link project to Expo
         env:
