@@ -3,7 +3,7 @@ import { BackHandler, Platform, SafeAreaView, StyleSheet, View, ActivityIndicato
 import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
 
-const APP_URL = "https://sisandashange.github.io/bouncy01/";
+const APP_URL = "https://sisandashange.github.io/Bouncy01/";
 
 export default function App() {
   const web = useRef(null);
