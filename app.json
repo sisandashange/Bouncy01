@@ -17,9 +17,6 @@
         "POST_NOTIFICATIONS"
       ]
     },
-    "plugins": [
-      "react-native-webview"
-    ],
     "extra": {
       "websiteUrl": "https://sisandashange.github.io/bouncy01/"
     }
