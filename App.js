@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { BackHandler, Platform, SafeAreaView, StyleSheet, View, ActivityIndicator, Text } from "react-native";
+import { BackHandler, PermissionsAndroid, Platform, SafeAreaView, StyleSheet, View, ActivityIndicator, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { WebView } from "react-native-webview";
 
@@ -10,6 +10,7 @@ export default function App() {
   const canGoBack = useRef(false);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [permissionsReady, setPermissionsReady] = useState(Platform.OS !== "android");
 
   const onBackPress = useCallback(() => {
     if (canGoBack.current && web.current) {
@@ -21,6 +22,24 @@ export default function App() {
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
+    let active = true;
+    (async () => {
+      try {
+        await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+        ]);
+      } catch (error) {
+        console.warn("BOUNCY media permission request failed:", error);
+      } finally {
+        if (active) setPermissionsReady(true);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", onBackPress);
     return () => sub.remove();
   }, [onBackPress]);
@@ -28,7 +47,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar style="light" backgroundColor="#0f1318" />
-      <WebView
+      {permissionsReady && <WebView
         ref={web}
         source={{ uri: APP_URL }}
         style={styles.web}
@@ -51,7 +70,7 @@ export default function App() {
           if (event.nativeEvent.statusCode >= 500) setFailed(true);
         }}
         allowsBackForwardNavigationGestures
-      />
+      />}
       {loading && (
         <View style={styles.overlay} pointerEvents="none">
           <ActivityIndicator size="large" color="#ff2d87" />
