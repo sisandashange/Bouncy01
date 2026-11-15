@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "icon": "./icon-512.png",
     "android": {
       "package": "com.sisandashange.bouncy",
       "versionCode": 1,
