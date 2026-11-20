@@ -851,6 +851,9 @@ async function enterApp(){
   authListenerSet=true;
   sb.auth.onAuthStateChange((evt)=>{
    if(evt==="SIGNED_OUT"&&me){
+    // Clear plaintext offline message cache on every sign-out, including expired or revoked sessions.
+    clearTimeout(cacheTimer);
+    void idbClearAll();
     if(call){try{cleanupCall();}catch{}}
     me=profile=cur=null;chats=[];
     try{for(const c of [presenceChannel,incomingChannel,msgChannel,typingChannel])if(c)sb.removeChannel(c);}catch{}
